@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spendly — Dashboard</title>
+    
+    <!-- Load Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white min-h-screen antialiased text-gray-900 selection:bg-gray-200">
+
+    <!-- Top Navbar -->
+    <nav class="w-full border-b border-gray-200 bg-white sticky top-0 z-10">
+        <div class="max-w-[640px] mx-auto px-4 h-16 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-900">
+                    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+                    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+                    <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                </svg>
+                <span class="text-lg font-bold tracking-tight text-gray-900">Spendly</span>
+            </a>
+
+            <!-- User Actions -->
+            <div class="flex items-center gap-4 text-sm">
+                <span class="font-medium text-gray-900">Gentle</span>
+                <span class="text-gray-300">|</span>
+                <a href="#" class="text-gray-500 hover:text-gray-900 transition-colors">Sign out</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-[640px] mx-auto px-4 py-8 sm:py-12">
+        
+        <!-- Section 1: Summary Cards -->
+        <section class="grid grid-cols-3 gap-3 sm:gap-4 mb-10">
+            <!-- Income Card -->
+            <div class="border border-gray-200 rounded-xl p-4 sm:p-5">
+                <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-1.5">Income</h2>
+                <p class="text-lg sm:text-2xl font-semibold text-green-600">₦120,000</p>
+            </div>
+            <!-- Expenses Card -->
+            <div class="border border-gray-200 rounded-xl p-4 sm:p-5">
+                <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-1.5">Expenses</h2>
+                <p class="text-lg sm:text-2xl font-semibold text-red-600">₦74,500</p>
+            </div>
+            <!-- Balance Card -->
+            <div class="border border-gray-200 rounded-xl p-4 sm:p-5">
+                <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-1.5">Balance</h2>
+                <p class="text-lg sm:text-2xl font-semibold text-gray-900">₦45,500</p>
+            </div>
+        </section>
+
+        <!-- Section 2: Add Transaction Form -->
+        <section class="border border-gray-200 rounded-xl p-5 sm:p-6 mb-10">
+            <h2 class="text-sm font-semibold text-gray-900 mb-4">Add new transaction</h2>
+            <form action="#" method="POST" onsubmit="event.preventDefault();">
+                <!-- Dropdowns Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="type" class="sr-only">Type</label>
+                        <select id="type" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors appearance-none">
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="category" class="sr-only">Category</label>
+                        <select id="category" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors appearance-none">
+                            <option value="" disabled selected>Select category...</option>
+                            <option value="food">Food & Groceries</option>
+                            <option value="transport">Transport</option>
+                            <option value="housing">Housing & Utilities</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="salary">Salary</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Inputs Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                    <div>
+                        <label for="amount" class="sr-only">Amount</label>
+                        <input type="number" id="amount" placeholder="Amount (₦)" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors">
+                    </div>
+                    <div>
+                        <label for="note" class="sr-only">Note</label>
+                        <input type="text" id="note" placeholder="What was this for?" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors">
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white text-sm font-medium py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
+                    Add transaction
+                </button>
+            </form>
+        </section>
+
+        <!-- Section 3: Transaction List -->
+        <section>
+            <div class="flex items-center justify-between mb-2 border-b border-gray-200 pb-2">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recent Activity</h2>
+            </div>
+            
+            <div class="divide-y divide-gray-100">
+                
+                <!-- Transaction 1 (Income) -->
+                <div class="py-3.5 flex items-center justify-between group">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-2 h-2 rounded-full bg-green-500 shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">June Salary</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Jun 28 &bull; Salary</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="text-sm font-medium text-green-600">₦120,000</p>
+                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transaction 2 (Expense) -->
+                <div class="py-3.5 flex items-center justify-between group">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Groceries at Shoprite</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Jun 26 &bull; Food & Groceries</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="text-sm font-medium text-red-600">-₦40,000</p>
+                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transaction 3 (Expense) -->
+                <div class="py-3.5 flex items-center justify-between group">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Prepaid Electricity Token</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Jun 25 &bull; Housing & Utilities</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="text-sm font-medium text-red-600">-₦15,000</p>
+                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transaction 4 (Expense) -->
+                <div class="py-3.5 flex items-center justify-between group">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Spectranet Renewal</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Jun 24 &bull; Housing & Utilities</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="text-sm font-medium text-red-600">-₦12,000</p>
+                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transaction 5 (Expense) -->
+                <div class="py-3.5 flex items-center justify-between group">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Uber to Ikeja</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Jun 22 &bull; Transport</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="text-sm font-medium text-red-600">-₦7,500</p>
+                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Empty State (Hidden by default, shown when list is empty) -->
+            <div class="hidden text-center py-12">
+                <p class="text-sm text-gray-500">No transactions yet. Add your first one above!</p>
+            </div>
+            
+        </section>
+
+    </main>
+
+</body>
+</html>
