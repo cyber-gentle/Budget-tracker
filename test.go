@@ -2,7 +2,10 @@ package main
 
 // Import the required packages
 import (
+	"encoding/csv"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -69,4 +72,33 @@ func (bt BudgetTracker) CalculateTotal(txnType string) float64 {
 		}
 	}
 	return total
+}
+
+// Save the transactions to a csv file
+
+func (bt BudgetTracker) SaveToCSV(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	writer := csv.NewWriter(file) // creating a new csv file
+	defer writer.Flush()          // flush make sure that the data is
+	//  written before the file is closed
+
+	// Write the CSV header
+	writer.Write([]string{"ID", "Amount", "Category", "Date", "Type"})
+
+	for _, transaction := range bt.transactions {
+		record := []string{
+			strconv.Itoa(transaction.ID),
+			fmt.Sprintf("%.2f", transaction.Amount),
+			transaction.Category,
+			transaction.Date.Format("2026-3-10"),
+			transaction.Type,
+		}
+		writer.Write(record)
+	}
+
+	return nil
 }
