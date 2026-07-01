@@ -48,7 +48,7 @@
         </header>
 
         <!-- Form -->
-        <form action="#" method="POST" class="space-y-5" onsubmit="event.preventDefault();">
+        <form action="/api/login" method="POST" class="space-y-5" data-login-form>
             
             <!-- Username Input -->
             <div>
@@ -56,7 +56,9 @@
                 <input 
                     type="text" 
                     id="username" 
-                    value="johndoe"
+                    name="username"
+                    value=""
+                    autocomplete="username"
                     class="w-full px-4 py-2.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-100 focus:border-gray-400 transition-colors bg-transparent" 
                     placeholder="Enter your username">
             </div>
@@ -68,8 +70,10 @@
                     <input 
                         type="password" 
                         id="password" 
-                        value="mypassword123"
-                        class="w-full px-4 py-2.5 text-sm rounded-lg border border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500 pr-10 transition-colors bg-transparent text-gray-900" 
+                        name="password"
+                        value=""
+                        autocomplete="current-password"
+                        class="w-full px-4 py-2.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-100 focus:border-gray-400 pr-10 transition-colors bg-transparent text-gray-900" 
                         placeholder="••••••••">
                     
                     <!-- Eye Toggle Button -->
@@ -85,7 +89,7 @@
                     </button>
                 </div>
                 <!-- Inline Error Message -->
-                <p class="text-sm text-red-500 mt-2 font-medium">Invalid username or password.</p>
+                <p class="text-sm text-red-500 mt-2 font-medium" id="login-error" style="display:none;">Invalid username or password.</p>
             </div>
 
             <!-- Submit Button -->
@@ -98,17 +102,18 @@
             </div>
         </form>
 
+
         <!-- Back Home -->
         <div class="mt-8 text-center">
             <p class="text-sm text-gray-500">
-                <a href="./index.html" class="hover:text-gray-800 transition-colors" style="display: block;">Go Home</a>
+                <a href="/" class="hover:text-gray-800 transition-colors" style="display: block;">Go Home</a>
             </p>
         </div>
 
         <!-- Footer Link -->
         <div class="mt-8 text-center">
             <p class="text-sm text-gray-500">
-                <a href="./sign-up.html" class="hover:text-gray-800 transition-colors">No account? <span class="font-medium text-gray-900 hover:underline">Register</span></a>
+                <a href="/sign-up" class="hover:text-gray-800 transition-colors">No account? <span class="font-medium text-gray-900 hover:underline">Register</span></a>
             </p>
         </div>
         
@@ -118,12 +123,12 @@
     <script>
         const togglePassword = document.getElementById('togglePassword');
         const password = document.getElementById('password');
+        const errorEl = document.getElementById('login-error');
 
         togglePassword.addEventListener('click', function () {
             const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
             password.setAttribute('type', type);
-            
-            // Toggle opacity of the eye icon to indicate state
+
             if (type === 'text') {
                 this.classList.add('text-gray-900');
                 this.classList.remove('text-gray-400');
@@ -132,6 +137,29 @@
                 this.classList.remove('text-gray-900');
             }
         });
+
+        // AJAX submit so we can redirect cleanly and show API errors.
+        const form = document.querySelector('[data-login-form]');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorEl.style.display = 'none';
+
+            const fd = new FormData(form);
+            const res = await fetch(form.action, {
+                method: 'POST',
+                body: fd
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                errorEl.textContent = data.error || 'Login failed.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            window.location.href = data.redirect || '/dashboard';
+        });
     </script>
+
 </body>
 </html>

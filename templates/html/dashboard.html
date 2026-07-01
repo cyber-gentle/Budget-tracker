@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spendly — Dashboard</title>
-    
+
     <!-- Load Inter font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/globals.css">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -31,7 +31,7 @@
     <nav class="w-full border-b border-gray-200 bg-white sticky top-0 z-10">
         <div class="max-w-[640px] mx-auto px-4 h-16 flex items-center justify-between">
             <!-- Logo -->
-            <a href="#" class="flex items-center gap-2">
+            <a href="/" class="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-900">
                     <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
                     <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
@@ -42,51 +42,51 @@
 
             <!-- User Actions -->
             <div class="flex items-center gap-4 text-sm">
-                <span class="font-medium text-gray-900">Gentle</span>
+                <span class="font-medium text-gray-900">{{.Username}}</span>
                 <span class="text-gray-300">|</span>
-                <a href="#" class="text-gray-500 hover:text-gray-900 transition-colors">Sign out</a>
+                <a href="#" id="logout-link" class="text-gray-500 hover:text-gray-900 transition-colors">Sign out</a>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
     <main class="max-w-[640px] mx-auto px-4 py-8 sm:py-12">
-        
+
         <!-- Section 1: Summary Cards -->
         <section class="grid grid-cols-3 gap-3 sm:gap-4 mb-10">
             <!-- Income Card -->
             <div class="border border-gray-200 rounded-xl p-4 sm:p-5">
                 <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-1.5">Income</h2>
-                <p class="text-lg sm:text-2xl font-semibold text-green-600">₦120,000</p>
+                <p class="text-lg sm:text-2xl font-semibold text-green-600" id="income-amount">{{.IncomeFmt}}</p>
             </div>
             <!-- Expenses Card -->
             <div class="border border-gray-200 rounded-xl p-4 sm:p-5">
                 <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-1.5">Expenses</h2>
-                <p class="text-lg sm:text-2xl font-semibold text-red-600">₦74,500</p>
+                <p class="text-lg sm:text-2xl font-semibold text-red-600" id="expense-amount">{{.ExpensesFmt}}</p>
             </div>
             <!-- Balance Card -->
             <div class="border border-gray-200 rounded-xl p-4 sm:p-5">
                 <h2 class="text-xs sm:text-sm font-medium text-gray-500 mb-1.5">Balance</h2>
-                <p class="text-lg sm:text-2xl font-semibold text-gray-900">₦45,500</p>
+                <p class="text-lg sm:text-2xl font-semibold text-gray-900" id="balance-amount">{{.BalanceFmt}}</p>
             </div>
         </section>
 
         <!-- Section 2: Add Transaction Form -->
         <section class="border border-gray-200 rounded-xl p-5 sm:p-6 mb-10">
             <h2 class="text-sm font-semibold text-gray-900 mb-4">Add new transaction</h2>
-            <form action="#" method="POST" onsubmit="event.preventDefault();">
+            <form action="/api/transactions" method="POST" id="add-tx-form">
                 <!-- Dropdowns Row -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="type" class="sr-only">Type</label>
-                        <select id="type" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors appearance-none">
+                        <select id="type" name="type" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors appearance-none">
                             <option value="expense">Expense</option>
                             <option value="income">Income</option>
                         </select>
                     </div>
                     <div>
                         <label for="category" class="sr-only">Category</label>
-                        <select id="category" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors appearance-none">
+                        <select id="category" name="category" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors appearance-none">
                             <option value="" disabled selected>Select category...</option>
                             <option value="food">Food & Groceries</option>
                             <option value="transport">Transport</option>
@@ -97,18 +97,20 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- Inputs Row -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                     <div>
                         <label for="amount" class="sr-only">Amount</label>
-                        <input type="number" id="amount" placeholder="Amount (₦)" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors">
+                        <input type="number" id="amount" name="amount" placeholder="Amount (₦)" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors">
                     </div>
                     <div>
                         <label for="note" class="sr-only">Note</label>
-                        <input type="text" id="note" placeholder="What was this for?" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors">
+                        <input type="text" id="note" name="note" placeholder="What was this for?" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors">
                     </div>
                 </div>
+
+                <p class="text-sm text-red-500 mt-2 font-medium" id="tx-error" style="display:none;"></p>
 
                 <!-- Submit Button -->
                 <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white text-sm font-medium py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
@@ -122,104 +124,226 @@
             <div class="flex items-center justify-between mb-2 border-b border-gray-200 pb-2">
                 <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recent Activity</h2>
             </div>
-            
-            <div class="divide-y divide-gray-100">
-                
-                <!-- Transaction 1 (Income) -->
+
+            <div class="divide-y divide-gray-100" id="tx-list">
+                {{range .Transactions}}
                 <div class="py-3.5 flex items-center justify-between group">
                     <div class="flex items-center gap-3.5">
-                        <div class="w-2 h-2 rounded-full bg-green-500 shrink-0"></div>
+                        <div class="w-2 h-2 rounded-full {{if eq .Color "green"}}bg-green-500{{else}}bg-red-500{{end}} shrink-0"></div>
                         <div>
-                            <p class="text-sm font-medium text-gray-900">June Salary</p>
-                            <p class="text-xs text-gray-500 mt-0.5">Jun 28 &bull; Salary</p>
+                            <p class="text-sm font-medium text-gray-900">{{.Note}}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">{{.DateStr}} &bull; {{.Category}}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <p class="text-sm font-medium text-green-600">₦120,000</p>
-                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
+<p class="text-sm font-medium {{if eq .Color "green"}}text-green-600{{else}}text-red-600{{end}}">{{.Sign}}{{.AmountFmt}}</p>
+                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none delete-tx" aria-label="Delete" data-id="{{.ID}}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         </button>
                     </div>
                 </div>
-
-                <!-- Transaction 2 (Expense) -->
-                <div class="py-3.5 flex items-center justify-between group">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">Groceries at Shoprite</p>
-                            <p class="text-xs text-gray-500 mt-0.5">Jun 26 &bull; Food & Groceries</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <p class="text-sm font-medium text-red-600">-₦40,000</p>
-                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Transaction 3 (Expense) -->
-                <div class="py-3.5 flex items-center justify-between group">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">Prepaid Electricity Token</p>
-                            <p class="text-xs text-gray-500 mt-0.5">Jun 25 &bull; Housing & Utilities</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <p class="text-sm font-medium text-red-600">-₦15,000</p>
-                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Transaction 4 (Expense) -->
-                <div class="py-3.5 flex items-center justify-between group">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">Spectranet Renewal</p>
-                            <p class="text-xs text-gray-500 mt-0.5">Jun 24 &bull; Housing & Utilities</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <p class="text-sm font-medium text-red-600">-₦12,000</p>
-                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Transaction 5 (Expense) -->
-                <div class="py-3.5 flex items-center justify-between group">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">Uber to Ikeja</p>
-                            <p class="text-xs text-gray-500 mt-0.5">Jun 22 &bull; Transport</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <p class="text-sm font-medium text-red-600">-₦7,500</p>
-                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none" aria-label="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
-                    </div>
-                </div>
-
+                {{end}}
             </div>
 
             <!-- Empty State (Hidden by default, shown when list is empty) -->
-            <div class="hidden text-center py-12">
+            <div class="hidden text-center py-12" id="tx-empty">
                 <p class="text-sm text-gray-500">No transactions yet. Add your first one above!</p>
             </div>
-            
+
         </section>
 
+        <!-- Edit Modal -->
+        <div id="edit-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 w-full max-w-sm mx-4">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4">Edit transaction</h3>
+                <form id="edit-tx-form" class="space-y-3">
+                    <input type="hidden" id="edit-id">
+                    <div class="grid grid-cols-2 gap-3">
+                        <select id="edit-type" name="type" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 appearance-none">
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                        </select>
+                        <select id="edit-category" name="category" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 appearance-none">
+                            <option value="food">Food & Groceries</option>
+                            <option value="transport">Transport</option>
+                            <option value="housing">Housing & Utilities</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="salary">Salary</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <input type="number" id="edit-amount" name="amount" placeholder="Amount (₦)" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900">
+                    <input type="text" id="edit-note" name="note" placeholder="Note" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900">
+                    <p class="text-sm text-red-500 font-medium" id="edit-error" style="display:none;"></p>
+                    <div class="flex gap-3 pt-1">
+                        <button type="button" id="edit-cancel" class="flex-1 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+                        <button type="submit" class="flex-1 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-black transition-colors">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </main>
+
+    <script>
+        const fmtNaira = (n) => {
+            try {
+                const x = Math.trunc(Number(n) || 0);
+                return '₦' + x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            } catch {
+                return '₦0';
+            }
+        };
+
+        async function loadTransactions() {
+            const res = await fetch('/api/transactions');
+            const txs = await res.json();
+            const list = document.getElementById('tx-list');
+            const empty = document.getElementById('tx-empty');
+
+            list.innerHTML = '';
+
+            if (!Array.isArray(txs) || txs.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            // API returns newest-first already; keep consistent.
+            for (const t of txs) {
+                const color = t.type === 'expense' ? 'red' : 'green';
+                const sign = t.type === 'expense' ? '-' : '+';
+                const amountText = fmtNaira(t.amount);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'py-3.5 flex items-center justify-between group';
+                wrapper.innerHTML = `
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-2 h-2 rounded-full ${color === 'green' ? 'bg-green-500' : 'bg-red-500'} shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">${escapeHtml(t.note || t.category || '')}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">${escapeHtml(fmtDate(t.date))} &bull; ${escapeHtml(t.category || '')}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="text-sm font-medium ${color === 'green' ? 'text-green-600' : 'text-red-600'}">${sign}${amountText}</p>
+                        <button class="text-gray-400 hover:text-gray-700 transition-colors focus:outline-none edit-tx" aria-label="Edit" data-id="${t.id}" data-amount="${t.amount}" data-category="${escapeHtml(t.category)}" data-note="${escapeHtml(t.note)}" data-type="${t.type}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button class="text-gray-300 hover:text-red-500 transition-colors focus:outline-none delete-tx" aria-label="Delete" data-id="${t.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(wrapper);
+            }
+
+            const totals = txs.reduce((acc, t) => {
+                const amt = Number(t.amount) || 0;
+                if (t.type === 'income') acc.income += amt;
+                else acc.expense += amt;
+                return acc;
+            }, { income: 0, expense: 0 });
+
+            document.getElementById('income-amount').textContent = fmtNaira(totals.income);
+            document.getElementById('expense-amount').textContent = fmtNaira(totals.expense);
+            document.getElementById('balance-amount').textContent = fmtNaira(totals.income - totals.expense);
+        }
+
+        function fmtDate(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(s) {
+            return String(s ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '<')
+                .replaceAll('>', '>')
+                .replaceAll('"', '"')
+                .replaceAll("'", '&#039;');
+        }
+
+
+        document.getElementById('tx-list').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.delete-tx');
+            if (!btn) return;
+            const id = btn.getAttribute('data-id');
+            if (!id) return;
+            if (!confirm('Delete this transaction?')) return;
+
+            const res = await fetch('/api/transactions/' + id, { method: 'DELETE' });
+            if (!res.ok) {
+                alert('Delete failed');
+                return;
+            }
+            await loadTransactions();
+        });
+
+        document.getElementById('add-tx-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById('tx-error');
+            errorEl.style.display = 'none';
+
+            const fd = new FormData(e.currentTarget);
+            const res = await fetch('/api/transactions', { method: 'POST', body: fd });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                errorEl.textContent = data.error || 'Failed to add transaction.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            e.currentTarget.reset();
+            await loadTransactions();
+        });
+
+        // Edit modal
+        const modal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-tx-form');
+        const editError = document.getElementById('edit-error');
+
+        document.getElementById('tx-list').addEventListener('click', (e) => {
+            const btn = e.target.closest('.edit-tx');
+            if (!btn) return;
+            document.getElementById('edit-id').value = btn.dataset.id;
+            document.getElementById('edit-amount').value = btn.dataset.amount;
+            document.getElementById('edit-note').value = btn.dataset.note;
+            document.getElementById('edit-type').value = btn.dataset.type;
+            document.getElementById('edit-category').value = btn.dataset.category || 'other';
+            editError.style.display = 'none';
+            modal.classList.remove('hidden');
+        });
+
+        document.getElementById('edit-cancel').addEventListener('click', () => modal.classList.add('hidden'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            editError.style.display = 'none';
+            const id = document.getElementById('edit-id').value;
+            const fd = new FormData(editForm);
+            const res = await fetch('/api/transactions/' + id, { method: 'PUT', body: fd });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                editError.textContent = data.error || 'Update failed.';
+                editError.style.display = 'block';
+                return;
+            }
+            modal.classList.add('hidden');
+            await loadTransactions();
+        });
+
+        document.getElementById('logout-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = '/api/logout';
+        });
+
+        // Initial fetch so dynamic list always matches persisted data.
+        loadTransactions().catch(() => {});
+    </script>
 
 </body>
 </html>

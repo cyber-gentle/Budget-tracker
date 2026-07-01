@@ -1,54 +1,39 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 )
 
-var tmpl = template.Must(template.ParseGlob("templates/html/*.html"))
+func main() {
+	// Persistent storage (in project dir). You can change these paths if desired.
+	app := NewApp("data/auth.json", "data/transactions.json")
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "index.html", nil)
-}
-
-func SignUpHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "sign-up.html", nil)
-}
-
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "login.html", nil)
-}
-
-func SwitchHandler() {
+	fileServer := http.FileServer(http.Dir("templates/"))
 	
-}
+	mux := http.NewServeMux()
 
-func Server() {
+	// Static assets
+	mux.Handle("/templates/", http.StripPrefix("/templates/", fileServer))
 
-	fileServer := http.FileServer(http.Dir("templates/assets/"))
-	http.Handle("/templates/assets/imgs", http.StripPrefix("/templates/assets/imgs/", fileServer))
+	// Pages
+	mux.HandleFunc("/", app.HandleHome)
+	mux.HandleFunc("/login", app.HandleLogin)
+	mux.HandleFunc("/sign-up", app.HandleSignUp)
+	mux.HandleFunc("/dashboard", app.HandleDashboard)
 
-	mainMux := http.NewServeMux()
-	apiMux := http.NewServeMux()
+	// Auth APIs
+	mux.HandleFunc("/api/signup", app.HandleSignupAPI)
+	mux.HandleFunc("/api/login", app.HandleLoginAPI)
+	mux.HandleFunc("/api/logout", app.HandleLogoutAPI)
 
-	mainMux.HandleFunc("/", HomeHandler)
-	mainMux.HandleFunc("/sign-up.html", SignUpHandler)
-	mainMux.Handle("/api/", http.StripPrefix("/api", apiMux))
+	// Transaction APIs
+	mux.HandleFunc("/api/transactions", app.HandleTransactions)               // GET, POST
+	mux.HandleFunc("/api/transactions/", app.HandleDeleteTransaction)         // DELETE /api/transactions/{id}
 
 	log.Println("Server started on http://localhost:8080")
-	http.ListenAndServe(":8080", mainMux)
-}
-
-func renderTemplate(w http.ResponseWriter, filename string, data any) {
-	err := tmpl.ExecuteTemplate(w, filename, data)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Printf("Error rendering template: %v", err)
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		log.Fatalf("server error: %v", err)
 	}
 }
 
-func main() {
-	Server()
-}

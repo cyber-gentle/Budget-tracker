@@ -1,0 +1,21 @@
+{
+  "transactions": [
+    {
+      "id": 31,
+      "amount": 10000,
+      "category": "salary",
+      "note": "Stipend",
+      "date": "2026-07-01T15:14:36.127633884+01:00",
+      "type": "income"
+    },
+    {
+      "id": 32,
+      "amount": 90000,
+      "category": "salary",
+      "note": "Stipend",
+      "date": "2026-07-01T15:14:50.834036094+01:00",
+      "type": "income"
+    }
+  ],
+  "next_id": 34
+}
