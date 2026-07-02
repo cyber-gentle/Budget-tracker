@@ -66,7 +66,7 @@
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <input type="number" name="amount" placeholder="Amount (₦)" min="1" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900">
+                    <input type="text" id="amount-input" placeholder="Amount (₦)" inputmode="numeric" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900">
                     <input type="text" name="note" placeholder="Note (optional)" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900">
                 </div>
                 <p class="text-sm text-red-500 font-medium hidden" id="tx-error"></p>
@@ -122,7 +122,7 @@
                         <option value="other">Other</option>
                     </select>
                 </div>
-                <input type="number" id="edit-amount" name="amount" placeholder="Amount (₦)" min="1" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900">
+                <input type="text" id="edit-amount" placeholder="Amount (₦)" inputmode="numeric" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900">
                 <input type="text" id="edit-note" name="note" placeholder="Note" class="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900">
                 <p class="text-sm text-red-500 font-medium hidden" id="edit-error"></p>
                 <div class="flex gap-3 pt-1">
@@ -202,12 +202,27 @@
 
         document.getElementById('filter').addEventListener('change', applyFilter);
 
+        // Amount comma formatting
+        function formatAmountInput(el) {
+            el.addEventListener('input', function() {
+                const raw = this.value.replace(/[^0-9]/g, '');
+                this.value = raw ? Number(raw).toLocaleString('en-US') : '';
+            });
+        }
+        formatAmountInput(document.getElementById('amount-input'));
+        formatAmountInput(document.getElementById('edit-amount'));
+
+        function getRawAmount(el) {
+            return el.value.replace(/,/g, '');
+        }
+
         // Add transaction
         document.getElementById('add-tx-form').addEventListener('submit', async e => {
             e.preventDefault();
             const errEl = document.getElementById('tx-error');
             errEl.classList.add('hidden');
             const fd = new FormData(e.currentTarget);
+            fd.set('amount', getRawAmount(document.getElementById('amount-input')));
             const res = await fetch('/api/transactions', { method: 'POST', body: fd });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) { errEl.textContent = data.error || 'Failed.'; errEl.classList.remove('hidden'); return; }
@@ -230,7 +245,7 @@
             const btn = e.target.closest('.edit-tx');
             if (!btn) return;
             document.getElementById('edit-id').value       = btn.dataset.id;
-            document.getElementById('edit-amount').value   = btn.dataset.amount;
+            document.getElementById('edit-amount').value   = Number(btn.dataset.amount).toLocaleString('en-US');
             document.getElementById('edit-note').value     = btn.dataset.note;
             document.getElementById('edit-type').value     = btn.dataset.type;
             document.getElementById('edit-category').value = btn.dataset.category || 'other';
@@ -249,6 +264,7 @@
             errEl.classList.add('hidden');
             const id = document.getElementById('edit-id').value;
             const fd = new FormData(e.currentTarget);
+            fd.set('amount', getRawAmount(document.getElementById('edit-amount')));
             const res = await fetch('/api/transactions/' + id, { method: 'PUT', body: fd });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) { errEl.textContent = data.error || 'Update failed.'; errEl.classList.remove('hidden'); return; }
