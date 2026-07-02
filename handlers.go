@@ -8,26 +8,43 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // App holds the shared application state.
 type App struct {
-	Auth    *AuthStore
-	Tracker *BudgetTracker
-	Tmpl    *template.Template
+	Auth       *AuthStore
+	Trackers   map[string]*BudgetTracker
+	TrackersMu sync.RWMutex
+	DataDir    string
+	Tmpl       *template.Template
 }
 
 // NewApp creates an App, parsing templates and initialising stores.
-func NewApp(authPath, trackerPath string) *App {
+func NewApp(authPath, dataDir string) *App {
 	auth := NewAuthStore(authPath)
-	tracker := NewBudgetTracker(trackerPath)
 	tmpl := template.Must(template.ParseGlob("templates/html/*.html"))
-
 	return &App{
-		Auth:    auth,
-		Tracker: tracker,
-		Tmpl:    tmpl,
+		Auth:     auth,
+		Trackers: make(map[string]*BudgetTracker),
+		DataDir:  dataDir,
+		Tmpl:     tmpl,
 	}
+}
+
+// trackerFor returns (creating if needed) the BudgetTracker for a user.
+func (app *App) trackerFor(username string) *BudgetTracker {
+	app.TrackersMu.RLock()
+	bt, ok := app.Trackers[username]
+	app.TrackersMu.RUnlock()
+	if ok {
+		return bt
+	}
+	bt = NewBudgetTracker(app.DataDir + "/" + username + "_transactions.json")
+	app.TrackersMu.Lock()
+	app.Trackers[username] = bt
+	app.TrackersMu.Unlock()
+	return bt
 }
 
 // renderTemplate is a helper to execute a named template.
@@ -50,7 +67,6 @@ func (app *App) getSessionUser(r *http.Request) (string, bool) {
 
 // ─── Page Handlers ──────────────────────────────────────────────────────────
 
-// HandleHome serves the landing page.
 func (app *App) HandleHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
@@ -59,17 +75,22 @@ func (app *App) HandleHome(w http.ResponseWriter, r *http.Request) {
 	app.renderTemplate(w, "index.html", nil)
 }
 
-// HandleLogin serves the login page.
 func (app *App) HandleLogin(w http.ResponseWriter, r *http.Request) {
+	if _, ok := app.getSessionUser(r); ok {
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		return
+	}
 	app.renderTemplate(w, "login.html", nil)
 }
 
-// HandleSignUp serves the sign-up page.
 func (app *App) HandleSignUp(w http.ResponseWriter, r *http.Request) {
+	if _, ok := app.getSessionUser(r); ok {
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		return
+	}
 	app.renderTemplate(w, "sign-up.html", nil)
 }
 
-// HandleDashboard serves the dashboard page.
 func (app *App) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 	username, ok := app.getSessionUser(r)
 	if !ok {
@@ -77,9 +98,13 @@ func (app *App) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txs := app.Tracker.GetTransactions()
+	tracker := app.trackerFor(username)
+	txs := tracker.GetTransactions()
+	// Reverse so newest first.
+	for i, j := 0, len(txs)-1; i < j; i, j = i+1, j-1 {
+		txs[i], txs[j] = txs[j], txs[i]
+	}
 
-	// Build a safe display list for the template.
 	type DisplayTx struct {
 		ID        int
 		Amount    float64
@@ -113,27 +138,21 @@ func (app *App) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	income := app.Tracker.CalculateTotal("income")
-	expenses := app.Tracker.CalculateTotal("expense")
-	balance := app.Tracker.Balance()
+	income := tracker.CalculateTotal("income")
+	expenses := tracker.CalculateTotal("expense")
+	balance := tracker.Balance()
 
 	data := struct {
-		Username   string
-		Income     float64
-		Expenses   float64
-		Balance    float64
-		IncomeFmt  string
-		ExpensesFmt string
-		BalanceFmt string
+		Username     string
+		IncomeFmt    string
+		ExpensesFmt  string
+		BalanceFmt   string
 		Transactions []DisplayTx
 	}{
-		Username:    username,
-		Income:      income,
-		Expenses:    expenses,
-		Balance:     balance,
-		IncomeFmt:   formatNaira(income),
-		ExpensesFmt: formatNaira(expenses),
-		BalanceFmt:  formatNaira(balance),
+		Username:     username,
+		IncomeFmt:    formatNaira(income),
+		ExpensesFmt:  formatNaira(expenses),
+		BalanceFmt:   formatNaira(balance),
 		Transactions: display,
 	}
 
@@ -142,13 +161,11 @@ func (app *App) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 
 // ─── Auth API Handlers ─────────────────────────────────────────────────────
 
-// HandleSignupAPI processes sign-up form submission.
 func (app *App) HandleSignupAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
 	r.ParseMultipartForm(1 << 20)
 	username := strings.TrimSpace(r.FormValue("username"))
 	password := r.FormValue("password")
@@ -157,33 +174,23 @@ func (app *App) HandleSignupAPI(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), http.StatusConflict)
 		return
 	}
-
-	// Auto-login after signup.
 	token, err := app.Auth.Login(username, password)
 	if err != nil {
 		jsonError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   86400, // 24 hours
+		Name: "session", Value: token, Path: "/",
+		HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 86400,
 	})
-
 	jsonOK(w, map[string]string{"redirect": "/dashboard"})
 }
 
-// HandleLoginAPI processes login form submission.
 func (app *App) HandleLoginAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
 	r.ParseMultipartForm(1 << 20)
 	username := strings.TrimSpace(r.FormValue("username"))
 	password := r.FormValue("password")
@@ -193,101 +200,73 @@ func (app *App) HandleLoginAPI(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   86400,
+		Name: "session", Value: token, Path: "/",
+		HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 86400,
 	})
-
 	jsonOK(w, map[string]string{"redirect": "/dashboard"})
 }
 
-// HandleLogoutAPI invalidates the session.
 func (app *App) HandleLogoutAPI(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie("session")
 	if err == nil {
 		app.Auth.Logout(c.Value)
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:   "session",
-		Value:  "",
-		Path:   "/",
-		MaxAge: -1,
-	})
+	http.SetCookie(w, &http.Cookie{Name: "session", Value: "", Path: "/", MaxAge: -1})
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // ─── Transaction API Handlers ───────────────────────────────────────────────
 
-// HandleTransactions is the API handler for GET (list) and POST (add).
 func (app *App) HandleTransactions(w http.ResponseWriter, r *http.Request) {
-	_, ok := app.getSessionUser(r)
+	username, ok := app.getSessionUser(r)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-
+	tracker := app.trackerFor(username)
 	switch r.Method {
 	case http.MethodGet:
-		app.listTransactions(w, r)
+		txs := tracker.GetTransactions()
+		for i, j := 0, len(txs)-1; i < j; i, j = i+1, j-1 {
+			txs[i], txs[j] = txs[j], txs[i]
+		}
+		jsonOK(w, txs)
 	case http.MethodPost:
-		app.addTransaction(w, r)
+		r.ParseMultipartForm(1 << 20)
+		amountStr := strings.TrimSpace(r.FormValue("amount"))
+		category := strings.TrimSpace(r.FormValue("category"))
+		note := strings.TrimSpace(r.FormValue("note"))
+		txnType := strings.TrimSpace(r.FormValue("type"))
+		if amountStr == "" || txnType == "" {
+			jsonError(w, "amount and type are required", http.StatusBadRequest)
+			return
+		}
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil || amount <= 0 {
+			jsonError(w, "invalid amount", http.StatusBadRequest)
+			return
+		}
+		tracker.AddTransaction(amount, category, note, txnType)
+		jsonOK(w, map[string]string{"status": "ok"})
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-func (app *App) listTransactions(w http.ResponseWriter, _ *http.Request) {
-	txs := app.Tracker.GetTransactions()
-	// Reverse so newest first.
-	for i, j := 0, len(txs)-1; i < j; i, j = i+1, j-1 {
-		txs[i], txs[j] = txs[j], txs[i]
-	}
-	jsonOK(w, txs)
-}
-
-func (app *App) addTransaction(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(1 << 20)
-	amountStr := strings.TrimSpace(r.FormValue("amount"))
-	category := strings.TrimSpace(r.FormValue("category"))
-	note := strings.TrimSpace(r.FormValue("note"))
-	txnType := strings.TrimSpace(r.FormValue("type"))
-
-	if amountStr == "" || txnType == "" {
-		jsonError(w, "amount and type are required", http.StatusBadRequest)
-		return
-	}
-
-	amount, err := strconv.ParseFloat(amountStr, 64)
-	if err != nil || amount <= 0 {
-		jsonError(w, "invalid amount", http.StatusBadRequest)
-		return
-	}
-
-	app.Tracker.AddTransaction(amount, category, note, txnType)
-	jsonOK(w, map[string]string{"status": "ok"})
-}
-
-// HandleDeleteTransaction deletes a transaction.
-func (app *App) HandleDeleteTransaction(w http.ResponseWriter, r *http.Request) {
-	_, ok := app.getSessionUser(r)
+func (app *App) HandleTransactionByID(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-
 	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(parts[len(parts)-1])
 	if err != nil {
 		jsonError(w, "invalid id", http.StatusBadRequest)
 		return
 	}
-
+	tracker := app.trackerFor(username)
 	switch r.Method {
 	case http.MethodPut:
 		r.ParseMultipartForm(1 << 20)
@@ -304,13 +283,13 @@ func (app *App) HandleDeleteTransaction(w http.ResponseWriter, r *http.Request) 
 			jsonError(w, "invalid amount", http.StatusBadRequest)
 			return
 		}
-		if !app.Tracker.UpdateTransaction(id, amount, category, note, txnType) {
+		if !tracker.UpdateTransaction(id, amount, category, note, txnType) {
 			jsonError(w, "transaction not found", http.StatusNotFound)
 			return
 		}
 		jsonOK(w, map[string]string{"status": "updated"})
 	case http.MethodDelete:
-		if !app.Tracker.DeleteTransaction(id) {
+		if !tracker.DeleteTransaction(id) {
 			jsonError(w, "transaction not found", http.StatusNotFound)
 			return
 		}
@@ -323,8 +302,7 @@ func (app *App) HandleDeleteTransaction(w http.ResponseWriter, r *http.Request) 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 func formatNaira(v float64) string {
-	intPart := int(v)
-	return fmt.Sprintf("₦%s", comma(intPart))
+	return fmt.Sprintf("₦%s", comma(int(v)))
 }
 
 func comma(n int) string {

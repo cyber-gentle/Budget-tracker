@@ -1,0 +1,13 @@
+{
+  "transactions": [
+    {
+      "id": 1,
+      "amount": 10000,
+      "category": "salary",
+      "note": "Video Editing",
+      "date": "2026-07-02T09:14:47.571527917+01:00",
+      "type": "income"
+    }
+  ],
+  "next_id": 2
+}
