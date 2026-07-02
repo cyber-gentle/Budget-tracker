@@ -6,15 +6,12 @@ import (
 )
 
 func main() {
-	// Persistent storage (in project dir). You can change these paths if desired.
-	app := NewApp("data/auth.json", "data/transactions.json")
+	app := NewApp("data/auth.json", "data")
 
-	fileServer := http.FileServer(http.Dir("templates/"))
-	
 	mux := http.NewServeMux()
 
 	// Static assets
-	mux.Handle("/templates/", http.StripPrefix("/templates/", fileServer))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("templates/"))))
 
 	// Pages
 	mux.HandleFunc("/", app.HandleHome)
@@ -28,12 +25,11 @@ func main() {
 	mux.HandleFunc("/api/logout", app.HandleLogoutAPI)
 
 	// Transaction APIs
-	mux.HandleFunc("/api/transactions", app.HandleTransactions)               // GET, POST
-	mux.HandleFunc("/api/transactions/", app.HandleDeleteTransaction)         // DELETE /api/transactions/{id}
+	mux.HandleFunc("/api/transactions", app.HandleTransactions)
+	mux.HandleFunc("/api/transactions/", app.HandleTransactionByID)
 
 	log.Println("Server started on http://localhost:8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }
-
