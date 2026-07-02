@@ -143,6 +143,7 @@
         let allTxs = [];
 
         function renderList(txs) {
+            document.getElementById('tx-loading').style.display = 'none';
             const list = document.getElementById('tx-list');
             const empty = document.getElementById('tx-empty');
             list.innerHTML = '';
