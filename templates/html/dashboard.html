@@ -278,9 +278,10 @@
                                     <option value="entertainment">🎬 Entertainment</option>
                                     <option value="shopping">🛍️ Shopping</option>
                                     <option value="healthcare">💊 Healthcare</option>
-                                    <option value="salary">💼 Salary</option>
-                                    <option value="investments">📈 Investments</option>
-                                    <option value="other">📦 Other</option>
+                                    <option value="education">📚 Education & Learning</option>
+                                    <option value="bills">💡 Bills & Subscriptions</option>
+                                    <option value="personal">✨ Personal Care</option>
+                                    <option value="other">📦 Other Expense</option>
                                 </select>
                             </div>
 
@@ -346,15 +347,27 @@
                             <div class="sm:col-span-4">
                                 <select id="filter-category" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-slate-900 cursor-pointer">
                                     <option value="all">All Categories</option>
-                                    <option value="food">🍔 Food & Groceries</option>
-                                    <option value="transport">🚗 Transportation</option>
-                                    <option value="housing">🏠 Housing & Utilities</option>
-                                    <option value="entertainment">🎬 Entertainment</option>
-                                    <option value="shopping">🛍️ Shopping</option>
-                                    <option value="healthcare">💊 Healthcare</option>
-                                    <option value="salary">💼 Salary</option>
-                                    <option value="investments">📈 Investments</option>
-                                    <option value="other">📦 Other</option>
+                                    <optgroup label="Expense Categories">
+                                        <option value="food">🍔 Food & Groceries</option>
+                                        <option value="transport">🚗 Transportation</option>
+                                        <option value="housing">🏠 Housing & Utilities</option>
+                                        <option value="entertainment">🎬 Entertainment</option>
+                                        <option value="shopping">🛍️ Shopping</option>
+                                        <option value="healthcare">💊 Healthcare</option>
+                                        <option value="education">📚 Education & Learning</option>
+                                        <option value="bills">💡 Bills & Subscriptions</option>
+                                        <option value="personal">✨ Personal Care</option>
+                                        <option value="other">📦 Other Expense</option>
+                                    </optgroup>
+                                    <optgroup label="Income Categories">
+                                        <option value="salary">💼 Salary & Wages</option>
+                                        <option value="freelance">💻 Freelance & Side Hustles</option>
+                                        <option value="investments">📈 Investments & Dividends</option>
+                                        <option value="business">🏢 Business & Sales</option>
+                                        <option value="rental">🏠 Rental Income</option>
+                                        <option value="gifts">🎁 Grants & Gifts</option>
+                                        <option value="refunds">🔄 Refunds & Reimbursements</option>
+                                    </optgroup>
                                 </select>
                             </div>
                         </div>
@@ -415,9 +428,10 @@
                             <option value="entertainment">🎬 Entertainment</option>
                             <option value="shopping">🛍️ Shopping</option>
                             <option value="healthcare">💊 Healthcare</option>
-                            <option value="salary">💼 Salary</option>
-                            <option value="investments">📈 Investments</option>
-                            <option value="other">📦 Other</option>
+                            <option value="education">📚 Education & Learning</option>
+                            <option value="bills">💡 Bills & Subscriptions</option>
+                            <option value="personal">✨ Personal Care</option>
+                            <option value="other">📦 Other Expense</option>
                         </select>
                     </div>
                 </div>
@@ -489,18 +503,135 @@
 
     <!-- ─── Application JavaScript Logic ────────────────────────────────────── -->
     <script>
-        // Category Meta
+        // Category Definitions by Type
+        const EXPENSE_CATEGORIES = [
+            { key: 'food', label: 'Food & Groceries', icon: '🍔', color: '#10B981' },
+            { key: 'transport', label: 'Transportation', icon: '🚗', color: '#3B82F6' },
+            { key: 'housing', label: 'Housing & Utilities', icon: '🏠', color: '#F59E0B' },
+            { key: 'entertainment', label: 'Entertainment', icon: '🎬', color: '#8B5CF6' },
+            { key: 'shopping', label: 'Shopping', icon: '🛍️', color: '#EC4899' },
+            { key: 'healthcare', label: 'Healthcare', icon: '💊', color: '#EF4444' },
+            { key: 'education', label: 'Education & Learning', icon: '📚', color: '#6366F1' },
+            { key: 'bills', label: 'Bills & Subscriptions', icon: '💡', color: '#EAB308' },
+            { key: 'personal', label: 'Personal Care', icon: '✨', color: '#14B8A6' },
+            { key: 'other', label: 'Other Expense', icon: '📦', color: '#64748B' },
+        ];
+
+        const INCOME_CATEGORIES = [
+            { key: 'salary', label: 'Salary & Wages', icon: '💼', color: '#059669' },
+            { key: 'freelance', label: 'Freelance & Side Hustles', icon: '💻', color: '#0D9488' },
+            { key: 'investments', label: 'Investments & Dividends', icon: '📈', color: '#06B6D4' },
+            { key: 'business', label: 'Business & Sales', icon: '🏢', color: '#3B82F6' },
+            { key: 'rental', label: 'Rental Income', icon: '🏠', color: '#F59E0B' },
+            { key: 'gifts', label: 'Grants & Gifts', icon: '🎁', color: '#EC4899' },
+            { key: 'refunds', label: 'Refunds & Reimbursements', icon: '🔄', color: '#8B5CF6' },
+            { key: 'other', label: 'Other Income', icon: '💵', color: '#64748B' },
+        ];
+
         const CATEGORIES = {
-            food: { label: 'Food & Groceries', icon: '🍔', color: '#10B981' },
-            transport: { label: 'Transportation', icon: '🚗', color: '#3B82F6' },
-            housing: { label: 'Housing & Utilities', icon: '🏠', color: '#F59E0B' },
-            entertainment: { label: 'Entertainment', icon: '🎬', color: '#8B5CF6' },
-            shopping: { label: 'Shopping', icon: '🛍️', color: '#EC4899' },
-            healthcare: { label: 'Healthcare', icon: '💊', color: '#EF4444' },
-            salary: { label: 'Salary', icon: '💼', color: '#059669' },
-            investments: { label: 'Investments', icon: '📈', color: '#06B6D4' },
+            food: { label: 'Food & Groceries', icon: '🍔', color: '#10B981', type: 'expense' },
+            transport: { label: 'Transportation', icon: '🚗', color: '#3B82F6', type: 'expense' },
+            housing: { label: 'Housing & Utilities', icon: '🏠', color: '#F59E0B', type: 'expense' },
+            entertainment: { label: 'Entertainment', icon: '🎬', color: '#8B5CF6', type: 'expense' },
+            shopping: { label: 'Shopping', icon: '🛍️', color: '#EC4899', type: 'expense' },
+            healthcare: { label: 'Healthcare', icon: '💊', color: '#EF4444', type: 'expense' },
+            education: { label: 'Education & Learning', icon: '📚', color: '#6366F1', type: 'expense' },
+            bills: { label: 'Bills & Subscriptions', icon: '💡', color: '#EAB308', type: 'expense' },
+            personal: { label: 'Personal Care', icon: '✨', color: '#14B8A6', type: 'expense' },
+            salary: { label: 'Salary & Wages', icon: '💼', color: '#059669', type: 'income' },
+            freelance: { label: 'Freelance & Side Hustles', icon: '💻', color: '#0D9488', type: 'income' },
+            investments: { label: 'Investments & Dividends', icon: '📈', color: '#06B6D4', type: 'income' },
+            business: { label: 'Business & Sales', icon: '🏢', color: '#3B82F6', type: 'income' },
+            rental: { label: 'Rental Income', icon: '🏠', color: '#F59E0B', type: 'income' },
+            gifts: { label: 'Grants & Gifts', icon: '🎁', color: '#EC4899', type: 'income' },
+            refunds: { label: 'Refunds & Reimbursements', icon: '🔄', color: '#8B5CF6', type: 'income' },
             other: { label: 'Other', icon: '📦', color: '#64748B' },
         };
+
+        function getCategoryMeta(catKey, type) {
+            if (catKey === 'other') {
+                return type === 'income'
+                    ? { label: 'Other Income', icon: '💵', color: '#64748B' }
+                    : { label: 'Other Expense', icon: '📦', color: '#64748B' };
+            }
+            return CATEGORIES[catKey] || { label: catKey || 'Other', icon: '📦', color: '#64748B' };
+        }
+
+        function populateCategorySelect(selectEl, type, selectedVal = '') {
+            if (!selectEl) return;
+            const list = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+            selectEl.innerHTML = '';
+            list.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.key;
+                opt.textContent = `${c.icon} ${c.label}`;
+                if (selectedVal && opt.value === selectedVal) {
+                    opt.selected = true;
+                }
+                selectEl.appendChild(opt);
+            });
+            if (selectedVal && selectEl.value !== selectedVal) {
+                const exists = list.some(c => c.key === selectedVal);
+                if (!exists) {
+                    const meta = getCategoryMeta(selectedVal, type);
+                    const customOpt = document.createElement('option');
+                    customOpt.value = selectedVal;
+                    customOpt.textContent = `${meta.icon || '📦'} ${meta.label || selectedVal}`;
+                    customOpt.selected = true;
+                    selectEl.appendChild(customOpt);
+                }
+            }
+        }
+
+        function updateFilterCategoryOptions(typeFilter) {
+            const filterCatEl = document.getElementById('filter-category');
+            if (!filterCatEl) return;
+            const currentVal = filterCatEl.value;
+            filterCatEl.innerHTML = '<option value="all">All Categories</option>';
+
+            if (typeFilter === 'expense') {
+                EXPENSE_CATEGORIES.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.key;
+                    opt.textContent = `${c.icon} ${c.label}`;
+                    filterCatEl.appendChild(opt);
+                });
+            } else if (typeFilter === 'income') {
+                INCOME_CATEGORIES.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.key;
+                    opt.textContent = `${c.icon} ${c.label}`;
+                    filterCatEl.appendChild(opt);
+                });
+            } else {
+                const expGroup = document.createElement('optgroup');
+                expGroup.label = 'Expense Categories';
+                EXPENSE_CATEGORIES.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.key;
+                    opt.textContent = `${c.icon} ${c.label}`;
+                    expGroup.appendChild(opt);
+                });
+                filterCatEl.appendChild(expGroup);
+
+                const incGroup = document.createElement('optgroup');
+                incGroup.label = 'Income Categories';
+                INCOME_CATEGORIES.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.key;
+                    opt.textContent = `${c.icon} ${c.label}`;
+                    incGroup.appendChild(opt);
+                });
+                filterCatEl.appendChild(incGroup);
+            }
+
+            const hasCurrent = Array.from(filterCatEl.options).some(o => o.value === currentVal);
+            if (hasCurrent) {
+                filterCatEl.value = currentVal;
+            } else {
+                filterCatEl.value = 'all';
+            }
+        }
 
         let currentCurrency = '{{.Currency}}' || '₦';
         let allTransactions = [];
@@ -572,13 +703,19 @@
             addTxType.value = 'expense';
             typeExpenseBtn.className = 'px-3 py-1 rounded-md bg-white text-slate-900 shadow-xs transition-all';
             typeIncomeBtn.className = 'px-3 py-1 rounded-md text-slate-500 hover:text-slate-900 transition-all';
+            populateCategorySelect(document.getElementById('add-category'), 'expense');
         });
 
         typeIncomeBtn.addEventListener('click', () => {
             addTxType.value = 'income';
             typeIncomeBtn.className = 'px-3 py-1 rounded-md bg-white text-slate-900 shadow-xs transition-all';
             typeExpenseBtn.className = 'px-3 py-1 rounded-md text-slate-500 hover:text-slate-900 transition-all';
+            populateCategorySelect(document.getElementById('add-category'), 'income');
         });
+
+        // Initialize Quick Add and Filter categories
+        populateCategorySelect(document.getElementById('add-category'), 'expense');
+        updateFilterCategoryOptions('all');
 
         // Timeframe selector & custom range handlers
         const trendTimeframeSelect = document.getElementById('trends-timeframe-select');
@@ -681,7 +818,7 @@
             list.style.display = '';
 
             for (const t of txs) {
-                const cat = CATEGORIES[t.category] || CATEGORIES.other;
+                const cat = getCategoryMeta(t.category, t.type);
                 const isExpense = t.type === 'expense';
                 const sign = isExpense ? '-' : '+';
                 const colorClass = isExpense ? 'text-rose-500' : 'text-emerald-600';
@@ -728,7 +865,8 @@
                 if (filterCategory !== 'all' && t.category !== filterCategory) return false;
                 if (query) {
                     const note = (t.note || '').toLowerCase();
-                    const catLabel = (CATEGORIES[t.category]?.label || t.category || '').toLowerCase();
+                    const cat = getCategoryMeta(t.category, t.type);
+                    const catLabel = (cat.label || t.category || '').toLowerCase();
                     if (!note.includes(query) && !catLabel.includes(query)) return false;
                 }
                 return true;
@@ -738,7 +876,10 @@
         }
 
         document.getElementById('search-input').addEventListener('input', applyFilters);
-        document.getElementById('filter-type').addEventListener('change', applyFilters);
+        document.getElementById('filter-type').addEventListener('change', function() {
+            updateFilterCategoryOptions(this.value);
+            applyFilters();
+        });
         document.getElementById('filter-category').addEventListener('change', applyFilters);
 
         // Add Transaction Submit
@@ -803,11 +944,17 @@
             document.getElementById('edit-id').value = btn.dataset.id;
             document.getElementById('edit-amount').value = Number(btn.dataset.amount).toLocaleString('en-US');
             document.getElementById('edit-note').value = btn.dataset.note;
-            document.getElementById('edit-type').value = btn.dataset.type;
-            document.getElementById('edit-category').value = btn.dataset.category || 'other';
+            const editType = btn.dataset.type || 'expense';
+            const editCategory = btn.dataset.category || 'other';
+            document.getElementById('edit-type').value = editType;
+            populateCategorySelect(document.getElementById('edit-category'), editType, editCategory);
             document.getElementById('edit-date').value = btn.dataset.date || new Date().toISOString().split('T')[0];
             document.getElementById('edit-error').classList.add('hidden');
             document.getElementById('edit-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('edit-type').addEventListener('change', function() {
+            populateCategorySelect(document.getElementById('edit-category'), this.value);
         });
 
         document.getElementById('edit-modal-close').addEventListener('click', () => document.getElementById('edit-modal').classList.add('hidden'));
@@ -887,7 +1034,7 @@
                     statusText = 'Near Limit';
                 }
 
-                const catMeta = CATEGORIES[catKey] || { label: catKey, icon: '📦' };
+                const catMeta = getCategoryMeta(catKey, 'expense');
 
                 const row = document.createElement('div');
                 row.className = 'space-y-1.5';
@@ -914,8 +1061,9 @@
         document.getElementById('btn-manage-budgets').addEventListener('click', () => {
             const container = document.getElementById('budget-input-rows');
             container.innerHTML = '';
-            for (const [key, meta] of Object.entries(CATEGORIES)) {
-                if (key === 'salary') continue; // typically an income category
+            for (const item of EXPENSE_CATEGORIES) {
+                const key = item.key;
+                const meta = item;
                 const currentVal = activeBudgets[key] || '';
                 const row = document.createElement('div');
                 row.className = 'flex items-center justify-between gap-3 p-2 rounded-xl bg-slate-50 border border-slate-200/60';
