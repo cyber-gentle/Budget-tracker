@@ -32,8 +32,12 @@ func NewDBStore(rawURL, authToken string) (*DBStore, error) {
 
 	driverName := "sqlite"
 	if connStr == "" {
-		// Default to local SQLite file for development
-		connStr = "file:spendly.db"
+		// Use /tmp in serverless/Vercel environments where root is read-only
+		if os.Getenv("VERCEL") != "" || os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
+			connStr = "file:/tmp/spendly.db"
+		} else {
+			connStr = "file:spendly.db"
+		}
 	} else if strings.HasPrefix(connStr, "libsql://") || strings.HasPrefix(connStr, "http://") || strings.HasPrefix(connStr, "https://") || strings.HasPrefix(connStr, "ws://") || strings.HasPrefix(connStr, "wss://") {
 		driverName = "libsql"
 		if authToken != "" && !strings.Contains(connStr, "authToken=") {
