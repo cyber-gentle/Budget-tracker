@@ -291,3 +291,120 @@ func TestUserProfileFlow(t *testing.T) {
 	}
 }
 
+func TestDebtsFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "debts_test.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	username := "david"
+	_ = store.Signup(username, "david@example.com", "pass123456")
+
+	// 1. Create Debts
+	// a. Someone owes david 50,000
+	dueDate := time.Date(2026, 10, 15, 0, 0, 0, 0, time.UTC)
+	debt1, err := store.CreateDebt(username, "John Doe", "owing_me", 50000, &dueDate, "Freelance project balance")
+	if err != nil {
+		t.Fatalf("create owing_me debt failed: %v", err)
+	}
+	if debt1.Amount != 50000 || debt1.Status != "unpaid" || debt1.Remaining != 50000 {
+		t.Fatalf("unexpected debt1 values: %+v", debt1)
+	}
+
+	// b. David owes Mike 20,000
+	debt2, err := store.CreateDebt(username, "Mike Ross", "i_owe", 20000, nil, "Laptop screen repair")
+	if err != nil {
+		t.Fatalf("create i_owe debt failed: %v", err)
+	}
+	if debt2.Amount != 20000 || debt2.Status != "unpaid" || debt2.Remaining != 20000 {
+		t.Fatalf("unexpected debt2 values: %+v", debt2)
+	}
+
+	// 2. Summary Check
+	debts, summary, err := store.GetDebts(username)
+	if err != nil {
+		t.Fatalf("get debts failed: %v", err)
+	}
+	if len(debts) != 2 {
+		t.Fatalf("expected 2 debts, got %d", len(debts))
+	}
+	if summary.TotalOwedToUser != 50000 || summary.TotalUserOwes != 20000 || summary.NetBalance != 30000 {
+		t.Fatalf("unexpected summary: %+v", summary)
+	}
+	if summary.CountOwingMe != 1 || summary.CountIOwe != 1 {
+		t.Fatalf("unexpected active counts: %+v", summary)
+	}
+
+	// 3. Partial Payment on owing_me with transaction logging
+	payDate := time.Date(2026, 9, 23, 14, 0, 0, 0, time.UTC)
+	updated1, err := store.RecordDebtPayment(debt1.ID, username, 20000, payDate, true)
+	if err != nil {
+		t.Fatalf("record debt payment failed: %v", err)
+	}
+	if updated1.AmountPaid != 20000 || updated1.Remaining != 30000 || updated1.Status != "partial" {
+		t.Fatalf("unexpected updated1 debt: %+v", updated1)
+	}
+
+	// Verify main transaction was logged as INCOME
+	txs, err := store.GetTransactions(username)
+	if err != nil {
+		t.Fatalf("get transactions failed: %v", err)
+	}
+	if len(txs) != 1 {
+		t.Fatalf("expected 1 logged transaction, got %d", len(txs))
+	}
+	if txs[0].Type != "income" || txs[0].Amount != 20000 {
+		t.Fatalf("expected 20000 income transaction, got %+v", txs[0])
+	}
+
+	// 4. Settle remaining 30,000 on debt1
+	updated1Settle, err := store.RecordDebtPayment(debt1.ID, username, 30000, payDate, true)
+	if err != nil {
+		t.Fatalf("record final debt payment failed: %v", err)
+	}
+	if updated1Settle.AmountPaid != 50000 || updated1Settle.Remaining != 0 || updated1Settle.Status != "settled" {
+		t.Fatalf("unexpected settled debt: %+v", updated1Settle)
+	}
+
+	// 5. Pay off debt2 (i_owe) with transaction logging -> should log EXPENSE
+	updated2, err := store.RecordDebtPayment(debt2.ID, username, 20000, payDate, true)
+	if err != nil {
+		t.Fatalf("record debt2 payment failed: %v", err)
+	}
+	if updated2.Status != "settled" || updated2.Remaining != 0 {
+		t.Fatalf("unexpected debt2 settled: %+v", updated2)
+	}
+
+	// Verify main transaction was logged as EXPENSE
+	txs, err = store.GetTransactions(username)
+	if err != nil {
+		t.Fatalf("get transactions failed: %v", err)
+	}
+	if len(txs) != 3 { // 2 income repayments from debt1, 1 expense from debt2
+		t.Fatalf("expected 3 transactions, got %d", len(txs))
+	}
+	foundExpense := false
+	for _, tItem := range txs {
+		if tItem.Type == "expense" && tItem.Amount == 20000 {
+			foundExpense = true
+			break
+		}
+	}
+	if !foundExpense {
+		t.Fatalf("expected 20000 expense transaction logged from debt2 payment")
+	}
+
+	// 6. Verify final summary
+	_, finalSummary, err := store.GetDebts(username)
+	if err != nil {
+		t.Fatalf("get final debts failed: %v", err)
+	}
+	if finalSummary.TotalOwedToUser != 0 || finalSummary.TotalUserOwes != 0 || finalSummary.TotalSettled != 2 {
+		t.Fatalf("unexpected final summary: %+v", finalSummary)
+	}
+}
+
+

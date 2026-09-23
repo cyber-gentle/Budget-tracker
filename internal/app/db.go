@@ -100,6 +100,20 @@ func (s *DBStore) migrate() error {
 		monthly_limit REAL NOT NULL,
 		PRIMARY KEY (username, category)
 	);
+
+	CREATE TABLE IF NOT EXISTS debts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		person_name TEXT NOT NULL,
+		amount REAL NOT NULL,
+		amount_paid REAL NOT NULL DEFAULT 0,
+		type TEXT NOT NULL,
+		due_date DATETIME,
+		note TEXT,
+		status TEXT NOT NULL DEFAULT 'unpaid',
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_debts_user ON debts(username);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
@@ -553,4 +567,302 @@ func (s *DBStore) CategoryBreakdown(username string, allTime bool) (map[string]f
 		}
 	}
 	return res, nil
+}
+
+// ─── Debts & IOUs Methods ───────────────────────────────────────────────────
+
+// Debt represents money owed by or to a user.
+type Debt struct {
+	ID         int        `json:"id"`
+	Username   string     `json:"username"`
+	PersonName string     `json:"person_name"`
+	Amount     float64    `json:"amount"`
+	AmountPaid float64    `json:"amount_paid"`
+	Remaining  float64    `json:"remaining"`
+	Type       string     `json:"type"` // "i_owe" (Liability/Debt) or "owing_me" (Asset/Loan)
+	DueDate    *time.Time `json:"due_date,omitempty"`
+	DueDateFmt string     `json:"due_date_fmt,omitempty"`
+	Note       string     `json:"note"`
+	Status     string     `json:"status"` // "unpaid", "partial", "settled"
+	CreatedAt  time.Time  `json:"created_at"`
+}
+
+// DebtSummary holds summary metrics for debts and loans.
+type DebtSummary struct {
+	TotalOwedToUser float64 `json:"total_owed_to_user"` // sum of remaining where type == "owing_me"
+	TotalUserOwes   float64 `json:"total_user_owes"`   // sum of remaining where type == "i_owe"
+	NetBalance      float64 `json:"net_balance"`       // total_owed_to_user - total_user_owes
+	CountOwingMe    int     `json:"count_owing_me"`    // active count
+	CountIOwe       int     `json:"count_i_owe"`       // active count
+	TotalSettled    int     `json:"total_settled"`
+}
+
+func (s *DBStore) CreateDebt(username, personName, debtType string, amount float64, dueDate *time.Time, note string) (*Debt, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	personName = strings.TrimSpace(personName)
+	if personName == "" {
+		return nil, fmt.Errorf("person name is required")
+	}
+	if amount <= 0 {
+		return nil, fmt.Errorf("amount must be greater than zero")
+	}
+	debtType = strings.ToLower(strings.TrimSpace(debtType))
+	if debtType != "i_owe" && debtType != "owing_me" {
+		debtType = "owing_me"
+	}
+
+	createdAt := time.Now()
+	res, err := s.db.Exec(
+		"INSERT INTO debts (username, person_name, amount, amount_paid, type, due_date, note, status, created_at) VALUES (?, ?, ?, 0, ?, ?, ?, 'unpaid', ?)",
+		username, personName, amount, debtType, dueDate, note, createdAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	debt := &Debt{
+		ID:         int(id),
+		Username:   username,
+		PersonName: personName,
+		Amount:     amount,
+		AmountPaid: 0,
+		Remaining:  amount,
+		Type:       debtType,
+		DueDate:    dueDate,
+		Note:       note,
+		Status:     "unpaid",
+		CreatedAt:  createdAt,
+	}
+	if dueDate != nil && !dueDate.IsZero() {
+		debt.DueDateFmt = dueDate.Format("2006-01-02")
+	}
+	return debt, nil
+}
+
+func (s *DBStore) GetDebts(username string) ([]Debt, *DebtSummary, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		"SELECT id, username, person_name, amount, amount_paid, type, due_date, note, status, created_at FROM debts WHERE username = ? ORDER BY CASE status WHEN 'unpaid' THEN 1 WHEN 'partial' THEN 2 ELSE 3 END, created_at DESC",
+		username,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	var debts []Debt
+	summary := &DebtSummary{}
+
+	for rows.Next() {
+		var d Debt
+		var dueDate sql.NullTime
+		if err := rows.Scan(&d.ID, &d.Username, &d.PersonName, &d.Amount, &d.AmountPaid, &d.Type, &dueDate, &d.Note, &d.Status, &d.CreatedAt); err != nil {
+			log.Printf("scan debt error: %v", err)
+			continue
+		}
+		if dueDate.Valid {
+			t := dueDate.Time
+			d.DueDate = &t
+			d.DueDateFmt = t.Format("2006-01-02")
+		}
+
+		rem := d.Amount - d.AmountPaid
+		if rem < 0 {
+			rem = 0
+		}
+		d.Remaining = rem
+
+		if d.Status == "settled" {
+			summary.TotalSettled++
+		} else {
+			if d.Type == "owing_me" {
+				summary.TotalOwedToUser += rem
+				summary.CountOwingMe++
+			} else {
+				summary.TotalUserOwes += rem
+				summary.CountIOwe++
+			}
+		}
+
+		debts = append(debts, d)
+	}
+
+	summary.NetBalance = summary.TotalOwedToUser - summary.TotalUserOwes
+	return debts, summary, nil
+}
+
+func (s *DBStore) GetDebtByID(id int, username string) (*Debt, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var d Debt
+	var dueDate sql.NullTime
+	err := s.db.QueryRow(
+		"SELECT id, username, person_name, amount, amount_paid, type, due_date, note, status, created_at FROM debts WHERE id = ? AND username = ?",
+		id, username,
+	).Scan(&d.ID, &d.Username, &d.PersonName, &d.Amount, &d.AmountPaid, &d.Type, &dueDate, &d.Note, &d.Status, &d.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	if dueDate.Valid {
+		t := dueDate.Time
+		d.DueDate = &t
+		d.DueDateFmt = t.Format("2006-01-02")
+	}
+	rem := d.Amount - d.AmountPaid
+	if rem < 0 {
+		rem = 0
+	}
+	d.Remaining = rem
+	return &d, nil
+}
+
+func (s *DBStore) UpdateDebt(id int, username, personName, debtType string, amount float64, dueDate *time.Time, note string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	personName = strings.TrimSpace(personName)
+	if personName == "" {
+		return fmt.Errorf("person name is required")
+	}
+	if amount <= 0 {
+		return fmt.Errorf("amount must be greater than zero")
+	}
+
+	// Fetch current amount_paid to adjust status
+	var amountPaid float64
+	err := s.db.QueryRow("SELECT amount_paid FROM debts WHERE id = ? AND username = ?", id, username).Scan(&amountPaid)
+	if err != nil {
+		return err
+	}
+
+	newStatus := "unpaid"
+	if amountPaid >= amount {
+		newStatus = "settled"
+	} else if amountPaid > 0 {
+		newStatus = "partial"
+	}
+
+	_, err = s.db.Exec(
+		"UPDATE debts SET person_name = ?, type = ?, amount = ?, due_date = ?, note = ?, status = ? WHERE id = ? AND username = ?",
+		personName, debtType, amount, dueDate, note, newStatus, id, username,
+	)
+	return err
+}
+
+func (s *DBStore) DeleteDebt(id int, username string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	res, err := s.db.Exec("DELETE FROM debts WHERE id = ? AND username = ?", id, username)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected > 0, nil
+}
+
+func (s *DBStore) RecordDebtPayment(id int, username string, paymentAmount float64, paymentDate time.Time, logTransaction bool) (*Debt, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if paymentAmount <= 0 {
+		return nil, fmt.Errorf("payment amount must be greater than zero")
+	}
+
+	var d Debt
+	var dueDate sql.NullTime
+	err := s.db.QueryRow(
+		"SELECT id, username, person_name, amount, amount_paid, type, due_date, note, status, created_at FROM debts WHERE id = ? AND username = ?",
+		id, username,
+	).Scan(&d.ID, &d.Username, &d.PersonName, &d.Amount, &d.AmountPaid, &d.Type, &dueDate, &d.Note, &d.Status, &d.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("debt not found: %w", err)
+	}
+
+	if d.Status == "settled" {
+		return nil, fmt.Errorf("this debt is already fully settled")
+	}
+
+	remaining := d.Amount - d.AmountPaid
+	if paymentAmount > remaining {
+		paymentAmount = remaining
+	}
+
+	newPaid := d.AmountPaid + paymentAmount
+	newStatus := "partial"
+	if newPaid >= d.Amount {
+		newPaid = d.Amount
+		newStatus = "settled"
+	}
+
+	_, err = s.db.Exec(
+		"UPDATE debts SET amount_paid = ?, status = ? WHERE id = ? AND username = ?",
+		newPaid, newStatus, id, username,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	d.AmountPaid = newPaid
+	rem := d.Amount - newPaid
+	if rem < 0 {
+		rem = 0
+	}
+	d.Remaining = rem
+	d.Status = newStatus
+
+	if dueDate.Valid {
+		t := dueDate.Time
+		d.DueDate = &t
+		d.DueDateFmt = t.Format("2006-01-02")
+	}
+
+	// Automatically record transaction into main ledger if requested
+	if logTransaction {
+		if paymentDate.IsZero() {
+			paymentDate = time.Now()
+		}
+
+		var txnType, category, txNote string
+		if d.Type == "owing_me" {
+			// Money owed to user was received -> Income
+			txnType = "income"
+			category = "refunds"
+			if d.Note != "" {
+				txNote = fmt.Sprintf("Payment from %s: %s", d.PersonName, d.Note)
+			} else {
+				txNote = fmt.Sprintf("Payment from %s", d.PersonName)
+			}
+		} else {
+			// User paid money owed -> Expense
+			txnType = "expense"
+			category = "bills"
+			if d.Note != "" {
+				txNote = fmt.Sprintf("Debt paid to %s: %s", d.PersonName, d.Note)
+			} else {
+				txNote = fmt.Sprintf("Debt paid to %s", d.PersonName)
+			}
+		}
+
+		_, err = s.db.Exec(
+			"INSERT INTO transactions (username, amount, category, note, date, type) VALUES (?, ?, ?, ?, ?, ?)",
+			username, paymentAmount, category, txNote, paymentDate, txnType,
+		)
+		if err != nil {
+			log.Printf("failed to log debt repayment transaction: %v", err)
+		}
+	}
+
+	return &d, nil
 }

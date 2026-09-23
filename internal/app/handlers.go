@@ -68,6 +68,7 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/login", app.HandleLogin)
 	app.Mux.HandleFunc("/sign-up", app.HandleSignUp)
 	app.Mux.HandleFunc("/dashboard", app.HandleDashboard)
+	app.Mux.HandleFunc("/debts", app.HandleDebts)
 
 	// Auth APIs
 	app.Mux.HandleFunc("/api/signup", app.HandleSignupAPI)
@@ -77,6 +78,10 @@ func (app *App) routes() {
 	// Transaction APIs
 	app.Mux.HandleFunc("/api/transactions", app.HandleTransactions)
 	app.Mux.HandleFunc("/api/transactions/", app.HandleTransactionByID)
+
+	// Debts & IOUs APIs
+	app.Mux.HandleFunc("/api/debts", app.HandleDebtsAPI)
+	app.Mux.HandleFunc("/api/debts/", app.HandleDebtByID)
 
 	// Budgets, Analytics, Export, Currency APIs
 	app.Mux.HandleFunc("/api/budgets", app.HandleBudgets)
@@ -637,3 +642,219 @@ func (app *App) HandleProfileAPI(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
+
+// ─── Debts & IOUs Handlers ──────────────────────────────────────────────────
+
+func (app *App) HandleDebts(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+	prof, _ := app.DB.GetProfile(username)
+	fullName := ""
+	email := ""
+	if prof != nil {
+		fullName = prof.FullName
+		email = prof.Email
+	}
+
+	data := struct {
+		Username string
+		FullName string
+		Email    string
+		Currency string
+	}{
+		Username: username,
+		FullName: fullName,
+		Email:    email,
+		Currency: curr,
+	}
+
+	app.renderTemplate(w, "debts.html", data)
+}
+
+func (app *App) HandleDebtsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		debts, summary, err := app.DB.GetDebts(username)
+		if err != nil {
+			jsonError(w, "failed to get debts", http.StatusInternalServerError)
+			return
+		}
+		if debts == nil {
+			debts = []Debt{}
+		}
+		jsonOK(w, map[string]any{
+			"debts":   debts,
+			"summary": summary,
+		})
+
+	case http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		personName := strings.TrimSpace(r.FormValue("person_name"))
+		debtType := strings.TrimSpace(r.FormValue("type"))
+		amountStr := strings.TrimSpace(r.FormValue("amount"))
+		dueDateStr := strings.TrimSpace(r.FormValue("due_date"))
+		note := strings.TrimSpace(r.FormValue("note"))
+
+		if personName == "" || amountStr == "" {
+			jsonError(w, "person name and amount are required", http.StatusBadRequest)
+			return
+		}
+
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil || amount <= 0 {
+			jsonError(w, "invalid amount", http.StatusBadRequest)
+			return
+		}
+
+		var dueDate *time.Time
+		if dueDateStr != "" {
+			if parsed, err := time.Parse("2006-01-02", dueDateStr); err == nil {
+				dueDate = &parsed
+			}
+		}
+
+		debt, err := app.DB.CreateDebt(username, personName, debtType, amount, dueDate, note)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		jsonOK(w, debt)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleDebtByID(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/api/debts/")
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[0])
+	if err != nil || id <= 0 {
+		jsonError(w, "invalid debt id", http.StatusBadRequest)
+		return
+	}
+
+	// Check if this is /api/debts/{id}/pay
+	if len(parts) == 2 && parts[1] == "pay" {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		_ = r.ParseMultipartForm(1 << 20)
+		amountStr := strings.TrimSpace(r.FormValue("amount"))
+		paymentDateStr := strings.TrimSpace(r.FormValue("date"))
+		logTxnStr := strings.TrimSpace(r.FormValue("log_transaction"))
+
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil || amount <= 0 {
+			jsonError(w, "invalid payment amount", http.StatusBadRequest)
+			return
+		}
+
+		paymentDate := time.Now()
+		if paymentDateStr != "" {
+			if parsed, err := time.Parse("2006-01-02", paymentDateStr); err == nil {
+				now := time.Now()
+				paymentDate = time.Date(parsed.Year(), parsed.Month(), parsed.Day(), now.Hour(), now.Minute(), now.Second(), 0, time.Local)
+			}
+		}
+
+		logTxn := true
+		if logTxnStr == "false" || logTxnStr == "0" {
+			logTxn = false
+		}
+
+		debt, err := app.DB.RecordDebtPayment(id, username, amount, paymentDate, logTxn)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		jsonOK(w, map[string]any{
+			"status": "payment_recorded",
+			"debt":   debt,
+		})
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		debt, err := app.DB.GetDebtByID(id, username)
+		if err != nil {
+			jsonError(w, "debt not found", http.StatusNotFound)
+			return
+		}
+		jsonOK(w, debt)
+
+	case http.MethodPut, http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		personName := strings.TrimSpace(r.FormValue("person_name"))
+		debtType := strings.TrimSpace(r.FormValue("type"))
+		amountStr := strings.TrimSpace(r.FormValue("amount"))
+		dueDateStr := strings.TrimSpace(r.FormValue("due_date"))
+		note := strings.TrimSpace(r.FormValue("note"))
+
+		if personName == "" || amountStr == "" {
+			jsonError(w, "person name and amount are required", http.StatusBadRequest)
+			return
+		}
+
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil || amount <= 0 {
+			jsonError(w, "invalid amount", http.StatusBadRequest)
+			return
+		}
+
+		var dueDate *time.Time
+		if dueDateStr != "" {
+			if parsed, err := time.Parse("2006-01-02", dueDateStr); err == nil {
+				dueDate = &parsed
+			}
+		}
+
+		if err := app.DB.UpdateDebt(id, username, personName, debtType, amount, dueDate, note); err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		debt, _ := app.DB.GetDebtByID(id, username)
+		jsonOK(w, debt)
+
+	case http.MethodDelete:
+		deleted, err := app.DB.DeleteDebt(id, username)
+		if err != nil || !deleted {
+			jsonError(w, "debt not found or delete failed", http.StatusNotFound)
+			return
+		}
+		jsonOK(w, map[string]string{"status": "deleted"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+

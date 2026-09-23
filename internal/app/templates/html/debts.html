@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debts & IOUs — Spendly</title>
+    
+    <link rel="icon" type="image/svg+xml" href="/static/assets/imgs/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/globals.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        offwhite: '#F8FAFC',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Synchronous anti-flash theme script
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('spendly-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200">
+
+    <!-- Top Navigation Header -->
+    <header class="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 sticky top-0 z-40 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Left: Logo & Nav Links -->
+            <div class="flex items-center gap-6">
+                <a href="/dashboard" class="flex items-center gap-2.5 transition-opacity hover:opacity-85">
+                    <span class="w-8 h-8 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+                            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+                            <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                        </svg>
+                    </span>
+                    <span class="font-heading text-lg font-bold tracking-tight text-slate-900 dark:text-white">Spendly</span>
+                </a>
+
+                <nav class="hidden sm:flex items-center gap-1.5">
+                    <a href="/dashboard" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Dashboard
+                    </a>
+                    <a href="/debts" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors">
+                        Debts & IOUs
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Right Controls -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Theme Toggle Button -->
+                <button type="button" id="theme-toggle-btn" class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer" title="Toggle Light/Dark Theme">
+                    <svg id="theme-icon-sun" class="w-4 h-4 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg id="theme-icon-moon" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+
+                <!-- Currency Picker -->
+                <div class="relative">
+                    <select id="currency-select" class="appearance-none bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-colors cursor-pointer">
+                        <option value="₦" {{if eq .Currency "₦"}}selected{{end}}>₦ (NGN)</option>
+                        <option value="$" {{if eq .Currency "$"}}selected{{end}}>$ (USD)</option>
+                        <option value="€" {{if eq .Currency "€"}}selected{{end}}>€ (EUR)</option>
+                        <option value="£" {{if eq .Currency "£"}}selected{{end}}>£ (GBP)</option>
+                        <option value="¥" {{if eq .Currency "¥"}}selected{{end}}>¥ (JPY)</option>
+                        <option value="₹" {{if eq .Currency "₹"}}selected{{end}}>₹ (INR)</option>
+                        <option value="C$" {{if eq .Currency "C$"}}selected{{end}}>C$ (CAD)</option>
+                        <option value="A$" {{if eq .Currency "A$"}}selected{{end}}>A$ (AUD)</option>
+                        <option value="₵" {{if eq .Currency "₵"}}selected{{end}}>₵ (GHS)</option>
+                        <option value="KSh" {{if eq .Currency "KSh"}}selected{{end}}>KSh (KES)</option>
+                        <option value="R" {{if eq .Currency "R"}}selected{{end}}>R (ZAR)</option>
+                    </select>
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </span>
+                </div>
+
+                <!-- User Dropdown Menu -->
+                <div class="relative">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                        <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center uppercase">
+                            {{printf "%.1s" .Username}}
+                        </span>
+                        <div class="hidden md:flex flex-col text-left">
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[100px] truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">@{{.Username}}</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <!-- Dropdown Content -->
+                    <div id="user-dropdown-menu" class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 hidden z-50">
+                        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                            <p class="text-xs font-bold text-slate-800 dark:text-white truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">{{if .Email}}{{.Email}}{{else}}@{{.Username}}{{end}}</p>
+                        </div>
+                        <div class="py-1">
+                            <a href="/dashboard" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                                <span>Dashboard</span>
+                            </a>
+                        </div>
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-1">
+                            <form action="/api/logout" method="POST">
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                    <span>Log out</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 flex-grow">
+
+        <!-- Header Title & Action Button -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Debts & IOUs</h1>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Track money people owe you and debts you owe, with automated transaction logging.</p>
+            </div>
+            <div>
+                <button type="button" id="btn-add-debt" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Add Debt / Loan</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Executive Summary Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Owing You (Receivables) -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">People Owing You</span>
+                    <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                    </span>
+                </div>
+                <p class="font-heading text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 truncate" id="summary-owing-me">0</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium" id="summary-owing-me-count">0 active loans</p>
+            </div>
+
+            <!-- You Owe (Debts) -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400">You Owe (Debts)</span>
+                    <span class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
+                    </span>
+                </div>
+                <p class="font-heading text-2xl sm:text-3xl font-extrabold text-rose-500 dark:text-rose-400 truncate" id="summary-i-owe">0</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium" id="summary-i-owe-count">0 pending debts</p>
+            </div>
+
+            <!-- Net Loan Position -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+                    <span class="text-xs font-semibold uppercase tracking-wider">Net Position</span>
+                    <span class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    </span>
+                </div>
+                <p class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white truncate" id="summary-net">0</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium" id="summary-net-desc">Calculated as (Owed To You - You Owe)</p>
+            </div>
+        </section>
+
+        <!-- Controls Bar: Tabs, Filters, Search -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-sm transition-colors">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                
+                <!-- Category Tabs: All / Owing Me / I Owe -->
+                <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold self-start sm:self-auto">
+                    <button type="button" data-tab="all" class="tab-btn px-4 py-1.5 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer">
+                        All Records
+                    </button>
+                    <button type="button" data-tab="owing_me" class="tab-btn px-4 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+                        People Owing You
+                    </button>
+                    <button type="button" data-tab="i_owe" class="tab-btn px-4 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+                        You Owe (Debts)
+                    </button>
+                </div>
+
+                <!-- Search & Status Filter -->
+                <div class="flex items-center gap-2.5">
+                    <!-- Search Input -->
+                    <div class="relative w-full sm:w-60">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        </span>
+                        <input type="text" id="debts-search" placeholder="Search person or note..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all">
+                    </div>
+
+                    <!-- Status Filter -->
+                    <select id="debts-filter-status" class="px-3 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-colors cursor-pointer">
+                        <option value="all">All Statuses</option>
+                        <option value="active" selected>Active (Pending / Partial)</option>
+                        <option value="settled">Settled Only</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Debts List Container -->
+        <div id="debts-container" class="space-y-3">
+            <div id="debts-loading" class="py-16 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
+                Loading debts and loans...
+            </div>
+            <div id="debts-empty" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl py-16 text-center px-4 hidden transition-colors">
+                <div class="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto mb-3 text-2xl">
+                    🤝
+                </div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">No records found</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">Click "Add Debt / Loan" above to start tracking money you lent or money you owe.</p>
+            </div>
+            <div id="debts-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+    </main>
+
+    <!-- ─── Modals ──────────────────────────────────────────────────────────── -->
+
+    <!-- Add / Edit Debt Modal -->
+    <div id="debt-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto transition-colors">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 id="debt-modal-title" class="font-heading font-bold text-base text-slate-900 dark:text-white">Add Debt or Loan</h3>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Track a new amount owed or lent</p>
+                </div>
+                <button type="button" id="debt-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <div id="debt-modal-error" class="hidden mb-4 p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs rounded-xl font-medium"></div>
+
+            <form id="debt-form" class="space-y-4">
+                <input type="hidden" id="debt-id" value="">
+
+                <!-- Direction Type Toggle -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Type</label>
+                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold">
+                        <button type="button" id="form-type-owing-me" class="py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center">
+                            Someone Owes Me (Loan)
+                        </button>
+                        <button type="button" id="form-type-i-owe" class="py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all cursor-pointer text-center">
+                            I Owe Someone (Debt)
+                        </button>
+                    </div>
+                    <input type="hidden" id="debt-form-type" value="owing_me">
+                </div>
+
+                <!-- Person Name -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Person / Entity Name</label>
+                    <input type="text" id="debt-person-name" required placeholder="e.g. John Doe, Landlord, Sarah" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium">
+                </div>
+
+                <!-- Total Amount & Due Date -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Total Amount (<span class="currency-label">{{.Currency}}</span>)</label>
+                        <input type="number" step="any" min="0.01" id="debt-amount" required placeholder="0" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Due Date (Optional)</label>
+                        <input type="date" id="debt-due-date" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                    </div>
+                </div>
+
+                <!-- Note / Reason -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Note / Reason</label>
+                    <input type="text" id="debt-note" placeholder="e.g. Laptop repair, Dinner split, Rent balance" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" id="debt-modal-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" id="debt-modal-submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white rounded-xl transition-all shadow-sm cursor-pointer">
+                        Save Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Record Payment / Settle Modal -->
+    <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl transition-colors">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Record Payment</h3>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" id="payment-modal-subtitle">Log a repayment</p>
+                </div>
+                <button type="button" id="payment-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Remaining Banner -->
+            <div id="payment-remaining-banner" class="mb-4 p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-xl flex items-center justify-between text-xs">
+                <span class="text-slate-500 dark:text-slate-400 font-medium">Remaining balance:</span>
+                <span id="payment-remaining-amount" class="font-extrabold text-slate-900 dark:text-white text-sm">₦0</span>
+            </div>
+
+            <div id="payment-modal-error" class="hidden mb-4 p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs rounded-xl font-medium"></div>
+
+            <form id="payment-form" class="space-y-4">
+                <input type="hidden" id="payment-debt-id" value="">
+
+                <!-- Payment Amount -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Amount Paid (<span class="currency-label">{{.Currency}}</span>)</label>
+                    <input type="number" step="any" min="0.01" id="payment-amount" required class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-bold">
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">You can enter a partial payment or settle in full.</p>
+                </div>
+
+                <!-- Payment Date -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Payment Date</label>
+                    <input type="date" id="payment-date" required class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <!-- Log to main transactions checkbox -->
+                <div class="p-3 bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 rounded-xl">
+                    <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" id="payment-log-transaction" checked class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                        <div class="text-xs">
+                            <span class="font-bold text-emerald-900 dark:text-emerald-300" id="payment-log-label">Log to Main Transactions</span>
+                            <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-0.5" id="payment-log-desc">Automatically records this payment as Income/Expense and updates your total balance.</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" id="payment-modal-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" id="payment-modal-submit" class="px-5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-sm cursor-pointer">
+                        Confirm Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl transition-colors">
+            <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white mb-2">Delete Record?</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                Are you sure you want to delete this record? This action cannot be undone.
+            </p>
+            <div class="flex items-center justify-end gap-2.5">
+                <button type="button" id="confirm-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" id="confirm-delete" class="px-4 py-2 text-xs font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition-colors shadow-xs cursor-pointer">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold flex items-center gap-2.5 transition-all transform translate-y-16 opacity-0 pointer-events-none">
+        <span class="text-base" id="toast-icon">✓</span>
+        <span id="toast-msg">Success</span>
+    </div>
+
+    <!-- ─── Script Controller ─────────────────────────────────────────────────── -->
+    <script>
+        let currentCurrency = '{{.Currency}}' || '₦';
+        let allDebts = [];
+        let activeTab = 'all';
+        let deleteTargetId = null;
+
+        // Theme management
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        const moonIcon = document.getElementById('theme-icon-moon');
+
+        function updateThemeUI() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                sunIcon?.classList.remove('hidden');
+                moonIcon?.classList.add('hidden');
+            } else {
+                sunIcon?.classList.add('hidden');
+                moonIcon?.classList.remove('hidden');
+            }
+        }
+        updateThemeUI();
+
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('spendly-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('spendly-theme', 'dark');
+                }
+                updateThemeUI();
+            });
+        }
+
+        // Dropdown toggle
+        const btnUserMenu = document.getElementById('btn-user-menu');
+        const userDropdown = document.getElementById('user-dropdown-menu');
+        if (btnUserMenu && userDropdown) {
+            btnUserMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+            document.addEventListener('click', () => userDropdown.classList.add('hidden'));
+        }
+
+        // Format money helper
+        function fmtMoney(amount) {
+            return currentCurrency + Number(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        // Toast Helper
+        function showToast(msg, icon = '✓') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            document.getElementById('toast-icon').textContent = icon;
+            toast.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Currency Selector
+        const currencySelect = document.getElementById('currency-select');
+        currencySelect.addEventListener('change', async (e) => {
+            const newCurr = e.target.value;
+            currentCurrency = newCurr;
+            document.querySelectorAll('.currency-label').forEach(el => el.textContent = newCurr);
+            const fd = new FormData();
+            fd.set('currency', newCurr);
+            await fetch('/api/currency', { method: 'POST', body: fd });
+            showToast(`Currency updated to ${newCurr}`);
+            loadDebts();
+        });
+
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+                    b.classList.add('text-slate-500', 'dark:text-slate-400');
+                });
+                btn.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+                btn.classList.remove('text-slate-500', 'dark:text-slate-400');
+                activeTab = btn.dataset.tab;
+                renderDebts();
+            });
+        });
+
+        // Search & Status filters
+        document.getElementById('debts-search').addEventListener('input', renderDebts);
+        document.getElementById('debts-filter-status').addEventListener('change', renderDebts);
+
+        // Fetch Debts
+        async function loadDebts() {
+            try {
+                const res = await fetch('/api/debts');
+                const data = await res.json().catch(() => ({}));
+                allDebts = data.debts || [];
+                
+                // Update Summary Cards
+                const s = data.summary || {};
+                document.getElementById('summary-owing-me').textContent = fmtMoney(s.total_owed_to_user);
+                document.getElementById('summary-owing-me-count').textContent = `${s.count_owing_me || 0} active loans`;
+
+                document.getElementById('summary-i-owe').textContent = fmtMoney(s.total_user_owes);
+                document.getElementById('summary-i-owe-count').textContent = `${s.count_i_owe || 0} pending debts`;
+
+                const net = s.net_balance || 0;
+                const netEl = document.getElementById('summary-net');
+                netEl.textContent = (net >= 0 ? '+' : '') + fmtMoney(net);
+                if (net > 0) {
+                    netEl.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 truncate';
+                    document.getElementById('summary-net-desc').textContent = 'Positive: You are owed more than you owe';
+                } else if (net < 0) {
+                    netEl.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-rose-500 dark:text-rose-400 truncate';
+                    document.getElementById('summary-net-desc').textContent = 'Negative: You owe more than you are owed';
+                } else {
+                    netEl.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white truncate';
+                    document.getElementById('summary-net-desc').textContent = 'Balanced: Zero net debt';
+                }
+
+                document.getElementById('debts-loading').classList.add('hidden');
+                renderDebts();
+            } catch (err) {
+                console.error('Error loading debts:', err);
+                document.getElementById('debts-loading').textContent = 'Failed to load records.';
+            }
+        }
+
+        // Render Cards
+        function renderDebts() {
+            const query = (document.getElementById('debts-search').value || '').toLowerCase().trim();
+            const statusFilter = document.getElementById('debts-filter-status').value;
+            const listEl = document.getElementById('debts-list');
+            const emptyEl = document.getElementById('debts-empty');
+
+            let filtered = allDebts.filter(d => {
+                // Tab filter
+                if (activeTab === 'owing_me' && d.type !== 'owing_me') return false;
+                if (activeTab === 'i_owe' && d.type !== 'i_owe') return false;
+
+                // Status filter
+                if (statusFilter === 'active' && d.status === 'settled') return false;
+                if (statusFilter === 'settled' && d.status !== 'settled') return false;
+
+                // Search filter
+                if (query) {
+                    const matchPerson = (d.person_name || '').toLowerCase().includes(query);
+                    const matchNote = (d.note || '').toLowerCase().includes(query);
+                    if (!matchPerson && !matchNote) return false;
+                }
+                return true;
+            });
+
+            if (!filtered.length) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = filtered.map(d => {
+                const isOwingMe = d.type === 'owing_me';
+                const isSettled = d.status === 'settled';
+                const pct = d.amount > 0 ? Math.min(100, Math.round((d.amount_paid / d.amount) * 100)) : 100;
+                
+                // Due date parsing
+                let dueBadge = '';
+                if (d.due_date_fmt) {
+                    const due = new Date(d.due_date_fmt);
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    due.setHours(0,0,0,0);
+                    const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+
+                    if (!isSettled && diffDays < 0) {
+                        dueBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">Overdue by ${Math.abs(diffDays)}d</span>`;
+                    } else if (!isSettled && diffDays === 0) {
+                        dueBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">Due today</span>`;
+                    } else {
+                        dueBadge = `<span class="text-[11px] text-slate-400 dark:text-slate-500">Due ${d.due_date_fmt}</span>`;
+                    }
+                }
+
+                const initials = (d.person_name || '?').substring(0, 2).toUpperCase();
+
+                return `
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-700 flex flex-col justify-between">
+                        <div>
+                            <!-- Header: Person & Type Badge -->
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl ${isOwingMe ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 border border-rose-100 dark:border-rose-900'} flex items-center justify-center font-heading font-extrabold text-xs">
+                                        ${initials}
+                                    </div>
+                                    <div>
+                                        <h4 class="font-heading font-bold text-sm text-slate-900 dark:text-white leading-tight">${escapeHtml(d.person_name)}</h4>
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold ${isOwingMe ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'} mt-0.5">
+                                            <span>${isOwingMe ? '↑ Owes You' : '↓ You Owe'}</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-1.5">
+                                    ${isSettled ? `
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800">
+                                            ✓ Settled
+                                        </span>
+                                    ` : `
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'partial' ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}">
+                                            ${d.status === 'partial' ? 'Partial' : 'Unpaid'}
+                                        </span>
+                                    `}
+                                </div>
+                            </div>
+
+                            <!-- Note -->
+                            ${d.note ? `<p class="text-xs text-slate-500 dark:text-slate-400 mb-3 bg-slate-50/60 dark:bg-slate-800/40 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800">${escapeHtml(d.note)}</p>` : ''}
+
+                            <!-- Financial Breakdown -->
+                            <div class="space-y-2 py-2 border-t border-slate-100 dark:border-slate-800/80">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-400 dark:text-slate-500">Total:</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-200">${fmtMoney(d.amount)}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-400 dark:text-slate-500">Paid:</span>
+                                    <span class="font-bold text-emerald-600 dark:text-emerald-400">${fmtMoney(d.amount_paid)}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-400 dark:text-slate-500">Remaining:</span>
+                                    <span class="font-extrabold ${isSettled ? 'text-slate-400' : 'text-slate-900 dark:text-white'} text-sm">${fmtMoney(d.remaining)}</span>
+                                </div>
+
+                                <!-- Progress Bar -->
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                                    <div class="h-full ${isSettled ? 'bg-emerald-500' : 'bg-slate-900 dark:bg-emerald-500'} rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                                </div>
+                                <div class="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-0.5">
+                                    <span>${pct}% completed</span>
+                                    <div>${dueBadge}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer Actions -->
+                        <div class="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                ${!isSettled ? `
+                                    <button type="button" onclick="openPaymentModal(${d.id})" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-colors cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/></svg>
+                                        <span>Record Payment</span>
+                                    </button>
+                                ` : `
+                                    <span class="text-xs text-slate-400 dark:text-slate-500 font-medium">Fully settled</span>
+                                `}
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button type="button" onclick="openEditModal(${d.id})" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer" title="Edit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                                </button>
+                                <button type="button" onclick="openDeleteModal(${d.id})" class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer" title="Delete">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ─── Add / Edit Modal Logic ──────────────────────────────────────────
+        const debtModal = document.getElementById('debt-modal');
+        const debtForm = document.getElementById('debt-form');
+        const debtModalTitle = document.getElementById('debt-modal-title');
+        const typeOwingMeBtn = document.getElementById('form-type-owing-me');
+        const typeIOweBtn = document.getElementById('form-type-i-owe');
+        const debtFormType = document.getElementById('debt-form-type');
+
+        function setFormType(type) {
+            debtFormType.value = type;
+            if (type === 'owing_me') {
+                typeOwingMeBtn.className = 'py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center';
+                typeIOweBtn.className = 'py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all cursor-pointer text-center';
+            } else {
+                typeIOweBtn.className = 'py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-rose-500 dark:text-rose-400 shadow-xs transition-all cursor-pointer text-center';
+                typeOwingMeBtn.className = 'py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all cursor-pointer text-center';
+            }
+        }
+
+        typeOwingMeBtn.addEventListener('click', () => setFormType('owing_me'));
+        typeIOweBtn.addEventListener('click', () => setFormType('i_owe'));
+
+        document.getElementById('btn-add-debt').addEventListener('click', () => {
+            debtModalTitle.textContent = 'Add Debt or Loan';
+            document.getElementById('debt-id').value = '';
+            document.getElementById('debt-person-name').value = '';
+            document.getElementById('debt-amount').value = '';
+            document.getElementById('debt-due-date').value = '';
+            document.getElementById('debt-note').value = '';
+            document.getElementById('debt-modal-error').classList.add('hidden');
+            setFormType('owing_me');
+            debtModal.classList.remove('hidden');
+        });
+
+        document.getElementById('debt-modal-close').addEventListener('click', () => debtModal.classList.add('hidden'));
+        document.getElementById('debt-modal-cancel').addEventListener('click', () => debtModal.classList.add('hidden'));
+
+        debtForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('debt-modal-error');
+            errEl.classList.add('hidden');
+
+            const id = document.getElementById('debt-id').value;
+            const personName = document.getElementById('debt-person-name').value.trim();
+            const amount = document.getElementById('debt-amount').value.trim();
+            const debtType = debtFormType.value;
+            const dueDate = document.getElementById('debt-due-date').value;
+            const note = document.getElementById('debt-note').value.trim();
+
+            const fd = new FormData();
+            fd.set('person_name', personName);
+            fd.set('amount', amount);
+            fd.set('type', debtType);
+            fd.set('due_date', dueDate);
+            fd.set('note', note);
+
+            const url = id ? `/api/debts/${id}` : '/api/debts';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, { method, body: fd });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errEl.textContent = data.error || 'Failed to save record';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+                debtModal.classList.add('hidden');
+                showToast(id ? 'Record updated!' : 'Record added successfully!');
+                await loadDebts();
+            } catch (err) {
+                errEl.textContent = 'Network error. Please try again.';
+                errEl.classList.remove('hidden');
+            }
+        });
+
+        function openEditModal(id) {
+            const debt = allDebts.find(d => d.id === id);
+            if (!debt) return;
+
+            debtModalTitle.textContent = 'Edit Record';
+            document.getElementById('debt-id').value = debt.id;
+            document.getElementById('debt-person-name').value = debt.person_name;
+            document.getElementById('debt-amount').value = debt.amount;
+            document.getElementById('debt-due-date').value = debt.due_date_fmt || '';
+            document.getElementById('debt-note').value = debt.note || '';
+            document.getElementById('debt-modal-error').classList.add('hidden');
+            setFormType(debt.type);
+            debtModal.classList.remove('hidden');
+        }
+
+        // ─── Payment Modal Logic ─────────────────────────────────────────────
+        const paymentModal = document.getElementById('payment-modal');
+        const paymentForm = document.getElementById('payment-form');
+
+        function openPaymentModal(id) {
+            const debt = allDebts.find(d => d.id === id);
+            if (!debt) return;
+
+            document.getElementById('payment-debt-id').value = debt.id;
+            document.getElementById('payment-modal-subtitle').textContent = debt.type === 'owing_me' 
+                ? `Recording payment from ${debt.person_name}` 
+                : `Recording payment to ${debt.person_name}`;
+            document.getElementById('payment-remaining-amount').textContent = fmtMoney(debt.remaining);
+            document.getElementById('payment-amount').value = debt.remaining;
+            document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('payment-modal-error').classList.add('hidden');
+
+            const logLabel = document.getElementById('payment-log-label');
+            const logDesc = document.getElementById('payment-log-desc');
+            if (debt.type === 'owing_me') {
+                logLabel.textContent = 'Log as Income in Main Transactions';
+                logDesc.textContent = 'Records this repayment into your income ledger and increases your Spendly balance.';
+            } else {
+                logLabel.textContent = 'Log as Expense in Main Transactions';
+                logDesc.textContent = 'Records this repayment into your expense ledger and deducts from your Spendly balance.';
+            }
+
+            paymentModal.classList.remove('hidden');
+        }
+
+        document.getElementById('payment-modal-close').addEventListener('click', () => paymentModal.classList.add('hidden'));
+        document.getElementById('payment-modal-cancel').addEventListener('click', () => paymentModal.classList.add('hidden'));
+
+        paymentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('payment-modal-error');
+            errEl.classList.add('hidden');
+
+            const id = document.getElementById('payment-debt-id').value;
+            const amount = document.getElementById('payment-amount').value.trim();
+            const date = document.getElementById('payment-date').value;
+            const logTxn = document.getElementById('payment-log-transaction').checked;
+
+            const fd = new FormData();
+            fd.set('amount', amount);
+            fd.set('date', date);
+            fd.set('log_transaction', logTxn ? '1' : '0');
+
+            try {
+                const res = await fetch(`/api/debts/${id}/pay`, { method: 'POST', body: fd });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errEl.textContent = data.error || 'Failed to record payment';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+                paymentModal.classList.add('hidden');
+                showToast(`Payment of ${fmtMoney(amount)} recorded!`);
+                await loadDebts();
+            } catch (err) {
+                errEl.textContent = 'Network error. Please try again.';
+                errEl.classList.remove('hidden');
+            }
+        });
+
+        // ─── Delete Modal Logic ──────────────────────────────────────────────
+        const confirmModal = document.getElementById('confirm-modal');
+        function openDeleteModal(id) {
+            deleteTargetId = id;
+            confirmModal.classList.remove('hidden');
+        }
+        document.getElementById('confirm-cancel').addEventListener('click', () => confirmModal.classList.add('hidden'));
+        document.getElementById('confirm-delete').addEventListener('click', async () => {
+            if (!deleteTargetId) return;
+            try {
+                const res = await fetch(`/api/debts/${deleteTargetId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Record deleted!');
+                    await loadDebts();
+                } else {
+                    showToast('Failed to delete', '✕');
+                }
+            } catch (err) {
+                showToast('Network error', '✕');
+            }
+            confirmModal.classList.add('hidden');
+        });
+
+        // Initial Load
+        loadDebts();
+    </script>
+</body>
+</html>
