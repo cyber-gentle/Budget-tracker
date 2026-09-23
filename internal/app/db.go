@@ -71,6 +71,7 @@ func (s *DBStore) migrate() error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS users (
 		username TEXT PRIMARY KEY,
+		full_name TEXT DEFAULT '',
 		email TEXT,
 		password TEXT NOT NULL,
 		currency TEXT DEFAULT '₦',
@@ -104,8 +105,9 @@ func (s *DBStore) migrate() error {
 		return err
 	}
 
-	// Migrate existing users table if email column doesn't exist
+	// Migrate existing users table if columns don't exist
 	_, _ = s.db.Exec("ALTER TABLE users ADD COLUMN email TEXT")
+	_, _ = s.db.Exec("ALTER TABLE users ADD COLUMN full_name TEXT DEFAULT ''")
 	_, _ = s.db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
 
 	return nil
@@ -254,6 +256,105 @@ func (s *DBStore) SetCurrency(username, currency string) error {
 		currency = "₦"
 	}
 	_, err := s.db.Exec("UPDATE users SET currency = ? WHERE username = ?", currency, username)
+	return err
+}
+
+// UserProfile represents public/editable profile information for a user.
+type UserProfile struct {
+	Username  string `json:"username"`
+	FullName  string `json:"full_name"`
+	Email     string `json:"email"`
+	Currency  string `json:"currency"`
+	CreatedAt string `json:"created_at"`
+}
+
+func (s *DBStore) GetProfile(username string) (*UserProfile, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var prof UserProfile
+	var createdAt time.Time
+	var email, fullName, curr sql.NullString
+
+	err := s.db.QueryRow(
+		"SELECT username, full_name, email, currency, created_at FROM users WHERE username = ?",
+		username,
+	).Scan(&prof.Username, &fullName, &email, &curr, &createdAt)
+	if err != nil {
+		return nil, err
+	}
+	if fullName.Valid {
+		prof.FullName = fullName.String
+	}
+	if email.Valid {
+		prof.Email = email.String
+	}
+	if curr.Valid && curr.String != "" {
+		prof.Currency = curr.String
+	} else {
+		prof.Currency = "₦"
+	}
+	prof.CreatedAt = createdAt.Format(time.RFC3339)
+	return &prof, nil
+}
+
+func (s *DBStore) UpdateProfile(username, fullName, email, currency, currentPass, newPass string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	fullName = strings.TrimSpace(fullName)
+	email = strings.ToLower(strings.TrimSpace(email))
+	currency = strings.TrimSpace(currency)
+
+	if email != "" {
+		if !strings.Contains(email, "@") || !strings.Contains(email, ".") {
+			return fmt.Errorf("please enter a valid email address")
+		}
+		var emailExists int
+		err := s.db.QueryRow("SELECT COUNT(1) FROM users WHERE LOWER(email) = LOWER(?) AND username != ?", email, username).Scan(&emailExists)
+		if err != nil {
+			return err
+		}
+		if emailExists > 0 {
+			return fmt.Errorf("email address already in use by another account")
+		}
+	}
+
+	if currency == "" {
+		currency = "₦"
+	}
+
+	if newPass != "" {
+		if len(newPass) < 6 {
+			return fmt.Errorf("new password must be at least 6 characters")
+		}
+		if currentPass == "" {
+			return fmt.Errorf("current password is required to set a new password")
+		}
+
+		var storedHash string
+		err := s.db.QueryRow("SELECT password FROM users WHERE username = ?", username).Scan(&storedHash)
+		if err != nil {
+			return err
+		}
+
+		matched, _ := verifyPassword(storedHash, currentPass)
+		if !matched {
+			return fmt.Errorf("current password is incorrect")
+		}
+
+		newHash, err := createPasswordHash(newPass)
+		if err != nil {
+			return err
+		}
+
+		_, err = s.db.Exec("UPDATE users SET full_name = ?, email = ?, currency = ?, password = ? WHERE username = ?",
+			fullName, email, currency, newHash, username)
+		return err
+	}
+
+	_, err := s.db.Exec("UPDATE users SET full_name = ?, email = ?, currency = ? WHERE username = ?",
+		fullName, email, currency, username)
 	return err
 }
 

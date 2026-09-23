@@ -83,6 +83,7 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/analytics", app.HandleAnalytics)
 	app.Mux.HandleFunc("/api/export", app.HandleExportCSV)
 	app.Mux.HandleFunc("/api/currency", app.HandleCurrencyAPI)
+	app.Mux.HandleFunc("/api/profile", app.HandleProfileAPI)
 
 	// Health check
 	app.Mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -157,8 +158,18 @@ func (app *App) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 		savingsRate = rate
 	}
 
+	prof, _ := app.DB.GetProfile(username)
+	fullName := ""
+	email := ""
+	if prof != nil {
+		fullName = prof.FullName
+		email = prof.Email
+	}
+
 	data := struct {
 		Username    string
+		FullName    string
+		Email       string
 		Currency    string
 		IncomeFmt   string
 		ExpensesFmt string
@@ -166,6 +177,8 @@ func (app *App) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 		SavingsRate int
 	}{
 		Username:    username,
+		FullName:    fullName,
+		Email:       email,
 		Currency:    curr,
 		IncomeFmt:   formatMoney(income, curr),
 		ExpensesFmt: formatMoney(expenses, curr),
@@ -581,4 +594,46 @@ func jsonError(w http.ResponseWriter, msg string, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(map[string]string{"error": msg})
+}
+
+// ─── Profile API Handler ───────────────────────────────────────────────────
+
+func (app *App) HandleProfileAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		prof, err := app.DB.GetProfile(username)
+		if err != nil {
+			jsonError(w, "failed to get profile", http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, prof)
+
+	case http.MethodPost, http.MethodPut:
+		_ = r.ParseMultipartForm(1 << 20)
+		fullName := strings.TrimSpace(r.FormValue("full_name"))
+		email := strings.TrimSpace(r.FormValue("email"))
+		currency := strings.TrimSpace(r.FormValue("currency"))
+		currentPass := r.FormValue("current_password")
+		newPass := r.FormValue("new_password")
+
+		if err := app.DB.UpdateProfile(username, fullName, email, currency, currentPass, newPass); err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		prof, _ := app.DB.GetProfile(username)
+		jsonOK(w, map[string]any{
+			"status": "ok",
+			"user":   prof,
+		})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
 }

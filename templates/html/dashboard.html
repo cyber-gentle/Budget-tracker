@@ -74,13 +74,38 @@
                     <span>Export CSV</span>
                 </a>
 
-                <!-- User Profile -->
-                <div class="flex items-center gap-3 pl-2 border-l border-slate-200">
-                    <div class="w-8 h-8 rounded-full bg-slate-900 text-white font-heading font-bold text-xs flex items-center justify-center uppercase shadow-sm">
-                        {{printf "%.1s" .Username}}
+                <!-- User Profile Dropdown -->
+                <div class="relative">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2.5 pl-2 border-l border-slate-200 hover:opacity-90 transition-all focus:outline-none cursor-pointer group" title="Account settings">
+                        <div class="w-8 h-8 rounded-full bg-slate-900 text-white font-heading font-bold text-xs flex items-center justify-center uppercase shadow-sm group-hover:bg-black transition-colors" id="user-avatar-badge">
+                            {{if .FullName}}{{printf "%.1s" .FullName}}{{else}}{{printf "%.1s" .Username}}{{end}}
+                        </div>
+                        <div class="hidden md:flex flex-col text-left">
+                            <span class="font-semibold text-xs text-slate-800 leading-tight truncate max-w-[120px]" id="user-display-name">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
+                            <span class="text-[10px] text-slate-400">@{{.Username}}</span>
+                        </div>
+                        <svg class="text-slate-400 group-hover:text-slate-600 transition-colors" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 bg-white border border-slate-200/90 rounded-2xl shadow-xl z-50 py-1.5 divide-y divide-slate-100">
+                        <div class="px-4 py-2.5">
+                            <p class="text-xs font-bold text-slate-900 truncate" id="dropdown-fullname">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</p>
+                            <p class="text-[11px] text-slate-400 truncate" id="dropdown-email">{{if .Email}}{{.Email}}{{else}}@{{.Username}}{{end}}</p>
+                        </div>
+                        <div class="py-1">
+                            <button type="button" id="btn-open-profile-modal" class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <span>Edit Profile</span>
+                            </button>
+                        </div>
+                        <div class="py-1">
+                            <a href="/api/logout" class="block px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                <span>Sign out</span>
+                            </a>
+                        </div>
                     </div>
-                    <span class="hidden md:inline font-semibold text-sm text-slate-800">{{.Username}}</span>
-                    <a href="/api/logout" class="text-xs font-medium text-slate-500 hover:text-red-600 transition-colors">Sign out</a>
                 </div>
             </div>
         </div>
@@ -400,6 +425,77 @@
     </main>
 
     <!-- ─── Modals ──────────────────────────────────────────────────────────── -->
+
+    <!-- Edit Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div>
+                    <h3 class="font-heading font-bold text-base text-slate-900">Edit Profile</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Manage your personal information and preferences</p>
+                </div>
+                <button type="button" id="profile-modal-close" class="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Profile Error Alert -->
+            <div id="profile-error" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium"></div>
+
+            <form id="profile-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
+                    <input type="text" id="profile-fullname" placeholder="e.g. Alex Morgan" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 font-medium">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Email Address</label>
+                    <input type="email" id="profile-email" placeholder="alex@example.com" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 font-medium">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Default Currency</label>
+                    <select id="profile-currency" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 font-medium">
+                        <option value="₦">₦ - Nigerian Naira (NGN)</option>
+                        <option value="$">$ - US Dollar (USD)</option>
+                        <option value="€">€ - Euro (EUR)</option>
+                        <option value="£">£ - British Pound (GBP)</option>
+                    </select>
+                </div>
+
+                <!-- Password Accordion -->
+                <div class="pt-2 border-t border-slate-100">
+                    <button type="button" id="btn-toggle-password-fields" class="w-full flex items-center justify-between py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 transition-colors cursor-pointer">
+                        <span class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <span>Security & Password</span>
+                        </span>
+                        <svg id="password-toggle-chevron" class="text-slate-400 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <div id="password-fields-container" class="hidden space-y-3 pt-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Current Password</label>
+                            <input type="password" id="profile-current-pass" autocomplete="current-password" placeholder="Required to change password" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">New Password</label>
+                            <input type="password" id="profile-new-pass" autocomplete="new-password" placeholder="Min 6 characters" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Confirm New Password</label>
+                            <input type="password" id="profile-confirm-pass" autocomplete="new-password" placeholder="Re-type new password" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 font-medium">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                    <button type="button" id="profile-cancel-btn" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                    <button type="submit" id="profile-submit-btn" class="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-black rounded-xl transition-colors shadow-sm cursor-pointer">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Edit Transaction Modal -->
     <div id="edit-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
@@ -1342,6 +1438,155 @@
             // Render Monthly Trends Bar Chart
             renderTrendsChart(data.trends || [], data.trend_summary);
         }
+
+        // ─── Profile Management ──────────────────────────────────────────────────
+        const btnUserMenu = document.getElementById('btn-user-menu');
+        const userDropdownMenu = document.getElementById('user-dropdown-menu');
+        const btnOpenProfileModal = document.getElementById('btn-open-profile-modal');
+        const profileModal = document.getElementById('profile-modal');
+        const profileModalClose = document.getElementById('profile-modal-close');
+        const profileCancelBtn = document.getElementById('profile-cancel-btn');
+        const profileForm = document.getElementById('profile-form');
+        const profileError = document.getElementById('profile-error');
+        const profileSubmitBtn = document.getElementById('profile-submit-btn');
+
+        const btnTogglePass = document.getElementById('btn-toggle-password-fields');
+        const passFieldsContainer = document.getElementById('password-fields-container');
+        const passToggleChevron = document.getElementById('password-toggle-chevron');
+
+        // Toggle user dropdown menu
+        btnUserMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdownMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!userDropdownMenu.contains(e.target) && !btnUserMenu.contains(e.target)) {
+                userDropdownMenu.classList.add('hidden');
+            }
+        });
+
+        // Toggle password fields accordion
+        btnTogglePass.addEventListener('click', () => {
+            passFieldsContainer.classList.toggle('hidden');
+            passToggleChevron.classList.toggle('rotate-180');
+        });
+
+        // Open profile modal
+        btnOpenProfileModal.addEventListener('click', async () => {
+            userDropdownMenu.classList.add('hidden');
+            profileError.classList.add('hidden');
+            document.getElementById('profile-current-pass').value = '';
+            document.getElementById('profile-new-pass').value = '';
+            document.getElementById('profile-confirm-pass').value = '';
+            passFieldsContainer.classList.add('hidden');
+            passToggleChevron.classList.remove('rotate-180');
+
+            try {
+                const res = await fetch('/api/profile');
+                if (res.ok) {
+                    const prof = await res.json();
+                    document.getElementById('profile-fullname').value = prof.full_name || '';
+                    document.getElementById('profile-email').value = prof.email || '';
+                    if (prof.currency) {
+                        document.getElementById('profile-currency').value = prof.currency;
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching profile:', err);
+            }
+
+            profileModal.classList.remove('hidden');
+        });
+
+        function closeProfileModal() {
+            profileModal.classList.add('hidden');
+            profileError.classList.add('hidden');
+        }
+
+        profileModalClose.addEventListener('click', closeProfileModal);
+        profileCancelBtn.addEventListener('click', closeProfileModal);
+
+        // Submit Profile Changes
+        profileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            profileError.classList.add('hidden');
+
+            const fullName = document.getElementById('profile-fullname').value.trim();
+            const email = document.getElementById('profile-email').value.trim();
+            const currency = document.getElementById('profile-currency').value;
+            const currentPass = document.getElementById('profile-current-pass').value;
+            const newPass = document.getElementById('profile-new-pass').value;
+            const confirmPass = document.getElementById('profile-confirm-pass').value;
+
+            if (newPass) {
+                if (newPass.length < 6) {
+                    profileError.textContent = 'New password must be at least 6 characters.';
+                    profileError.classList.remove('hidden');
+                    return;
+                }
+                if (!currentPass) {
+                    profileError.textContent = 'Please enter your current password to set a new password.';
+                    profileError.classList.remove('hidden');
+                    return;
+                }
+                if (newPass !== confirmPass) {
+                    profileError.textContent = 'New passwords do not match.';
+                    profileError.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            profileSubmitBtn.disabled = true;
+            profileSubmitBtn.innerHTML = `<span>Saving...</span>`;
+
+            try {
+                const fd = new FormData();
+                fd.set('full_name', fullName);
+                fd.set('email', email);
+                fd.set('currency', currency);
+                if (newPass) {
+                    fd.set('current_password', currentPass);
+                    fd.set('new_password', newPass);
+                }
+
+                const res = await fetch('/api/profile', { method: 'POST', body: fd });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    profileError.textContent = data.error || 'Failed to update profile.';
+                    profileError.classList.remove('hidden');
+                    return;
+                }
+
+                showToast('Profile updated successfully!');
+                closeProfileModal();
+
+                // Live update UI elements
+                const user = data.user || {};
+                const displayName = user.full_name || user.username || 'User';
+                const avatarInitial = displayName.charAt(0).toUpperCase();
+
+                document.getElementById('user-display-name').textContent = displayName;
+                document.getElementById('dropdown-fullname').textContent = displayName;
+                document.getElementById('dropdown-email').textContent = user.email || `@${user.username}`;
+                document.getElementById('user-avatar-badge').textContent = avatarInitial;
+
+                // If currency changed
+                if (user.currency && user.currency !== currentCurrency) {
+                    currentCurrency = user.currency;
+                    document.getElementById('currency-select').value = currentCurrency;
+                    document.querySelectorAll('.currency-label').forEach(el => el.textContent = currentCurrency);
+                    await loadAll();
+                }
+            } catch (err) {
+                profileError.textContent = 'Network error. Please try again.';
+                profileError.classList.remove('hidden');
+            } finally {
+                profileSubmitBtn.disabled = false;
+                profileSubmitBtn.innerHTML = `<span>Save Changes</span>`;
+            }
+        });
 
         // Master Load
         async function loadAll() {

@@ -214,3 +214,80 @@ func TestTrendsTimeframes(t *testing.T) {
 	}
 }
 
+func TestUserProfileFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "test_profile.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	// 1. Signup two users
+	err = store.Signup("alice", "alice@example.com", "alicepass123")
+	if err != nil {
+		t.Fatalf("signup alice failed: %v", err)
+	}
+	err = store.Signup("bob", "bob@example.com", "bobpass123")
+	if err != nil {
+		t.Fatalf("signup bob failed: %v", err)
+	}
+
+	// 2. Fetch initial profile
+	prof, err := store.GetProfile("alice")
+	if err != nil {
+		t.Fatalf("get profile failed: %v", err)
+	}
+	if prof.Username != "alice" || prof.Email != "alice@example.com" || prof.Currency != "₦" {
+		t.Fatalf("unexpected initial profile: %+v", prof)
+	}
+
+	// 3. Update profile (Name, Email, Currency)
+	err = store.UpdateProfile("alice", "Alice Wonderland", "alice.new@example.com", "$", "", "")
+	if err != nil {
+		t.Fatalf("update profile failed: %v", err)
+	}
+
+	profUpdated, err := store.GetProfile("alice")
+	if err != nil {
+		t.Fatalf("get updated profile failed: %v", err)
+	}
+	if profUpdated.FullName != "Alice Wonderland" || profUpdated.Email != "alice.new@example.com" || profUpdated.Currency != "$" {
+		t.Fatalf("unexpected updated profile: %+v", profUpdated)
+	}
+
+	// 4. Duplicate email prevention across accounts
+	err = store.UpdateProfile("bob", "Bob Ross", "alice.new@example.com", "$", "", "")
+	if err == nil {
+		t.Fatalf("expected duplicate email update to fail for bob")
+	}
+
+	// 5. Change password validation
+	// 5a. Incorrect current password
+	err = store.UpdateProfile("alice", "Alice Wonderland", "alice.new@example.com", "$", "wrongpass", "brandnewpass123")
+	if err == nil {
+		t.Fatalf("expected password change with incorrect current password to fail")
+	}
+
+	// 5b. Short new password
+	err = store.UpdateProfile("alice", "Alice Wonderland", "alice.new@example.com", "$", "alicepass123", "short")
+	if err == nil {
+		t.Fatalf("expected password change with short new password to fail")
+	}
+
+	// 5c. Successful password change
+	err = store.UpdateProfile("alice", "Alice Wonderland", "alice.new@example.com", "$", "alicepass123", "brandnewpass123")
+	if err != nil {
+		t.Fatalf("successful password update failed: %v", err)
+	}
+
+	// 6. Verify login with old vs new password
+	if _, err := store.Login("alice", "alicepass123"); err == nil {
+		t.Fatalf("expected login with old password to fail")
+	}
+	token, err := store.Login("alice", "brandnewpass123")
+	if err != nil || token == "" {
+		t.Fatalf("expected login with new password to succeed, got %v", err)
+	}
+}
+
