@@ -30,29 +30,35 @@ func getHeaderCaseInsensitive(r *http.Request, key string) string {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	// Restore clean request path
-	p := r.URL.Path
+	// 1. Check if rewritten path was passed via __path query parameter
+	q := r.URL.Query()
+	targetPath := q.Get("__path")
 
-	// Strip /api/index.go or /api/index prefix if present from rewrite
-	if strings.HasPrefix(p, "/api/index.go") {
-		p = strings.TrimPrefix(p, "/api/index.go")
-	} else if strings.HasPrefix(p, "/api/index") {
-		p = strings.TrimPrefix(p, "/api/index")
-	}
-
-	// Also check forwarded URI header as secondary verification
-	if p == "" || p == "/" {
-		if origURI := getHeaderCaseInsensitive(r, "x-forwarded-uri"); origURI != "" && origURI != "/api/index" {
-			if u, err := url.Parse(origURI); err == nil && u.Path != "" {
-				p = u.Path
-			}
+	if targetPath != "" {
+		// Clean up __path from query string so downstream handlers don't see it
+		q.Del("__path")
+		r.URL.RawQuery = q.Encode()
+		r.URL.Path = targetPath
+	} else if origURI := getHeaderCaseInsensitive(r, "x-forwarded-uri"); origURI != "" && origURI != "/api/index" && origURI != "/api" {
+		if u, err := url.Parse(origURI); err == nil && u.Path != "" {
+			r.URL.Path = u.Path
 		}
+	} else {
+		// Fallback: strip /api/index.go or /api/index
+		p := r.URL.Path
+		if strings.HasPrefix(p, "/api/index.go") {
+			p = strings.TrimPrefix(p, "/api/index.go")
+		} else if strings.HasPrefix(p, "/api/index") {
+			p = strings.TrimPrefix(p, "/api/index")
+		} else if strings.HasPrefix(p, "/api") {
+			p = strings.TrimPrefix(p, "/api")
+		}
+		r.URL.Path = p
 	}
 
-	if p == "" || p == "/index" || p == "/index.html" {
-		p = "/"
+	if r.URL.Path == "" || r.URL.Path == "/index" || r.URL.Path == "/index.html" || r.URL.Path == "/api/index" {
+		r.URL.Path = "/"
 	}
-	r.URL.Path = p
 
 	once.Do(func() {
 		db, err := app.NewDBStore(os.Getenv("TURSO_DATABASE_URL"), os.Getenv("TURSO_AUTH_TOKEN"))
