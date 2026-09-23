@@ -166,14 +166,66 @@
 
                 <!-- Monthly Cash Flow (Trends Bar Chart) -->
                 <div class="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-4">
                         <div>
-                            <h2 class="font-heading text-sm font-bold text-slate-900">Cash Flow Trends</h2>
-                            <p class="text-xs text-slate-400">Income vs. Expenses (Last 6 Months)</p>
+                            <div class="flex items-center gap-2">
+                                <h2 class="font-heading text-sm font-bold text-slate-900">Cash Flow Trends</h2>
+                                <span id="trends-net-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 transition-all">Net: +₦0</span>
+                            </div>
+                            <p id="trends-subtitle" class="text-xs text-slate-400">Income vs. Expenses (Last 6 Months)</p>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <select id="trends-timeframe-select" class="px-2.5 py-1 text-xs font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 hover:text-slate-900 focus:outline-none focus:border-slate-900 transition-colors cursor-pointer">
+                                <option value="3m">Last 3 Months</option>
+                                <option value="6m" selected>Last 6 Months</option>
+                                <option value="12m">Last 12 Months</option>
+                                <option value="ytd">Year to Date (YTD)</option>
+                                <option value="all">All Time</option>
+                                <option value="custom">Custom Range...</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="min-h-[190px]">
+
+                    <!-- Custom Date Range Form (collapsible) -->
+                    <div id="trends-custom-range" class="hidden mb-3.5 p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2">
+                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <label for="trends-start-date" class="text-slate-500 font-medium">From:</label>
+                                <input type="date" id="trends-start-date" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:border-slate-900">
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <label for="trends-end-date" class="text-slate-500 font-medium">To:</label>
+                                <input type="date" id="trends-end-date" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:border-slate-900">
+                            </div>
+                            <button type="button" id="trends-apply-custom" class="px-3 py-1 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-black transition-colors">Apply</button>
+                            <button type="button" id="trends-cancel-custom" class="px-2 py-1 text-slate-500 hover:text-slate-700 text-xs transition-colors">Cancel</button>
+                        </div>
+                        <p id="trends-custom-error" class="text-rose-500 text-[11px] font-medium hidden"></p>
+                    </div>
+
+                    <!-- Cash Flow Period Metrics Bar -->
+                    <div id="trends-summary-bar" class="flex items-center justify-between text-xs py-1.5 px-3 mb-3 bg-slate-50/80 rounded-xl border border-slate-100">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-400 font-medium">In:</span>
+                            <span id="trends-total-income" class="font-bold text-emerald-600">₦0</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-400 font-medium">Out:</span>
+                            <span id="trends-total-expense" class="font-bold text-rose-500">₦0</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-400 font-medium">Net:</span>
+                            <span id="trends-total-net" class="font-bold text-slate-900">₦0</span>
+                        </div>
+                    </div>
+
+                    <div class="relative min-h-[190px]">
                         <canvas id="trendsChart" class="max-h-[190px]"></canvas>
+                        <!-- Empty State -->
+                        <div id="trends-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-white/90 hidden">
+                            <span class="text-2xl mb-1">📉</span>
+                            <p class="text-xs text-slate-400 font-medium">No cash flow recorded for this time frame</p>
+                        </div>
                     </div>
                 </div>
 
@@ -455,6 +507,10 @@
         let categoryChartInstance = null;
         let trendsChartInstance = null;
         let pendingDeleteId = null;
+        let currentTrendTimeframe = '6m';
+        let customTrendStart = '';
+        let customTrendEnd = '';
+        let previousTrendTimeframe = '6m';
 
         // Number Formatting
         function fmtMoney(num) {
@@ -522,6 +578,72 @@
             addTxType.value = 'income';
             typeIncomeBtn.className = 'px-3 py-1 rounded-md bg-white text-slate-900 shadow-xs transition-all';
             typeExpenseBtn.className = 'px-3 py-1 rounded-md text-slate-500 hover:text-slate-900 transition-all';
+        });
+
+        // Timeframe selector & custom range handlers
+        const trendTimeframeSelect = document.getElementById('trends-timeframe-select');
+        const trendCustomRangeBox = document.getElementById('trends-custom-range');
+        const trendStartDateInput = document.getElementById('trends-start-date');
+        const trendEndDateInput = document.getElementById('trends-end-date');
+        const trendApplyCustomBtn = document.getElementById('trends-apply-custom');
+        const trendCancelCustomBtn = document.getElementById('trends-cancel-custom');
+        const trendCustomError = document.getElementById('trends-custom-error');
+
+        // Pre-fill default dates for custom range (last 30 days)
+        const todayStr = new Date().toISOString().split('T')[0];
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        trendStartDateInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+        trendEndDateInput.value = todayStr;
+
+        trendTimeframeSelect.addEventListener('change', function() {
+            const val = this.value;
+            if (val === 'custom') {
+                trendCustomRangeBox.classList.remove('hidden');
+                trendCustomError.classList.add('hidden');
+            } else {
+                trendCustomRangeBox.classList.add('hidden');
+                trendCustomError.classList.add('hidden');
+                previousTrendTimeframe = val;
+                currentTrendTimeframe = val;
+                updateTrends();
+            }
+        });
+
+        trendApplyCustomBtn.addEventListener('click', function() {
+            const startVal = trendStartDateInput.value;
+            const endVal = trendEndDateInput.value;
+            if (!startVal || !endVal) {
+                trendCustomError.textContent = 'Please choose both start and end dates.';
+                trendCustomError.classList.remove('hidden');
+                return;
+            }
+            if (startVal > endVal) {
+                trendCustomError.textContent = 'Start date cannot be after end date.';
+                trendCustomError.classList.remove('hidden');
+                return;
+            }
+            trendCustomError.classList.add('hidden');
+            currentTrendTimeframe = 'custom';
+            customTrendStart = startVal;
+            customTrendEnd = endVal;
+            previousTrendTimeframe = 'custom';
+            updateTrends();
+        });
+
+        trendCancelCustomBtn.addEventListener('click', function() {
+            trendCustomRangeBox.classList.add('hidden');
+            trendCustomError.classList.add('hidden');
+            if (previousTrendTimeframe !== 'custom') {
+                currentTrendTimeframe = previousTrendTimeframe;
+                trendTimeframeSelect.value = previousTrendTimeframe;
+                updateTrends();
+            } else {
+                currentTrendTimeframe = '6m';
+                trendTimeframeSelect.value = '6m';
+                previousTrendTimeframe = '6m';
+                updateTrends();
+            }
         });
 
         // Amount Input live formatting
@@ -831,9 +953,171 @@
             await loadBudgets();
         });
 
+        function updateTrendsSubtitle() {
+            const sub = document.getElementById('trends-subtitle');
+            if (!sub) return;
+            switch (currentTrendTimeframe) {
+                case '3m':
+                    sub.textContent = 'Income vs. Expenses (Last 3 Months)';
+                    break;
+                case '6m':
+                    sub.textContent = 'Income vs. Expenses (Last 6 Months)';
+                    break;
+                case '12m':
+                    sub.textContent = 'Income vs. Expenses (Last 12 Months)';
+                    break;
+                case 'ytd':
+                    sub.textContent = `Income vs. Expenses (Year to Date ${new Date().getFullYear()})`;
+                    break;
+                case 'all':
+                    sub.textContent = 'Income vs. Expenses (All Time)';
+                    break;
+                case 'custom':
+                    if (customTrendStart && customTrendEnd) {
+                        sub.textContent = `Income vs. Expenses (${fmtDate(customTrendStart)} – ${fmtDate(customTrendEnd)})`;
+                    } else {
+                        sub.textContent = 'Income vs. Expenses (Custom Range)';
+                    }
+                    break;
+                default:
+                    sub.textContent = 'Income vs. Expenses';
+            }
+        }
+
+        function updateTrendsMetrics(trends, trendSummary) {
+            let inc = 0, exp = 0;
+            if (trendSummary && typeof trendSummary.income === 'number') {
+                inc = trendSummary.income;
+                exp = trendSummary.expense;
+            } else if (trends && trends.length) {
+                for (const t of trends) {
+                    inc += (t.income || 0);
+                    exp += (t.expense || 0);
+                }
+            }
+            const net = inc - exp;
+
+            const elInc = document.getElementById('trends-total-income');
+            const elExp = document.getElementById('trends-total-expense');
+            const elNet = document.getElementById('trends-total-net');
+            const elBadge = document.getElementById('trends-net-badge');
+
+            if (elInc) elInc.textContent = fmtMoney(inc);
+            if (elExp) elExp.textContent = fmtMoney(exp);
+            if (elNet) {
+                elNet.textContent = (net >= 0 ? '+' : '') + fmtMoney(net);
+                elNet.className = `font-bold ${net >= 0 ? 'text-emerald-600' : 'text-rose-500'}`;
+            }
+
+            if (elBadge) {
+                elBadge.textContent = `Net: ${net >= 0 ? '+' : ''}${fmtMoney(net)}`;
+                if (net >= 0) {
+                    elBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 transition-all';
+                } else {
+                    elBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-500 transition-all';
+                }
+            }
+        }
+
+        function renderTrendsChart(trends = [], trendSummary = null) {
+            updateTrendsSubtitle();
+            updateTrendsMetrics(trends, trendSummary);
+
+            const trendsEmpty = document.getElementById('trends-empty');
+            const hasData = trends.some(t => (t.income > 0 || t.expense > 0));
+
+            if (!hasData) {
+                if (trendsEmpty) trendsEmpty.classList.remove('hidden');
+            } else {
+                if (trendsEmpty) trendsEmpty.classList.add('hidden');
+            }
+
+            const monthLabels = trends.map(t => t.month);
+            const incomes = trends.map(t => t.income);
+            const expenses = trends.map(t => t.expense);
+
+            const ctxTrends = document.getElementById('trendsChart').getContext('2d');
+            if (trendsChartInstance) trendsChartInstance.destroy();
+            trendsChartInstance = new Chart(ctxTrends, {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: incomes,
+                            backgroundColor: '#10B981',
+                            borderRadius: 6,
+                        },
+                        {
+                            label: 'Expense',
+                            data: expenses,
+                            backgroundColor: '#F43F5E',
+                            borderRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 10, family: 'Inter' },
+                                maxRotation: trends.length > 12 ? 45 : 0,
+                                autoSkip: true,
+                                maxTicksLimit: 14
+                            }
+                        },
+                        y: {
+                            grid: { color: '#F1F5F9' },
+                            ticks: {
+                                font: { size: 10, family: 'Inter' },
+                                callback: val => currentCurrency + (val >= 1000 ? (val/1000).toFixed(0)+'k' : val)
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: { boxWidth: 10, font: { size: 11, family: 'Inter' } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: item => ` ${item.dataset.label}: ${fmtMoney(item.raw)}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function updateTrends() {
+            let url = `/api/analytics?timeframe=${encodeURIComponent(currentTrendTimeframe)}`;
+            if (currentTrendTimeframe === 'custom') {
+                if (!customTrendStart || !customTrendEnd) return;
+                url += `&start=${encodeURIComponent(customTrendStart)}&end=${encodeURIComponent(customTrendEnd)}`;
+            }
+            try {
+                const res = await fetch(url);
+                const data = await res.json().catch(() => ({}));
+                if (data && data.trends) {
+                    renderTrendsChart(data.trends, data.trend_summary);
+                }
+            } catch (err) {
+                console.error('Error updating trends:', err);
+            }
+        }
+
         // Charts & Analytics Rendering
         async function loadAnalytics() {
-            const res = await fetch('/api/analytics');
+            let url = `/api/analytics?timeframe=${encodeURIComponent(currentTrendTimeframe)}`;
+            if (currentTrendTimeframe === 'custom' && customTrendStart && customTrendEnd) {
+                url += `&start=${encodeURIComponent(customTrendStart)}&end=${encodeURIComponent(customTrendEnd)}`;
+            }
+            const res = await fetch(url);
             const data = await res.json().catch(() => ({}));
             if (!data.summary) return;
 
@@ -904,63 +1188,8 @@
                 });
             }
 
-            // Monthly Trends Bar Chart
-            const trends = data.trends || [];
-            const monthLabels = trends.map(t => t.month);
-            const incomes = trends.map(t => t.income);
-            const expenses = trends.map(t => t.expense);
-
-            const ctxTrends = document.getElementById('trendsChart').getContext('2d');
-            if (trendsChartInstance) trendsChartInstance.destroy();
-            trendsChartInstance = new Chart(ctxTrends, {
-                type: 'bar',
-                data: {
-                    labels: monthLabels,
-                    datasets: [
-                        {
-                            label: 'Income',
-                            data: incomes,
-                            backgroundColor: '#10B981',
-                            borderRadius: 6,
-                        },
-                        {
-                            label: 'Expense',
-                            data: expenses,
-                            backgroundColor: '#F43F5E',
-                            borderRadius: 6,
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 10, family: 'Inter' } }
-                        },
-                        y: {
-                            grid: { color: '#F1F5F9' },
-                            ticks: {
-                                font: { size: 10, family: 'Inter' },
-                                callback: val => currentCurrency + (val >= 1000 ? (val/1000).toFixed(0)+'k' : val)
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            align: 'end',
-                            labels: { boxWidth: 10, font: { size: 11, family: 'Inter' } }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: item => ` ${item.dataset.label}: ${fmtMoney(item.raw)}`
-                            }
-                        }
-                    }
-                }
-            });
+            // Render Monthly Trends Bar Chart
+            renderTrendsChart(data.trends || [], data.trend_summary);
         }
 
         // Master Load

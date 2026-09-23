@@ -420,49 +420,19 @@ func (s *DBStore) GetCurrentMonthSpending(username string) (map[string]float64, 
 	return res, nil
 }
 
-func (s *DBStore) GetMonthlyTrends(username string, monthsBack int) ([]MonthlySummary, error) {
-	if monthsBack <= 0 {
-		monthsBack = 6
-	}
-
+func (s *DBStore) GetTrendsByTimeFrame(username, timeframe, startDateStr, endDateStr string) ([]MonthlySummary, error) {
 	txs, err := s.GetTransactions(username)
 	if err != nil {
 		return nil, err
 	}
+	return CalculateTrends(txs, timeframe, startDateStr, endDateStr), nil
+}
 
-	now := time.Now()
-	type monthKey struct {
-		year  int
-		month time.Month
+func (s *DBStore) GetMonthlyTrends(username string, monthsBack int) ([]MonthlySummary, error) {
+	if monthsBack <= 0 {
+		monthsBack = 6
 	}
-	keys := make([]monthKey, monthsBack)
-	for i := 0; i < monthsBack; i++ {
-		d := time.Date(now.Year(), now.Month()-time.Month(monthsBack-1-i), 1, 0, 0, 0, 0, time.UTC)
-		keys[i] = monthKey{year: d.Year(), month: d.Month()}
-	}
-
-	sums := make(map[monthKey]*MonthlySummary)
-	for _, k := range keys {
-		label := fmt.Sprintf("%s %02d", k.month.String()[:3], k.year%100)
-		sums[k] = &MonthlySummary{Month: label}
-	}
-
-	for _, t := range txs {
-		k := monthKey{year: t.Date.Year(), month: t.Date.Month()}
-		if s, ok := sums[k]; ok {
-			if t.Type == "income" {
-				s.Income += t.Amount
-			} else if t.Type == "expense" {
-				s.Expense += t.Amount
-			}
-		}
-	}
-
-	result := make([]MonthlySummary, len(keys))
-	for i, k := range keys {
-		result[i] = *sums[k]
-	}
-	return result, nil
+	return s.GetTrendsByTimeFrame(username, fmt.Sprintf("%dm", monthsBack), "", "")
 }
 
 func (s *DBStore) CategoryBreakdown(username string, allTime bool) (map[string]float64, error) {

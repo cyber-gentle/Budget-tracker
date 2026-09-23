@@ -426,13 +426,36 @@ func (app *App) HandleAnalytics(w http.ResponseWriter, r *http.Request) {
 		savingsRate = rate
 	}
 
+	timeframe := strings.TrimSpace(r.URL.Query().Get("timeframe"))
+	if timeframe == "" {
+		if m := strings.TrimSpace(r.URL.Query().Get("months")); m != "" {
+			timeframe = m + "m"
+		} else {
+			timeframe = "6m"
+		}
+	}
+	start := strings.TrimSpace(r.URL.Query().Get("start"))
+	end := strings.TrimSpace(r.URL.Query().Get("end"))
+
 	income, expense, balance, _ := app.DB.CalculateTotals(username)
 	breakdown, _ := app.DB.CategoryBreakdown(username, false)
-	trends, _ := app.DB.GetMonthlyTrends(username, 6)
+	trends, _ := app.DB.GetTrendsByTimeFrame(username, timeframe, start, end)
+
+	var trendIncome, trendExpense float64
+	for _, tr := range trends {
+		trendIncome += tr.Income
+		trendExpense += tr.Expense
+	}
 
 	jsonOK(w, map[string]any{
 		"category_breakdown": breakdown,
 		"trends":             trends,
+		"timeframe":          timeframe,
+		"trend_summary": map[string]any{
+			"income":  trendIncome,
+			"expense": trendExpense,
+			"net":     trendIncome - trendExpense,
+		},
 		"summary": map[string]any{
 			"total_income":       income,
 			"total_expense":      expense,

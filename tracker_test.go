@@ -121,3 +121,96 @@ func TestDBFlow(t *testing.T) {
 		t.Fatalf("expected session to be invalidated after logout")
 	}
 }
+
+func TestTrendsTimeframes(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "test_trends.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	err = store.Signup("trenduser", "trend@spendly.app", "securepass123")
+	if err != nil {
+		t.Fatalf("signup failed: %v", err)
+	}
+
+	// Add transactions spanning multiple months
+	now := time.Now()
+	// 1. Transaction in current month
+	_ = store.AddTransaction("trenduser", 10000, "salary", "This Month Salary", "income", now)
+	_ = store.AddTransaction("trenduser", 2500, "food", "Groceries", "expense", now)
+
+	// 2. Transaction 2 months ago
+	d2 := now.AddDate(0, -2, 0)
+	_ = store.AddTransaction("trenduser", 8000, "salary", "2 Months Ago Salary", "income", d2)
+	_ = store.AddTransaction("trenduser", 3000, "transport", "Fuel", "expense", d2)
+
+	// 3. Transaction 5 months ago
+	d5 := now.AddDate(0, -5, 0)
+	_ = store.AddTransaction("trenduser", 7500, "salary", "5 Months Ago Salary", "income", d5)
+
+	// Test 3m
+	trends3m, err := store.GetTrendsByTimeFrame("trenduser", "3m", "", "")
+	if err != nil {
+		t.Fatalf("3m failed: %v", err)
+	}
+	if len(trends3m) != 3 {
+		t.Fatalf("expected 3 periods for 3m, got %d", len(trends3m))
+	}
+	// Last element is current month
+	if trends3m[len(trends3m)-1].Income != 10000 || trends3m[len(trends3m)-1].Expense != 2500 {
+		t.Fatalf("current month trend mismatch in 3m: %+v", trends3m[len(trends3m)-1])
+	}
+
+	// Test 6m
+	trends6m, err := store.GetTrendsByTimeFrame("trenduser", "6m", "", "")
+	if err != nil {
+		t.Fatalf("6m failed: %v", err)
+	}
+	if len(trends6m) != 6 {
+		t.Fatalf("expected 6 periods for 6m, got %d", len(trends6m))
+	}
+
+	// Test YTD
+	trendsYTD, err := store.GetTrendsByTimeFrame("trenduser", "ytd", "", "")
+	if err != nil {
+		t.Fatalf("ytd failed: %v", err)
+	}
+	if len(trendsYTD) != int(now.Month()) {
+		t.Fatalf("expected %d periods for ytd, got %d", int(now.Month()), len(trendsYTD))
+	}
+
+	// Test All Time
+	trendsAll, err := store.GetTrendsByTimeFrame("trenduser", "all", "", "")
+	if err != nil {
+		t.Fatalf("all failed: %v", err)
+	}
+	if len(trendsAll) < 6 {
+		t.Fatalf("expected at least 6 periods for all time, got %d", len(trendsAll))
+	}
+
+	// Test Custom Short Range (daily aggregation <= 31 days)
+	startStr := now.AddDate(0, 0, -5).Format("2006-01-02")
+	endStr := now.Format("2006-01-02")
+	trendsCustomDaily, err := store.GetTrendsByTimeFrame("trenduser", "custom", startStr, endStr)
+	if err != nil {
+		t.Fatalf("custom daily failed: %v", err)
+	}
+	if len(trendsCustomDaily) != 6 { // 6 days inclusive
+		t.Fatalf("expected 6 days for daily custom range, got %d", len(trendsCustomDaily))
+	}
+
+	// Test Custom Multi-Month Range (> 31 days)
+	startMStr := now.AddDate(0, -3, 0).Format("2006-01-02")
+	endMStr := now.Format("2006-01-02")
+	trendsCustomMonthly, err := store.GetTrendsByTimeFrame("trenduser", "custom", startMStr, endMStr)
+	if err != nil {
+		t.Fatalf("custom monthly failed: %v", err)
+	}
+	if len(trendsCustomMonthly) != 4 { // 4 months inclusive
+		t.Fatalf("expected 4 months for custom range, got %d", len(trendsCustomMonthly))
+	}
+}
+
