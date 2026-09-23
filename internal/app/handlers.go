@@ -100,7 +100,7 @@ func (app *App) getSessionUser(r *http.Request) (string, bool) {
 // ─── Page Handlers ──────────────────────────────────────────────────────────
 
 func (app *App) HandleHome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
+	if r.URL.Path != "/" && r.URL.Path != "" && r.URL.Path != "/index.html" {
 		http.NotFound(w, r)
 		return
 	}
