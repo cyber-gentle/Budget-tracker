@@ -51,6 +51,18 @@ func (app *App) routes() {
 	}
 	app.Mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
+	// Favicon
+	app.Mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		data, err := embeddedFS.ReadFile("templates/assets/imgs/favicon.svg")
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		w.Write(data)
+	})
+
 	// Pages
 	app.Mux.HandleFunc("/", app.HandleHome)
 	app.Mux.HandleFunc("/login", app.HandleLogin)
