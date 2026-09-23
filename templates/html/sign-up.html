@@ -11,68 +11,102 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/globals.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'] } } } }</script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter','sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('spendly-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
-<body class="bg-[#F9FAFB] min-h-screen flex items-center justify-center p-4 antialiased text-gray-900">
+<body class="bg-[#F9FAFB] dark:bg-slate-950 min-h-screen flex items-center justify-center p-4 antialiased text-gray-900 dark:text-slate-100 transition-colors">
 
-    <main class="w-full max-w-[420px] bg-white p-8 sm:p-10 border border-gray-200 rounded-2xl">
-        <header class="mb-8">
-            <div class="flex items-center gap-2.5 mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
-                <h1 class="text-2xl font-bold tracking-tight">Spendly</h1>
+    <main class="w-full max-w-[420px] bg-white dark:bg-slate-900 p-8 sm:p-10 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-sm transition-colors">
+        <header class="mb-8 flex items-start justify-between">
+            <div>
+                <div class="flex items-center gap-2.5 mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-900 dark:text-emerald-500"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                    <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Spendly</h1>
+                </div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-200">Create your account</h2>
             </div>
-            <h2 class="text-lg font-semibold text-gray-900">Create your account</h2>
+            <button id="theme-toggle-btn" type="button" aria-label="Toggle theme" class="p-2 text-gray-400 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
+                <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+                <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </button>
         </header>
 
         <form action="/api/signup" method="POST" class="space-y-5" data-signup-form>
             <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Username</label>
                 <input type="text" id="username" name="username" autocomplete="username" required
-                    class="w-full px-4 py-2.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:border-gray-900 transition-colors"
+                    class="w-full px-4 py-2.5 text-sm rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:border-gray-900 dark:focus:border-slate-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-slate-500"
                     placeholder="Choose a username">
             </div>
 
             <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Email address</label>
                 <input type="email" id="email" name="email" autocomplete="email" required
-                    class="w-full px-4 py-2.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:border-gray-900 transition-colors"
+                    class="w-full px-4 py-2.5 text-sm rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:border-gray-900 dark:focus:border-slate-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-slate-500"
                     placeholder="you@example.com">
             </div>
 
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Password</label>
                 <div class="relative">
                     <input type="password" id="password" name="password" autocomplete="new-password"
-                        class="w-full px-4 py-2.5 pr-10 text-sm rounded-lg border border-gray-200 focus:outline-none focus:border-gray-900 transition-colors"
+                        class="w-full px-4 py-2.5 pr-10 text-sm rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:border-gray-900 dark:focus:border-slate-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-slate-500"
                         placeholder="Create a password">
-                    <button type="button" id="toggle-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Toggle password">
+                    <button type="button" id="toggle-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 focus:outline-none cursor-pointer" aria-label="Toggle password">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                 </div>
                 <div class="mt-2 flex gap-1.5">
-                    <div class="h-1 flex-1 rounded-full bg-gray-100" id="s1"></div>
-                    <div class="h-1 flex-1 rounded-full bg-gray-100" id="s2"></div>
-                    <div class="h-1 flex-1 rounded-full bg-gray-100" id="s3"></div>
+                    <div class="h-1 flex-1 rounded-full bg-gray-100 dark:bg-slate-800" id="s1"></div>
+                    <div class="h-1 flex-1 rounded-full bg-gray-100 dark:bg-slate-800" id="s2"></div>
+                    <div class="h-1 flex-1 rounded-full bg-gray-100 dark:bg-slate-800" id="s3"></div>
                 </div>
-                <p class="text-[11px] text-gray-400 mt-1 font-medium uppercase tracking-wide" id="strength-label"></p>
+                <p class="text-[11px] text-gray-400 dark:text-slate-500 mt-1 font-medium uppercase tracking-wide" id="strength-label"></p>
             </div>
 
             <div>
-                <label for="confirm" class="block text-sm font-medium text-gray-700 mb-1.5">Confirm password</label>
+                <label for="confirm" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Confirm password</label>
                 <input type="password" id="confirm" autocomplete="new-password"
-                    class="w-full px-4 py-2.5 text-sm rounded-lg border border-gray-200 focus:outline-none focus:border-gray-900 transition-colors"
+                    class="w-full px-4 py-2.5 text-sm rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:border-gray-900 dark:focus:border-slate-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-slate-500"
                     placeholder="Confirm your password">
             </div>
 
-            <p class="text-sm text-red-500 font-medium hidden" id="signup-error"></p>
+            <p class="text-sm text-red-500 dark:text-red-400 font-medium hidden" id="signup-error"></p>
 
-            <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white text-sm font-medium py-3 rounded-lg transition-colors focus:outline-none">
+            <button type="submit" class="w-full bg-gray-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white text-sm font-medium py-3 rounded-lg transition-colors focus:outline-none cursor-pointer">
                 Create account
             </button>
         </form>
 
-        <div class="mt-8 text-center text-sm text-gray-500">
-            Already have an account? <a href="/login" class="text-gray-900 font-medium hover:underline">Sign in</a>
+        <div class="mt-8 text-center text-sm text-gray-500 dark:text-slate-400">
+            Already have an account? <a href="/login" class="text-gray-900 dark:text-white font-medium hover:underline">Sign in</a>
         </div>
     </main>
 
@@ -115,6 +149,38 @@
             if (!res.ok) { errEl.textContent = data.error || 'Signup failed.'; errEl.classList.remove('hidden'); return; }
             window.location.href = data.redirect || '/dashboard';
         });
+
+        // Theme Toggle
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const darkIcon = document.getElementById('theme-toggle-dark-icon');
+        const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+        function updateToggleIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                darkIcon?.classList.add('hidden');
+                lightIcon?.classList.remove('hidden');
+            } else {
+                lightIcon?.classList.add('hidden');
+                darkIcon?.classList.remove('hidden');
+            }
+        }
+
+        updateToggleIcon();
+
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('spendly-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('spendly-theme', 'dark');
+                }
+                updateToggleIcon();
+            });
+        }
     </script>
 </body>
 </html>

@@ -18,6 +18,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -30,30 +31,52 @@
             }
         }
     </script>
+    <script>
+        // Synchronous anti-flash theme script
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('spendly-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
-<body class="bg-offwhite min-h-screen flex flex-col antialiased text-gray-900 selection:bg-gray-200">
+<body class="bg-offwhite dark:bg-slate-950 min-h-screen flex flex-col antialiased text-gray-900 dark:text-slate-100 selection:bg-gray-200 dark:selection:bg-slate-800 transition-colors duration-200">
 
     <!-- Fixed Background Grid -->
-    <div class="fixed inset-0 z-[-1] bg-grid mask-radial-fade pointer-events-none"></div>
+    <div class="fixed inset-0 z-[-1] bg-grid mask-radial-fade pointer-events-none opacity-100 dark:opacity-20"></div>
 
-    <nav class="w-full border-b border-gray-200/60 bg-offwhite/80 backdrop-blur-md sticky top-0 z-50">
+    <nav class="w-full border-b border-gray-200/60 dark:border-slate-800 bg-offwhite/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 transition-colors">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <!-- Logo -->
             <a href="#" class="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-900">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-900 dark:text-white">
                     <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
                     <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
                     <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
                 </svg>
-                <span class="text-xl font-bold tracking-tight text-gray-900">Spendly</span>
+                <span class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Spendly</span>
             </a>
 
             <!-- Nav Actions -->
             <div class="flex items-center gap-3">
-                <a href="/login" class="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+                <button id="theme-toggle-btn" type="button" aria-label="Toggle theme" class="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </button>
+                <a href="/login" class="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 bg-transparent border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-slate-700">
                     Sign in
                 </a>
-                <a href="/sign-up" class="inline-flex px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-black transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:ring-offset-offwhite">
+                <a href="/sign-up" class="inline-flex px-4 py-2 text-sm font-medium text-white dark:text-slate-900 bg-gray-900 dark:bg-white rounded-lg hover:bg-black dark:hover:bg-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:ring-offset-offwhite">
                     Get started
                 </a>
             </div>
@@ -64,18 +87,18 @@
         
         <section class="w-full px-6 py-20 md:py-32">
             <div class="max-w-3xl mx-auto text-center">
-                <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-gray-900 dark:text-white mb-6 leading-tight">
                     Know exactly where your money goes.
                 </h1>
-                <p class="text-lg md:text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
+                <p class="text-lg md:text-xl text-gray-500 dark:text-slate-400 mb-10 max-w-2xl mx-auto">
                     Log income and expenses. See your balance. Stay in control.
                 </p>
                 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-5">
-                    <a href="/sign-up" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3.5 text-base font-medium text-white bg-gray-900 rounded-xl hover:bg-black transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:ring-offset-offwhite">
+                    <a href="/sign-up" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3.5 text-base font-medium text-white dark:text-slate-900 bg-gray-900 dark:bg-white rounded-xl hover:bg-black dark:hover:bg-slate-200 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:ring-offset-offwhite">
                         Get started for free
                     </a>
-                    <a href="/login" class="text-base font-medium text-gray-600 hover:text-gray-900 hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-offset-4 focus:ring-gray-200 rounded-sm">
+                    <a href="/login" class="text-base font-medium text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-offset-4 focus:ring-gray-200 dark:focus:ring-slate-700 rounded-sm">
                         Sign in
                     </a>
                 </div>
@@ -87,8 +110,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
                     <!-- Feature 1 -->
-                    <div class="bg-white border border-gray-100 p-6 rounded-2xl shadow-[0_4px_24px_-8px_rgba(0,0,0,0.03)] flex flex-col items-start transition-transform hover:-translate-y-1 duration-300">
-                        <div class="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center mb-5 text-gray-700">
+                    <div class="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-6 rounded-2xl shadow-[0_4px_24px_-8px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col items-start transition-transform hover:-translate-y-1 duration-300">
+                        <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center mb-5 text-gray-700 dark:text-slate-200">
                             <!-- Arrows Icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="m3 16 4 4 4-4"/>
@@ -97,15 +120,15 @@
                                 <path d="M17 4v16"/>
                             </svg>
                         </div>
-                        <h3 class="text-base font-semibold text-gray-900 mb-2">Track income and expenses</h3>
-                        <p class="text-sm text-gray-500 leading-relaxed">
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">Track income and expenses</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 leading-relaxed">
                             Log every transaction effortlessly and categorize your spending habits.
                         </p>
                     </div>
 
                     <!-- Feature 2 -->
-                    <div class="bg-white border border-gray-100 p-6 rounded-2xl shadow-[0_4px_24px_-8px_rgba(0,0,0,0.03)] flex flex-col items-start transition-transform hover:-translate-y-1 duration-300">
-                        <div class="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center mb-5 text-gray-700">
+                    <div class="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-6 rounded-2xl shadow-[0_4px_24px_-8px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col items-start transition-transform hover:-translate-y-1 duration-300">
+                        <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center mb-5 text-gray-700 dark:text-slate-200">
                             <!-- Chart Icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" x2="12" y1="20" y2="10"/>
@@ -113,23 +136,23 @@
                                 <line x1="6" x2="6" y1="20" y2="16"/>
                             </svg>
                         </div>
-                        <h3 class="text-base font-semibold text-gray-900 mb-2">See your balance at a glance</h3>
-                        <p class="text-sm text-gray-500 leading-relaxed">
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">See your balance at a glance</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 leading-relaxed">
                             Always know exactly how much you have left with real-time balance updates.
                         </p>
                     </div>
 
                     <!-- Feature 3 -->
-                    <div class="bg-white border border-gray-100 p-6 rounded-2xl shadow-[0_4px_24px_-8px_rgba(0,0,0,0.03)] flex flex-col items-start transition-transform hover:-translate-y-1 duration-300">
-                        <div class="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center mb-5 text-gray-700">
+                    <div class="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-6 rounded-2xl shadow-[0_4px_24px_-8px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col items-start transition-transform hover:-translate-y-1 duration-300">
+                        <div class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center mb-5 text-gray-700 dark:text-slate-200">
                             <!-- Lock Icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                             </svg>
                         </div>
-                        <h3 class="text-base font-semibold text-gray-900 mb-2">Your data, private and secure</h3>
-                        <p class="text-sm text-gray-500 leading-relaxed">
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">Your data, private and secure</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 leading-relaxed">
                             Your financial information stays encrypted and solely yours to manage.
                         </p>
                     </div>
@@ -140,11 +163,43 @@
         
     </main>
 
-    <footer class="w-full border-t border-gray-200/60 py-8 px-6 text-center">
-        <p class="text-sm text-gray-400">
+    <footer class="w-full border-t border-gray-200/60 dark:border-slate-800 py-8 px-6 text-center transition-colors">
+        <p class="text-sm text-gray-400 dark:text-slate-500">
             &copy; 2026 Spendly. Designed for clarity.
         </p>
     </footer>
 
+    <script>
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const darkIcon = document.getElementById('theme-toggle-dark-icon');
+        const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+        function updateToggleIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                darkIcon?.classList.add('hidden');
+                lightIcon?.classList.remove('hidden');
+            } else {
+                lightIcon?.classList.add('hidden');
+                darkIcon?.classList.remove('hidden');
+            }
+        }
+
+        updateToggleIcon();
+
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('spendly-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('spendly-theme', 'dark');
+                }
+                updateToggleIcon();
+            });
+        }
+    </script>
 </body>
 </html>
