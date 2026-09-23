@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: spendly
+    env: go
+    plan: free
+    region: oregon
+    buildCommand: go build -o spendly .
+    startCommand: ./spendly
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATA_DIR
+        value: ./data

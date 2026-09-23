@@ -3,33 +3,26 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+
+	"spendly/internal/app"
 )
 
 func main() {
-	app := NewApp("data/auth.json", "data")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
-	mux := http.NewServeMux()
+	db, err := app.NewDBStore(os.Getenv("TURSO_DATABASE_URL"), os.Getenv("TURSO_AUTH_TOKEN"))
+	if err != nil {
+		log.Fatalf("database error: %v", err)
+	}
 
-	// Static assets
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("templates/"))))
+	server := app.NewApp(db)
 
-	// Pages
-	mux.HandleFunc("/", app.HandleHome)
-	mux.HandleFunc("/login", app.HandleLogin)
-	mux.HandleFunc("/sign-up", app.HandleSignUp)
-	mux.HandleFunc("/dashboard", app.HandleDashboard)
-
-	// Auth APIs
-	mux.HandleFunc("/api/signup", app.HandleSignupAPI)
-	mux.HandleFunc("/api/login", app.HandleLoginAPI)
-	mux.HandleFunc("/api/logout", app.HandleLogoutAPI)
-
-	// Transaction APIs
-	mux.HandleFunc("/api/transactions", app.HandleTransactions)
-	mux.HandleFunc("/api/transactions/", app.HandleTransactionByID)
-
-	log.Println("Server started on http://localhost:8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	log.Printf("Spendly server running on port :%s", port)
+	if err := http.ListenAndServe(":"+port, server); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }

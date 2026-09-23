@@ -1,0 +1,17 @@
+# Binaries & build artifacts
+spendly
+spendly.exe
+*.exe
+
+# Local databases & caches
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+data/sessions.json
+cookies*.txt
+
+# Environment files
+.env
+.env.*
+.DS_Store
