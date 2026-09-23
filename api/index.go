@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"os"
@@ -30,21 +31,33 @@ func getHeaderCaseInsensitive(r *http.Request, key string) string {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	// 1. Check if rewritten path was passed via __path query parameter
-	q := r.URL.Query()
-	targetPath := q.Get("__path")
+	// Try multiple sources for the original client route
+	var finalPath string
 
-	if targetPath != "" {
-		// Clean up __path from query string so downstream handlers don't see it
-		q.Del("__path")
-		r.URL.RawQuery = q.Encode()
-		r.URL.Path = targetPath
-	} else if origURI := getHeaderCaseInsensitive(r, "x-forwarded-uri"); origURI != "" && origURI != "/api/index" && origURI != "/api" {
-		if u, err := url.Parse(origURI); err == nil && u.Path != "" {
-			r.URL.Path = u.Path
+	if matched := getHeaderCaseInsensitive(r, "x-matched-path"); matched != "" && !strings.HasPrefix(matched, "/api/index") && matched != "/api" {
+		if u, err := url.Parse(matched); err == nil && u.Path != "" {
+			finalPath = u.Path
 		}
-	} else {
-		// Fallback: strip /api/index.go or /api/index
+	}
+
+	if finalPath == "" {
+		if qPath := r.URL.Query().Get("__path"); qPath != "" {
+			finalPath = qPath
+			q := r.URL.Query()
+			q.Del("__path")
+			r.URL.RawQuery = q.Encode()
+		}
+	}
+
+	if finalPath == "" {
+		if origURI := getHeaderCaseInsensitive(r, "x-forwarded-uri"); origURI != "" && !strings.HasPrefix(origURI, "/api/index") && origURI != "/api" {
+			if u, err := url.Parse(origURI); err == nil && u.Path != "" {
+				finalPath = u.Path
+			}
+		}
+	}
+
+	if finalPath == "" {
 		p := r.URL.Path
 		if strings.HasPrefix(p, "/api/index.go") {
 			p = strings.TrimPrefix(p, "/api/index.go")
@@ -53,11 +66,29 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		} else if strings.HasPrefix(p, "/api") {
 			p = strings.TrimPrefix(p, "/api")
 		}
-		r.URL.Path = p
+		finalPath = p
 	}
 
-	if r.URL.Path == "" || r.URL.Path == "/index" || r.URL.Path == "/index.html" || r.URL.Path == "/api/index" {
-		r.URL.Path = "/"
+	if finalPath == "" || finalPath == "/index" || finalPath == "/index.html" || finalPath == "/api/index" {
+		finalPath = "/"
+	}
+	r.URL.Path = finalPath
+
+	if r.URL.Query().Get("__debug") == "1" {
+		w.Header().Set("Content-Type", "application/json")
+		headers := make(map[string][]string)
+		for k, v := range r.Header {
+			headers[k] = v
+		}
+		data := map[string]any{
+			"url_path":    r.URL.Path,
+			"raw_query":   r.URL.RawQuery,
+			"final_path":  finalPath,
+			"request_uri": r.RequestURI,
+			"headers":     headers,
+		}
+		json.NewEncoder(w).Encode(data)
+		return
 	}
 
 	once.Do(func() {
