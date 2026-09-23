@@ -16,12 +16,23 @@ var (
 	initErr error
 )
 
+func getHeaderCaseInsensitive(r *http.Request, key string) string {
+	if val := r.Header.Get(key); val != "" {
+		return val
+	}
+	keyLower := strings.ToLower(key)
+	for k, v := range r.Header {
+		if strings.ToLower(k) == keyLower && len(v) > 0 {
+			return v[0]
+		}
+	}
+	return ""
+}
+
 func Handler(w http.ResponseWriter, r *http.Request) {
 	// Restore original request path when rewritten by Vercel
-	origURI := r.Header.Get("x-forwarded-uri")
-	matchedPath := r.Header.Get("x-matched-path")
-
-	w.Header().Set("X-Spendly-Routed", "true")
+	origURI := getHeaderCaseInsensitive(r, "x-forwarded-uri")
+	matchedPath := getHeaderCaseInsensitive(r, "x-matched-path")
 
 	if origURI != "" {
 		if u, err := url.Parse(origURI); err == nil {
@@ -39,9 +50,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		} else if strings.HasPrefix(r.URL.Path, "/api") {
 			r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api")
 		}
-		if r.URL.Path == "" {
-			r.URL.Path = "/"
-		}
+	}
+
+	if r.URL.Path == "" {
+		r.URL.Path = "/"
 	}
 
 	once.Do(func() {
