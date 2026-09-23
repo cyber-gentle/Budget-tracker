@@ -2,7 +2,10 @@ module spendly
 
 go 1.25.0
 
-require github.com/tursodatabase/libsql-client-go v0.0.0-20260528064733-9d5d30a29a60
+require (
+	github.com/tursodatabase/libsql-client-go v0.0.0-20260528064733-9d5d30a29a60
+	modernc.org/sqlite v1.59.0
+)
 
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
@@ -17,5 +20,4 @@ require (
 	modernc.org/libc v1.75.7 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
-	modernc.org/sqlite v1.59.0 // indirect
 )
