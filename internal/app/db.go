@@ -71,6 +71,7 @@ func (s *DBStore) migrate() error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS users (
 		username TEXT PRIMARY KEY,
+		email TEXT,
 		password TEXT NOT NULL,
 		currency TEXT DEFAULT '₦',
 		created_at DATETIME
@@ -99,23 +100,35 @@ func (s *DBStore) migrate() error {
 		PRIMARY KEY (username, category)
 	);
 	`
-	_, err := s.db.Exec(schema)
-	return err
+	if _, err := s.db.Exec(schema); err != nil {
+		return err
+	}
+
+	// Migrate existing users table if email column doesn't exist
+	_, _ = s.db.Exec("ALTER TABLE users ADD COLUMN email TEXT")
+	_, _ = s.db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+
+	return nil
 }
 
 // ─── Authentication & User Methods ──────────────────────────────────────────
 
-func (s *DBStore) Signup(username, password string) error {
+func (s *DBStore) Signup(username, email, password string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	username = strings.TrimSpace(username)
-	if username == "" || password == "" {
-		return fmt.Errorf("username and password are required")
+	email = strings.ToLower(strings.TrimSpace(email))
+	if username == "" || email == "" || password == "" {
+		return fmt.Errorf("username, email, and password are required")
+	}
+
+	if !strings.Contains(email, "@") || !strings.Contains(email, ".") {
+		return fmt.Errorf("please enter a valid email address")
 	}
 
 	var exists int
-	err := s.db.QueryRow("SELECT COUNT(1) FROM users WHERE username = ?", username).Scan(&exists)
+	err := s.db.QueryRow("SELECT COUNT(1) FROM users WHERE LOWER(username) = LOWER(?)", username).Scan(&exists)
 	if err != nil {
 		return err
 	}
@@ -123,32 +136,49 @@ func (s *DBStore) Signup(username, password string) error {
 		return fmt.Errorf("username already taken")
 	}
 
+	var emailExists int
+	err = s.db.QueryRow("SELECT COUNT(1) FROM users WHERE LOWER(email) = LOWER(?)", email).Scan(&emailExists)
+	if err != nil {
+		return err
+	}
+	if emailExists > 0 {
+		return fmt.Errorf("email address already in use")
+	}
+
 	hash, err := createPasswordHash(password)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.db.Exec("INSERT INTO users (username, password, currency, created_at) VALUES (?, ?, '₦', ?)",
-		username, hash, time.Now())
+	_, err = s.db.Exec("INSERT INTO users (username, email, password, currency, created_at) VALUES (?, ?, ?, '₦', ?)",
+		username, email, hash, time.Now())
 	return err
 }
 
-func (s *DBStore) Login(username, password string) (string, error) {
+func (s *DBStore) Login(identifier, password string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	var storedHash string
-	err := s.db.QueryRow("SELECT password FROM users WHERE username = ?", username).Scan(&storedHash)
+	identifier = strings.TrimSpace(identifier)
+	if identifier == "" || password == "" {
+		return "", fmt.Errorf("email/username and password are required")
+	}
+
+	var username, storedHash string
+	err := s.db.QueryRow(
+		"SELECT username, password FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?) LIMIT 1",
+		identifier, identifier,
+	).Scan(&username, &storedHash)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", fmt.Errorf("invalid username or password")
+			return "", fmt.Errorf("invalid email/username or password")
 		}
 		return "", err
 	}
 
 	matched, needsUpgrade := verifyPassword(storedHash, password)
 	if !matched {
-		return "", fmt.Errorf("invalid username or password")
+		return "", fmt.Errorf("invalid email/username or password")
 	}
 
 	if needsUpgrade {

@@ -18,26 +18,37 @@ func TestDBFlow(t *testing.T) {
 	}
 
 	// 1. Auth Flow
-	err = store.Signup("testuser", "securepass123")
+	err = store.Signup("testuser", "test@spendly.app", "securepass123")
 	if err != nil {
 		t.Fatalf("signup failed: %v", err)
 	}
 
-	// Duplicate signup should fail
-	if err := store.Signup("testuser", "anotherpass"); err == nil {
-		t.Fatalf("expected duplicate signup to fail")
+	// Duplicate username should fail
+	if err := store.Signup("testuser", "other@spendly.app", "anotherpass"); err == nil {
+		t.Fatalf("expected duplicate username signup to fail")
 	}
 
-	// Login
-	token, err := store.Login("testuser", "securepass123")
-	if err != nil || token == "" {
-		t.Fatalf("login failed: %v", err)
+	// Duplicate email should fail
+	if err := store.Signup("newuser", "test@spendly.app", "anotherpass"); err == nil {
+		t.Fatalf("expected duplicate email signup to fail")
+	}
+
+	// Login with username
+	token1, err := store.Login("testuser", "securepass123")
+	if err != nil || token1 == "" {
+		t.Fatalf("login with username failed: %v", err)
+	}
+
+	// Login with email
+	token2, err := store.Login("test@spendly.app", "securepass123")
+	if err != nil || token2 == "" {
+		t.Fatalf("login with email failed: %v", err)
 	}
 
 	// Validate Session
-	username, ok := store.ValidateSession(token)
+	username, ok := store.ValidateSession(token2)
 	if !ok || username != "testuser" {
-		t.Fatalf("expected valid session for testuser, got %v (ok=%v)", username, ok)
+		t.Fatalf("expected valid session for testuser from email login, got %v (ok=%v)", username, ok)
 	}
 
 	// 2. Transactions Flow
@@ -105,8 +116,8 @@ func TestDBFlow(t *testing.T) {
 	}
 
 	// 5. Logout
-	store.Logout(token)
-	if _, ok := store.ValidateSession(token); ok {
+	store.Logout(token2)
+	if _, ok := store.ValidateSession(token2); ok {
 		t.Fatalf("expected session to be invalidated after logout")
 	}
 }

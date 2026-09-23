@@ -50,17 +50,18 @@
         <!-- Form -->
         <form action="/api/login" method="POST" class="space-y-5" data-login-form>
             
-            <!-- Username Input -->
+            <!-- Identifier (Email or Username) Input -->
             <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+                <label for="identifier" class="block text-sm font-medium text-gray-700 mb-1.5">Email or Username</label>
                 <input 
                     type="text" 
-                    id="username" 
-                    name="username"
+                    id="identifier" 
+                    name="identifier"
                     value=""
                     autocomplete="username"
+                    required
                     class="w-full px-4 py-2.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-100 focus:border-gray-400 transition-colors bg-transparent" 
-                    placeholder="Enter your username">
+                    placeholder="Enter your email or username">
             </div>
 
             <!-- Password Input with Error State -->
@@ -89,7 +90,7 @@
                     </button>
                 </div>
                 <!-- Inline Error Message -->
-                <p class="text-sm text-red-500 mt-2 font-medium" id="login-error" style="display:none;">Invalid username or password.</p>
+                <p class="text-sm text-red-500 mt-2 font-medium" id="login-error" style="display:none;">Invalid email/username or password.</p>
             </div>
 
             <!-- Submit Button -->

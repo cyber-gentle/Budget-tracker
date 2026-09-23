@@ -173,9 +173,10 @@ func (app *App) HandleSignupAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	r.ParseMultipartForm(1 << 20)
 	username := strings.TrimSpace(r.FormValue("username"))
+	email := strings.TrimSpace(r.FormValue("email"))
 	password := r.FormValue("password")
 
-	if err := app.DB.Signup(username, password); err != nil {
+	if err := app.DB.Signup(username, email, password); err != nil {
 		jsonError(w, err.Error(), http.StatusConflict)
 		return
 	}
@@ -197,10 +198,16 @@ func (app *App) HandleLoginAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.ParseMultipartForm(1 << 20)
-	username := strings.TrimSpace(r.FormValue("username"))
+	identifier := strings.TrimSpace(r.FormValue("identifier"))
+	if identifier == "" {
+		identifier = strings.TrimSpace(r.FormValue("username"))
+	}
+	if identifier == "" {
+		identifier = strings.TrimSpace(r.FormValue("email"))
+	}
 	password := r.FormValue("password")
 
-	token, err := app.DB.Login(username, password)
+	token, err := app.DB.Login(identifier, password)
 	if err != nil {
 		jsonError(w, err.Error(), http.StatusUnauthorized)
 		return
