@@ -100,11 +100,14 @@ func (app *App) getSessionUser(r *http.Request) (string, bool) {
 // ─── Page Handlers ──────────────────────────────────────────────────────────
 
 func (app *App) HandleHome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" && r.URL.Path != "" && r.URL.Path != "/index.html" {
+	switch r.URL.Path {
+	case "/", "", "/index", "/index.html", "/api", "/api/index", "/api/index/":
+		app.renderTemplate(w, "index.html", nil)
+		return
+	default:
 		http.NotFound(w, r)
 		return
 	}
-	app.renderTemplate(w, "index.html", nil)
 }
 
 func (app *App) HandleLogin(w http.ResponseWriter, r *http.Request) {

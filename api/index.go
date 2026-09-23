@@ -30,31 +30,29 @@ func getHeaderCaseInsensitive(r *http.Request, key string) string {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	// Restore original request path when rewritten by Vercel
-	origURI := getHeaderCaseInsensitive(r, "x-forwarded-uri")
-	matchedPath := getHeaderCaseInsensitive(r, "x-matched-path")
+	// Restore clean request path
+	p := r.URL.Path
 
-	if origURI != "" {
-		if u, err := url.Parse(origURI); err == nil {
-			r.URL.Path = u.Path
-			if u.RawQuery != "" {
-				r.URL.RawQuery = u.RawQuery
+	// Strip /api/index.go or /api/index prefix if present from rewrite
+	if strings.HasPrefix(p, "/api/index.go") {
+		p = strings.TrimPrefix(p, "/api/index.go")
+	} else if strings.HasPrefix(p, "/api/index") {
+		p = strings.TrimPrefix(p, "/api/index")
+	}
+
+	// Also check forwarded URI header as secondary verification
+	if p == "" || p == "/" {
+		if origURI := getHeaderCaseInsensitive(r, "x-forwarded-uri"); origURI != "" && origURI != "/api/index" {
+			if u, err := url.Parse(origURI); err == nil && u.Path != "" {
+				p = u.Path
 			}
 		}
-	} else if matchedPath != "" && matchedPath != "/api" && matchedPath != "/api/index.go" {
-		r.URL.Path = matchedPath
-	} else {
-		// Fallback: strip /api/index.go or /api if present
-		if strings.HasPrefix(r.URL.Path, "/api/index.go") {
-			r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api/index.go")
-		} else if strings.HasPrefix(r.URL.Path, "/api") {
-			r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api")
-		}
 	}
 
-	if r.URL.Path == "" {
-		r.URL.Path = "/"
+	if p == "" || p == "/index" || p == "/index.html" {
+		p = "/"
 	}
+	r.URL.Path = p
 
 	once.Do(func() {
 		db, err := app.NewDBStore(os.Getenv("TURSO_DATABASE_URL"), os.Getenv("TURSO_AUTH_TOKEN"))
