@@ -170,7 +170,7 @@ func (s *DBStore) Signup(username, email, password string, optFullName ...string
 		return err
 	}
 
-	_, err = s.db.Exec("INSERT INTO users (username, full_name, email, password, currency, created_at) VALUES (?, ?, ?, ?, ?, '₦', ?)",
+	_, err = s.db.Exec("INSERT INTO users (username, full_name, email, password, currency, created_at) VALUES (?, ?, ?, ?, '₦', ?)",
 		username, fullName, email, hash, time.Now())
 	return err
 }
