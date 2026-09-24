@@ -408,12 +408,18 @@
                                 <input type="text" id="search-input" placeholder="Search note or category..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all">
                             </div>
 
-                            <!-- Month Filter -->
-                            <div class="sm:col-span-3">
-                                <select id="filter-month" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
-                                    <option value="current" selected>This Month</option>
-                                    <option value="all">All Time</option>
-                                </select>
+                            <!-- Month Navigator (< {Month} >) -->
+                            <div class="sm:col-span-3 flex items-center justify-between bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-1 py-0.5">
+                                <button type="button" id="btn-prev-month" class="p-1 rounded hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" title="Previous Month">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                </button>
+                                <button type="button" id="btn-month-label" class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate px-1 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer" title="Click to reset to current month">
+                                    <span id="month-display-text">This Month</span>
+                                </button>
+                                <button type="button" id="btn-next-month" class="p-1 rounded hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" title="Next Month">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                </button>
+                                <button type="button" id="btn-all-time" class="text-[10px] font-bold px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1" title="Toggle all historical transactions">All</button>
                             </div>
 
                             <!-- Type Filter -->
@@ -451,6 +457,27 @@
                                         <option value="refunds">🔄 Refunds & Reimbursements</option>
                                     </optgroup>
                                 </select>
+                            </div>
+                        </div>
+
+                        <!-- Selected Month Summary Metrics Bar (Option B) -->
+                        <div id="tx-month-summary-bar" class="flex flex-wrap items-center justify-between text-xs py-2 px-3.5 bg-slate-50/90 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-800 transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-slate-400 dark:text-slate-500 font-medium">In:</span>
+                                    <span id="tx-month-income" class="font-bold text-emerald-600 dark:text-emerald-400">+₦0</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-slate-400 dark:text-slate-500 font-medium">Out:</span>
+                                    <span id="tx-month-expense" class="font-bold text-rose-500 dark:text-rose-400">-₦0</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-slate-400 dark:text-slate-500 font-medium">Net:</span>
+                                    <span id="tx-month-net" class="font-bold text-slate-900 dark:text-white">₦0</span>
+                                </div>
+                            </div>
+                            <div id="tx-month-period-label" class="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                                This Month
                             </div>
                         </div>
                     </div>
@@ -1007,69 +1034,195 @@
             }
         }
 
-        // Month Filter Options Populator
-        function updateMonthFilterOptions() {
-            const monthSelect = document.getElementById('filter-month');
-            if (!monthSelect) return;
-            const currentSelected = monthSelect.value || 'current';
+        // ─── Month Navigator & Filter State ──────────────────────────────────────
+        let activeMonthFilter = 'current'; // 'current' | 'all' | 'YYYY-MM'
 
+        function getCalendarYM() {
             const now = new Date();
-            const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
 
-            const ymSet = new Set();
-            for (const t of allTransactions) {
-                if (t.date && t.date.length >= 7) {
-                    ymSet.add(t.date.substring(0, 7));
+        const MONTH_NAMES_FULL = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        const MONTH_NAMES_SHORT = [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        ];
+
+        function getResolvedYM() {
+            return (activeMonthFilter === 'current') ? getCalendarYM() : activeMonthFilter;
+        }
+
+        function formatYMDisplay(ym) {
+            if (ym === 'all') return 'All Time';
+            const [yearStr, monthStr] = ym.split('-');
+            const year = parseInt(yearStr, 10);
+            const mIdx = parseInt(monthStr, 10) - 1;
+            const shortName = MONTH_NAMES_SHORT[mIdx] || '';
+            return `${shortName} ${year}`;
+        }
+
+        function formatYMFull(ym) {
+            if (ym === 'all') return 'All Time';
+            const [yearStr, monthStr] = ym.split('-');
+            const year = parseInt(yearStr, 10);
+            const mIdx = parseInt(monthStr, 10) - 1;
+            const fullName = MONTH_NAMES_FULL[mIdx] || '';
+            const isCurrent = (ym === getCalendarYM());
+            return isCurrent ? `This Month (${fullName} ${year})` : `${fullName} ${year}`;
+        }
+
+        function updateMonthNavigatorUI() {
+            const labelEl = document.getElementById('month-display-text');
+            const btnNext = document.getElementById('btn-next-month');
+            const btnAll = document.getElementById('btn-all-time');
+            const summaryPeriodLabel = document.getElementById('tx-month-period-label');
+
+            const currentYM = getCalendarYM();
+            const resolvedYM = getResolvedYM();
+
+            if (labelEl) {
+                labelEl.textContent = (activeMonthFilter === 'all') ? 'All Time' : formatYMDisplay(resolvedYM);
+            }
+
+            if (summaryPeriodLabel) {
+                summaryPeriodLabel.textContent = (activeMonthFilter === 'all') ? 'All Time' : formatYMFull(resolvedYM);
+            }
+
+            // Update All Time button styling
+            if (btnAll) {
+                if (activeMonthFilter === 'all') {
+                    btnAll.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-900 dark:bg-emerald-600 text-white transition-colors cursor-pointer ml-1';
+                } else {
+                    btnAll.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1';
                 }
             }
 
-            const sortedYMs = Array.from(ymSet).sort().reverse();
-
-            let html = `<option value="current">This Month (${monthNames[now.getMonth()]} ${now.getFullYear()})</option>`;
-            html += `<option value="all">All Time</option>`;
-
-            let pastOptions = '';
-            for (const ym of sortedYMs) {
-                if (ym === currentYM) continue;
-                const [year, month] = ym.split('-');
-                const mIdx = parseInt(month, 10) - 1;
-                const label = `${monthNames[mIdx]} ${year}`;
-                pastOptions += `<option value="${ym}">${label}</option>`;
+            // Check if there are any transactions in future months
+            let maxTxYM = currentYM;
+            for (const t of allTransactions) {
+                if (t.date && t.date.length >= 7) {
+                    const ym = t.date.substring(0, 7);
+                    if (ym > maxTxYM) maxTxYM = ym;
+                }
             }
 
-            if (pastOptions) {
-                html += `<optgroup label="Past Months">${pastOptions}</optgroup>`;
-            }
-
-            monthSelect.innerHTML = html;
-            const availableValues = Array.from(monthSelect.options).map(o => o.value);
-            if (availableValues.includes(currentSelected)) {
-                monthSelect.value = currentSelected;
-            } else {
-                monthSelect.value = 'current';
+            // Disable next month button if already at the max available month
+            if (btnNext) {
+                const isAtMax = (activeMonthFilter !== 'all' && resolvedYM >= maxTxYM);
+                btnNext.disabled = isAtMax;
+                btnNext.classList.toggle('opacity-30', isAtMax);
+                btnNext.classList.toggle('cursor-not-allowed', isAtMax);
             }
         }
 
-        // Filter Logic
+        function stepMonth(delta) {
+            const currentYM = getCalendarYM();
+            let baseYM = (activeMonthFilter === 'all') ? currentYM : getResolvedYM();
+            let [y, m] = baseYM.split('-').map(Number);
+            m += delta;
+            if (m < 1) {
+                m = 12;
+                y -= 1;
+            } else if (m > 12) {
+                m = 1;
+                y += 1;
+            }
+            const nextYM = `${y}-${String(m).padStart(2, '0')}`;
+
+            // Check max transaction month or current month
+            let maxTxYM = currentYM;
+            for (const t of allTransactions) {
+                if (t.date && t.date.length >= 7) {
+                    const ym = t.date.substring(0, 7);
+                    if (ym > maxTxYM) maxTxYM = ym;
+                }
+            }
+
+            if (delta > 0 && nextYM > maxTxYM) {
+                return;
+            }
+
+            activeMonthFilter = (nextYM === currentYM) ? 'current' : nextYM;
+            updateMonthNavigatorUI();
+            applyFilters();
+        }
+
+        function updateMonthFilterOptions() {
+            updateMonthNavigatorUI();
+        }
+
+        // Attach Month Navigator Listeners
+        const btnPrevMonth = document.getElementById('btn-prev-month');
+        if (btnPrevMonth) {
+            btnPrevMonth.addEventListener('click', () => stepMonth(-1));
+        }
+
+        const btnNextMonth = document.getElementById('btn-next-month');
+        if (btnNextMonth) {
+            btnNextMonth.addEventListener('click', () => stepMonth(1));
+        }
+
+        const btnMonthLabel = document.getElementById('btn-month-label');
+        if (btnMonthLabel) {
+            btnMonthLabel.addEventListener('click', () => {
+                activeMonthFilter = 'current';
+                updateMonthNavigatorUI();
+                applyFilters();
+            });
+        }
+
+        const btnAllTime = document.getElementById('btn-all-time');
+        if (btnAllTime) {
+            btnAllTime.addEventListener('click', () => {
+                activeMonthFilter = (activeMonthFilter === 'all') ? 'current' : 'all';
+                updateMonthNavigatorUI();
+                applyFilters();
+            });
+        }
+
+        // Filter Logic & Option B Monthly Totals
         function applyFilters() {
             const query = document.getElementById('search-input').value.toLowerCase().trim();
             const filterType = document.getElementById('filter-type').value;
             const filterCategory = document.getElementById('filter-category').value;
-            const monthSelect = document.getElementById('filter-month');
-            const filterMonth = monthSelect ? monthSelect.value : 'current';
+            const resolvedYM = getResolvedYM();
 
-            const now = new Date();
-            const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            // 1. Calculate Option B summary metrics for selected month/period
+            let periodIncome = 0;
+            let periodExpense = 0;
 
-            const filtered = allTransactions.filter(t => {
-                // Month filter: defaults to current month only
-                if (filterMonth === 'current') {
-                    if (!t.date || !t.date.startsWith(currentYM)) return false;
-                } else if (filterMonth !== 'all') {
-                    if (!t.date || !t.date.startsWith(filterMonth)) return false;
+            for (const t of allTransactions) {
+                if (activeMonthFilter !== 'all') {
+                    if (!t.date || !t.date.startsWith(resolvedYM)) continue;
                 }
+                const amt = Number(t.amount) || 0;
+                if (t.type === 'income') {
+                    periodIncome += amt;
+                } else if (t.type === 'expense') {
+                    periodExpense += amt;
+                }
+            }
+            const periodNet = periodIncome - periodExpense;
 
+            const elMonthInc = document.getElementById('tx-month-income');
+            const elMonthExp = document.getElementById('tx-month-expense');
+            const elMonthNet = document.getElementById('tx-month-net');
+
+            if (elMonthInc) elMonthInc.textContent = `+${fmtMoney(periodIncome)}`;
+            if (elMonthExp) elMonthExp.textContent = `-${fmtMoney(periodExpense)}`;
+            if (elMonthNet) {
+                elMonthNet.textContent = (periodNet >= 0 ? '+' : '') + fmtMoney(periodNet);
+                elMonthNet.className = `font-bold ${periodNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`;
+            }
+
+            // 2. Filter transactions for the list
+            const filtered = allTransactions.filter(t => {
+                if (activeMonthFilter !== 'all') {
+                    if (!t.date || !t.date.startsWith(resolvedYM)) return false;
+                }
                 if (filterType !== 'all' && t.type !== filterType) return false;
                 if (filterCategory !== 'all' && t.category !== filterCategory) return false;
                 if (query) {
@@ -1085,7 +1238,6 @@
         }
 
         document.getElementById('search-input').addEventListener('input', applyFilters);
-        document.getElementById('filter-month').addEventListener('change', applyFilters);
         document.getElementById('filter-type').addEventListener('change', function() {
             updateFilterCategoryOptions(this.value);
             applyFilters();
