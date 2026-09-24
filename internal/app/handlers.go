@@ -202,11 +202,15 @@ func (app *App) HandleSignupAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.ParseMultipartForm(1 << 20)
+	fullName := strings.TrimSpace(r.FormValue("name"))
+	if fullName == "" {
+		fullName = strings.TrimSpace(r.FormValue("full_name"))
+	}
 	username := strings.TrimSpace(r.FormValue("username"))
 	email := strings.TrimSpace(r.FormValue("email"))
 	password := r.FormValue("password")
 
-	if err := app.DB.Signup(username, email, password); err != nil {
+	if err := app.DB.Signup(username, email, password, fullName); err != nil {
 		jsonError(w, err.Error(), http.StatusConflict)
 		return
 	}

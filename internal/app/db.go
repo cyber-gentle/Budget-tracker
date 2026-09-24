@@ -129,12 +129,16 @@ func (s *DBStore) migrate() error {
 
 // ─── Authentication & User Methods ──────────────────────────────────────────
 
-func (s *DBStore) Signup(username, email, password string) error {
+func (s *DBStore) Signup(username, email, password string, optFullName ...string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	username = strings.TrimSpace(username)
 	email = strings.ToLower(strings.TrimSpace(email))
+	fullName := ""
+	if len(optFullName) > 0 {
+		fullName = strings.TrimSpace(optFullName[0])
+	}
 	if username == "" || email == "" || password == "" {
 		return fmt.Errorf("username, email, and password are required")
 	}
@@ -166,8 +170,8 @@ func (s *DBStore) Signup(username, email, password string) error {
 		return err
 	}
 
-	_, err = s.db.Exec("INSERT INTO users (username, email, password, currency, created_at) VALUES (?, ?, ?, '₦', ?)",
-		username, email, hash, time.Now())
+	_, err = s.db.Exec("INSERT INTO users (username, full_name, email, password, currency, created_at) VALUES (?, ?, ?, ?, ?, '₦', ?)",
+		username, fullName, email, hash, time.Now())
 	return err
 }
 

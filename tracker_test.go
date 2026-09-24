@@ -18,9 +18,14 @@ func TestDBFlow(t *testing.T) {
 	}
 
 	// 1. Auth Flow
-	err = store.Signup("testuser", "test@spendly.app", "securepass123")
+	err = store.Signup("testuser", "test@spendly.app", "securepass123", "Test User")
 	if err != nil {
 		t.Fatalf("signup failed: %v", err)
+	}
+
+	prof, err := store.GetProfile("testuser")
+	if err != nil || prof.FullName != "Test User" {
+		t.Fatalf("expected FullName 'Test User', got %q (err: %v)", prof.FullName, err)
 	}
 
 	// Duplicate username should fail
