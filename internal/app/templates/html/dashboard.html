@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Spendly — Financial Dashboard</title>
     
     <link rel="icon" type="image/svg+xml" href="/static/assets/imgs/favicon.svg">
@@ -53,20 +53,20 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-[#F8FAFC] dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-150">
+<body class="bg-[#F8FAFC] dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-150 overflow-x-hidden">
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
 
     <!-- Navigation Header -->
     <header class="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 sticky top-0 z-30 transition-colors">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-6">
-                <a href="/dashboard" class="flex items-center gap-2.5 group">
-                    <div class="w-9 h-9 rounded-xl bg-slate-900 dark:bg-emerald-600 text-white flex items-center justify-center shadow-sm group-hover:bg-black dark:group-hover:bg-emerald-500 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-3 sm:gap-6">
+                <a href="/dashboard" class="flex items-center gap-2 sm:gap-2.5 group">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 dark:bg-emerald-600 text-white flex items-center justify-center shadow-sm group-hover:bg-black dark:group-hover:bg-emerald-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" class="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
                     </div>
-                    <span class="font-heading font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">Spendly</span>
+                    <span class="font-heading font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">Spendly</span>
                 </a>
 
                 <nav class="hidden sm:flex items-center gap-1.5">
@@ -80,7 +80,7 @@
             </div>
 
             <!-- Header Actions -->
-            <div class="flex items-center gap-2 sm:gap-3">
+            <div class="flex items-center gap-1.5 sm:gap-3">
                 <!-- Theme Toggle Button -->
                 <button type="button" id="theme-toggle-btn" class="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer" title="Toggle theme (Light / Dark)">
                     <span id="theme-icon-container">
@@ -93,9 +93,9 @@
                 </button>
 
                 <!-- Currency Selector -->
-                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
-                    <span class="text-slate-400">Currency:</span>
-                    <select id="currency-select" class="bg-transparent font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer">
+                <div class="flex items-center gap-1 sm:gap-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                    <span class="text-slate-400 hidden sm:inline">Currency:</span>
+                    <select id="currency-select" class="bg-transparent font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer text-xs">
                         <option value="₦" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">₦ (NGN)</option>
                         <option value="$" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">$ (USD)</option>
                         <option value="€" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">€ (EUR)</option>
@@ -158,56 +158,56 @@
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-6 pb-12 sm:pb-8">
 
         <!-- Executive KPI Cards -->
-        <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
             <!-- Balance Card -->
-            <div class="order-1 lg:order-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm relative overflow-hidden transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Total Balance</span>
-                    <span class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            <div class="order-1 lg:order-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm relative overflow-hidden transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5 gap-1">
+                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">Total Balance</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" class="sm:w-[15px] sm:h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
                     </span>
                 </div>
-                <p class="font-heading text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white truncate" id="kpi-balance">{{.BalanceFmt}}</p>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Net accumulated balance</p>
+                <p class="font-heading text-lg sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white truncate" id="kpi-balance">{{.BalanceFmt}}</p>
+                <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 truncate">Net accumulated balance</p>
             </div>
 
             <!-- Savings Rate Card -->
-            <div class="order-2 lg:order-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Savings Rate</span>
-                    <span class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">%</span>
+            <div class="order-2 lg:order-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5 gap-1">
+                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">Savings Rate</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-[11px] sm:text-xs">%</span>
                 </div>
-                <p class="font-heading text-xl sm:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 truncate" id="kpi-savings-rate">{{.SavingsRate}}%</p>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Of current month income</p>
+                <p class="font-heading text-lg sm:text-2xl lg:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 truncate" id="kpi-savings-rate">{{.SavingsRate}}%</p>
+                <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 truncate">Of current month income</p>
             </div>
 
             <!-- Monthly Income Card -->
-            <div class="order-3 lg:order-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
-                    <span class="text-xs font-semibold uppercase tracking-wider">This Month Income</span>
-                    <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+            <div class="order-3 lg:order-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5 gap-1">
+                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">This Month Income</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" class="sm:w-[15px] sm:h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
                     </span>
                 </div>
-                <p class="font-heading text-xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 truncate" id="kpi-income">{{.IncomeFmt}}</p>
-                <p class="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1 font-medium flex items-center gap-1">
+                <p class="font-heading text-lg sm:text-2xl lg:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 truncate" id="kpi-income">{{.IncomeFmt}}</p>
+                <p class="text-[11px] sm:text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-0.5 sm:mt-1 font-medium flex items-center gap-1 truncate">
                     <span>●</span> Current period
                 </p>
             </div>
 
             <!-- Monthly Expenses Card -->
-            <div class="order-4 lg:order-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
-                    <span class="text-xs font-semibold uppercase tracking-wider">This Month Expenses</span>
-                    <span class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
+            <div class="order-4 lg:order-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5 gap-1">
+                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">This Month Expenses</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" class="sm:w-[15px] sm:h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
                     </span>
                 </div>
-                <p class="font-heading text-xl sm:text-3xl font-extrabold text-rose-500 dark:text-rose-400 truncate" id="kpi-expense">{{.ExpensesFmt}}</p>
-                <p class="text-xs text-rose-500/80 dark:text-rose-400/80 mt-1 font-medium flex items-center gap-1">
+                <p class="font-heading text-lg sm:text-2xl lg:text-3xl font-extrabold text-rose-500 dark:text-rose-400 truncate" id="kpi-expense">{{.ExpensesFmt}}</p>
+                <p class="text-[11px] sm:text-xs text-rose-500/80 dark:text-rose-400/80 mt-0.5 sm:mt-1 font-medium flex items-center gap-1 truncate">
                     <span>●</span> Current period
                 </p>
             </div>
@@ -220,7 +220,7 @@
             <div class="lg:col-span-5 space-y-6">
                 
                 <!-- Category Expense Breakdown (Donut Chart) -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm transition-colors">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Spending Breakdown</h2>
@@ -239,7 +239,7 @@
                 </div>
 
                 <!-- Monthly Cash Flow (Trends Bar Chart) -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm transition-colors">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-4">
                         <div>
                             <div class="flex items-center gap-2">
@@ -304,7 +304,7 @@
                 </div>
 
                 <!-- Monthly Category Budgets -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm transition-colors">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Category Budgets</h2>
@@ -328,7 +328,7 @@
             <div class="lg:col-span-7 space-y-6">
 
                 <!-- Quick Add Transaction Card -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm transition-colors">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Quick Add Transaction</h2>
                         <!-- Expense / Income Toggle -->
