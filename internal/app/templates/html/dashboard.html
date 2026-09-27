@@ -464,23 +464,37 @@
                         </div>
 
                         <!-- Selected Month Summary Metrics Bar (Option B) -->
-                        <div id="tx-month-summary-bar" class="flex flex-wrap items-center justify-between text-xs py-2 px-3.5 bg-slate-50/90 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-800 transition-colors">
-                            <div class="flex items-center gap-4">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-slate-400 dark:text-slate-500 font-medium">In:</span>
-                                    <span id="tx-month-income" class="font-bold text-emerald-600 dark:text-emerald-400">+₦0</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-slate-400 dark:text-slate-500 font-medium">Out:</span>
-                                    <span id="tx-month-expense" class="font-bold text-rose-500 dark:text-rose-400">-₦0</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-slate-400 dark:text-slate-500 font-medium">Net:</span>
-                                    <span id="tx-month-net" class="font-bold text-slate-900 dark:text-white">₦0</span>
-                                </div>
+                        <div id="tx-month-summary-bar" class="p-2 sm:py-2.5 sm:px-3.5 bg-slate-50/90 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-800 transition-colors">
+                            <!-- Mobile Period Header -->
+                            <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-200/60 dark:border-slate-700/60 sm:hidden">
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Monthly Overview</span>
+                                <span id="tx-month-period-label-mobile" class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[200px]">This Month</span>
                             </div>
-                            <div id="tx-month-period-label" class="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-                                This Month
+
+                            <div class="flex items-center justify-between gap-2">
+                                <!-- 3 Financial Metrics (Equal 3-column tile grid on phones, horizontal inline on desktop) -->
+                                <div class="grid grid-cols-3 gap-1.5 sm:flex sm:items-center sm:gap-4 w-full sm:w-auto">
+                                    <!-- In -->
+                                    <div class="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-0.5 sm:gap-1.5 min-w-0 bg-white dark:bg-slate-900/60 sm:bg-transparent rounded-lg py-1.5 px-1 sm:p-0 border border-slate-200/60 dark:border-slate-700/60 sm:border-0 shadow-2xs sm:shadow-none">
+                                        <span class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">In:</span>
+                                        <span id="tx-month-income" class="font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap text-[11px] sm:text-xs truncate">+₦0</span>
+                                    </div>
+                                    <!-- Out -->
+                                    <div class="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-0.5 sm:gap-1.5 min-w-0 bg-white dark:bg-slate-900/60 sm:bg-transparent rounded-lg py-1.5 px-1 sm:p-0 border border-slate-200/60 dark:border-slate-700/60 sm:border-0 shadow-2xs sm:shadow-none">
+                                        <span class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">Out:</span>
+                                        <span id="tx-month-expense" class="font-bold text-rose-500 dark:text-rose-400 whitespace-nowrap text-[11px] sm:text-xs truncate">-₦0</span>
+                                    </div>
+                                    <!-- Net -->
+                                    <div class="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-0.5 sm:gap-1.5 min-w-0 bg-white dark:bg-slate-900/60 sm:bg-transparent rounded-lg py-1.5 px-1 sm:p-0 border border-slate-200/60 dark:border-slate-700/60 sm:border-0 shadow-2xs sm:shadow-none">
+                                        <span class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">Net:</span>
+                                        <span id="tx-month-net" class="font-bold text-slate-900 dark:text-white whitespace-nowrap text-[11px] sm:text-xs truncate">₦0</span>
+                                    </div>
+                                </div>
+
+                                <!-- Desktop Period Label -->
+                                <div id="tx-month-period-label" class="hidden sm:block text-[11px] font-semibold text-slate-400 dark:text-slate-500 whitespace-nowrap shrink-0">
+                                    This Month
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1119,8 +1133,13 @@
                 labelEl.textContent = (activeMonthFilter === 'all') ? 'All Time' : formatYMDisplay(resolvedYM);
             }
 
+            const periodText = (activeMonthFilter === 'all') ? 'All Time' : formatYMFull(resolvedYM);
             if (summaryPeriodLabel) {
-                summaryPeriodLabel.textContent = (activeMonthFilter === 'all') ? 'All Time' : formatYMFull(resolvedYM);
+                summaryPeriodLabel.textContent = periodText;
+            }
+            const summaryPeriodLabelMobile = document.getElementById('tx-month-period-label-mobile');
+            if (summaryPeriodLabelMobile) {
+                summaryPeriodLabelMobile.textContent = periodText;
             }
 
             // Update All Time button styling
@@ -1247,7 +1266,7 @@
             if (elMonthExp) elMonthExp.textContent = `-${fmtMoney(periodExpense)}`;
             if (elMonthNet) {
                 elMonthNet.textContent = (periodNet >= 0 ? '+' : '') + fmtMoney(periodNet);
-                elMonthNet.className = `font-bold ${periodNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`;
+                elMonthNet.className = `font-bold whitespace-nowrap text-[11px] sm:text-xs truncate ${periodNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`;
             }
 
             // 2. Filter transactions for the list
