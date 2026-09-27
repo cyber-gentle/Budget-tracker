@@ -402,9 +402,9 @@
                         </div>
 
                         <!-- Search input + Filters -->
-                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                        <div class="grid grid-cols-2 sm:grid-cols-12 gap-2 sm:gap-2.5">
                             <!-- Search Input -->
-                            <div class="sm:col-span-4 relative">
+                            <div class="col-span-2 sm:col-span-4 relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                 </span>
@@ -412,7 +412,7 @@
                             </div>
 
                             <!-- Month Navigator (< {Month} >) -->
-                            <div class="sm:col-span-3 flex items-center justify-between bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-1 py-0.5">
+                            <div class="col-span-2 sm:col-span-3 flex items-center justify-between bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-1 py-0.5">
                                 <button type="button" id="btn-prev-month" class="p-1 rounded hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" title="Previous Month">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                                 </button>
@@ -425,18 +425,18 @@
                                 <button type="button" id="btn-all-time" class="text-[10px] font-bold px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1" title="Toggle all historical transactions">All</button>
                             </div>
 
-                            <!-- Type Filter -->
-                            <div class="sm:col-span-2">
-                                <select id="filter-type" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                            <!-- Type Filter (50% on mobile, 2/12 on desktop) -->
+                            <div class="col-span-1 sm:col-span-2">
+                                <select id="filter-type" class="w-full px-2 sm:px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer truncate">
                                     <option value="all">All Types</option>
                                     <option value="income">Income</option>
                                     <option value="expense">Expense</option>
                                 </select>
                             </div>
 
-                            <!-- Category Filter -->
-                            <div class="sm:col-span-3">
-                                <select id="filter-category" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                            <!-- Category Filter (50% on mobile, 3/12 on desktop) -->
+                            <div class="col-span-1 sm:col-span-3">
+                                <select id="filter-category" class="w-full px-2 sm:px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer truncate">
                                     <option value="all">All Categories</option>
                                     <optgroup label="Expense Categories">
                                         <option value="food">🍔 Food & Groceries</option>
