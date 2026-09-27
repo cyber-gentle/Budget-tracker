@@ -1896,7 +1896,6 @@
             const newDark = !currentDark;
             localStorage.setItem('spendly-theme', newDark ? 'dark' : 'light');
             updateThemeUI(newDark);
-            showToast(`Switched to ${newDark ? 'Dark' : 'Light'} theme`);
         }
 
         if (themeToggleBtn) {
