@@ -1,6 +1,6 @@
 module spendly
 
-go 1.22.2
+go 1.25.0
 
 require (
 	github.com/tursodatabase/libsql-client-go v0.0.0-20260528064733-9d5d30a29a60
