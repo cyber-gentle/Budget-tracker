@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 	"sync"
 
@@ -31,24 +32,17 @@ func getHeaderCaseInsensitive(r *http.Request, key string) string {
 
 // Handler is the Vercel serverless function entrypoint.
 func Handler(w http.ResponseWriter, r *http.Request) {
-	// Try multiple sources for the original client route
 	var finalPath string
 
-	if matched := getHeaderCaseInsensitive(r, "x-matched-path"); matched != "" && !strings.HasPrefix(matched, "/api/index") && matched != "/api" {
-		if u, err := url.Parse(matched); err == nil && u.Path != "" {
-			finalPath = u.Path
-		}
+	// 1. Primary: check __path passed by vercel.json rewrite
+	q := r.URL.Query()
+	if qPath := q.Get("__path"); qPath != "" {
+		finalPath = qPath
+		q.Del("__path")
+		r.URL.RawQuery = q.Encode()
 	}
 
-	if finalPath == "" {
-		if qPath := r.URL.Query().Get("__path"); qPath != "" {
-			finalPath = qPath
-			q := r.URL.Query()
-			q.Del("__path")
-			r.URL.RawQuery = q.Encode()
-		}
-	}
-
+	// 2. Secondary: check x-forwarded-uri
 	if finalPath == "" {
 		if origURI := getHeaderCaseInsensitive(r, "x-forwarded-uri"); origURI != "" && !strings.HasPrefix(origURI, "/api/index") && origURI != "/api" {
 			if u, err := url.Parse(origURI); err == nil && u.Path != "" {
@@ -57,6 +51,16 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// 3. Tertiary: check x-matched-path (only if not root or api index)
+	if finalPath == "" {
+		if matched := getHeaderCaseInsensitive(r, "x-matched-path"); matched != "" && matched != "/" && !strings.HasPrefix(matched, "/api/index") && matched != "/api" {
+			if u, err := url.Parse(matched); err == nil && u.Path != "" {
+				finalPath = u.Path
+			}
+		}
+	}
+
+	// 4. Fallback: check r.URL.Path
 	if finalPath == "" {
 		p := r.URL.Path
 		if strings.HasPrefix(p, "/api/index.go") {
@@ -69,7 +73,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		finalPath = p
 	}
 
-	if finalPath == "" || finalPath == "/index" || finalPath == "/index.html" || finalPath == "/api/index" {
+	// Normalize path (ensure leading slash, resolve double slashes, clean)
+	if finalPath != "" {
+		finalPath = path.Clean("/" + strings.TrimLeft(finalPath, "/"))
+	}
+
+	if finalPath == "" || finalPath == "/index" || finalPath == "/index.html" || finalPath == "/api" || finalPath == "/api/index" || finalPath == "/api/index.go" {
 		finalPath = "/"
 	}
 	r.URL.Path = finalPath
