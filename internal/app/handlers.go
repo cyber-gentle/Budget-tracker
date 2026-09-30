@@ -120,6 +120,10 @@ func (app *App) getSessionUser(r *http.Request) (string, bool) {
 func (app *App) HandleHome(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/", "", "/index", "/index.html", "/api", "/api/index", "/api/index/":
+		if _, ok := app.getSessionUser(r); ok {
+			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+			return
+		}
 		app.renderTemplate(w, "index.html", nil)
 		return
 	default:
