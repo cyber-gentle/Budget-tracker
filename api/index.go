@@ -73,6 +73,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		finalPath = p
 	}
 
+	if strings.Contains(finalPath, "$1") || strings.Contains(finalPath, ":path") {
+		finalPath = ""
+	}
+
 	// Normalize path (ensure leading slash, resolve double slashes, clean)
 	if finalPath != "" {
 		finalPath = path.Clean("/" + strings.TrimLeft(finalPath, "/"))
