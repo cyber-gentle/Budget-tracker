@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"os"
@@ -32,6 +33,22 @@ func getHeaderCaseInsensitive(r *http.Request, key string) string {
 
 // Handler is the Vercel serverless function entrypoint.
 func Handler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("__debug") == "1" {
+		w.Header().Set("Content-Type", "application/json")
+		headers := make(map[string][]string)
+		for k, v := range r.Header {
+			headers[k] = v
+		}
+		data := map[string]any{
+			"url_path":    r.URL.Path,
+			"raw_query":   r.URL.RawQuery,
+			"request_uri": r.RequestURI,
+			"headers":     headers,
+		}
+		json.NewEncoder(w).Encode(data)
+		return
+	}
+
 	var finalPath string
 
 	// 1. Primary: check __path passed by vercel.json rewrite
