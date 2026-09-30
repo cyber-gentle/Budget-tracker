@@ -33,76 +33,50 @@ func getHeaderCaseInsensitive(r *http.Request, key string) string {
 
 // Handler is the Vercel serverless function entrypoint.
 func Handler(w http.ResponseWriter, r *http.Request) {
+	// Diagnostic check
 	if r.URL.Query().Get("__debug") == "1" {
 		w.Header().Set("Content-Type", "application/json")
 		headers := make(map[string][]string)
 		for k, v := range r.Header {
 			headers[k] = v
 		}
-		data := map[string]any{
+		json.NewEncoder(w).Encode(map[string]any{
 			"url_path":    r.URL.Path,
 			"raw_query":   r.URL.RawQuery,
 			"request_uri": r.RequestURI,
 			"headers":     headers,
-		}
-		json.NewEncoder(w).Encode(data)
+		})
 		return
 	}
 
-	var finalPath string
+	origPath := r.URL.Path
 
-	// 1. Primary: check __path passed by vercel.json rewrite
-	q := r.URL.Query()
-	if qPath := q.Get("__path"); qPath != "" {
-		finalPath = qPath
-		q.Del("__path")
-		r.URL.RawQuery = q.Encode()
-	}
-
-	// 2. Secondary: check x-forwarded-uri
-	if finalPath == "" {
-		if origURI := getHeaderCaseInsensitive(r, "x-forwarded-uri"); origURI != "" && !strings.HasPrefix(origURI, "/api/index") && origURI != "/api" {
-			if u, err := url.Parse(origURI); err == nil && u.Path != "" {
-				finalPath = u.Path
+	// If Vercel rewrote path to function file itself, recover target route
+	if origPath == "" || strings.HasPrefix(origPath, "/api/index") || origPath == "/api" {
+		if fURI := getHeaderCaseInsensitive(r, "x-forwarded-uri"); fURI != "" && !strings.HasPrefix(fURI, "/api/index") {
+			if u, err := url.Parse(fURI); err == nil && u.Path != "" {
+				origPath = u.Path
 			}
-		}
-	}
-
-	// 3. Tertiary: check x-matched-path (only if not root or api index)
-	if finalPath == "" {
-		if matched := getHeaderCaseInsensitive(r, "x-matched-path"); matched != "" && matched != "/" && !strings.HasPrefix(matched, "/api/index") && matched != "/api" {
-			if u, err := url.Parse(matched); err == nil && u.Path != "" {
-				finalPath = u.Path
+		} else if mPath := getHeaderCaseInsensitive(r, "x-matched-path"); mPath != "" && mPath != "/" && !strings.HasPrefix(mPath, "/api/index") {
+			if u, err := url.Parse(mPath); err == nil && u.Path != "" {
+				origPath = u.Path
 			}
+		} else if qPath := r.URL.Query().Get("__path"); qPath != "" {
+			origPath = qPath
+			q := r.URL.Query()
+			q.Del("__path")
+			r.URL.RawQuery = q.Encode()
+		} else {
+			origPath = "/"
 		}
 	}
 
-	// 4. Fallback: check r.URL.Path
-	if finalPath == "" {
-		p := r.URL.Path
-		if strings.HasPrefix(p, "/api/index.go") {
-			p = strings.TrimPrefix(p, "/api/index.go")
-		} else if strings.HasPrefix(p, "/api/index") {
-			p = strings.TrimPrefix(p, "/api/index")
-		} else if strings.HasPrefix(p, "/api") {
-			p = strings.TrimPrefix(p, "/api")
-		}
-		finalPath = p
+	// Normalize route
+	origPath = path.Clean("/" + strings.TrimLeft(origPath, "/"))
+	if origPath == "/index" || origPath == "/index.html" {
+		origPath = "/"
 	}
-
-	if strings.Contains(finalPath, "$1") || strings.Contains(finalPath, ":path") {
-		finalPath = ""
-	}
-
-	// Normalize path (ensure leading slash, resolve double slashes, clean)
-	if finalPath != "" {
-		finalPath = path.Clean("/" + strings.TrimLeft(finalPath, "/"))
-	}
-
-	if finalPath == "" || finalPath == "/index" || finalPath == "/index.html" || finalPath == "/api" || finalPath == "/api/index" || finalPath == "/api/index.go" {
-		finalPath = "/"
-	}
-	r.URL.Path = finalPath
+	r.URL.Path = origPath
 
 	once.Do(func() {
 		db, err := app.NewDBStore(os.Getenv("TURSO_DATABASE_URL"), os.Getenv("TURSO_AUTH_TOKEN"))
