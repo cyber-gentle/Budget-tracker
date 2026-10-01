@@ -70,6 +70,7 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/dashboard", app.HandleDashboard)
 	app.Mux.HandleFunc("/debts", app.HandleDebts)
 	app.Mux.HandleFunc("/subscriptions", app.HandleSubscriptionsPage)
+	app.Mux.HandleFunc("/goals", app.HandleGoalsPage)
 
 	// Auth APIs
 	app.Mux.HandleFunc("/api/signup", app.HandleSignupAPI)
@@ -87,6 +88,10 @@ func (app *App) routes() {
 	// Subscriptions & Recurring Bills APIs
 	app.Mux.HandleFunc("/api/subscriptions", app.HandleSubscriptionsAPI)
 	app.Mux.HandleFunc("/api/subscriptions/", app.HandleSubscriptionByID)
+
+	// Savings Goals & Virtual Pots APIs
+	app.Mux.HandleFunc("/api/goals", app.HandleGoalsAPI)
+	app.Mux.HandleFunc("/api/goals/", app.HandleGoalByID)
 
 	// Budgets, Analytics, Export, Currency APIs
 	app.Mux.HandleFunc("/api/budgets", app.HandleBudgets)
@@ -1072,4 +1077,281 @@ func (app *App) HandleSubscriptionByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
+
+// ─── Savings Goals & Virtual Pots Handlers ──────────────────────────────────
+
+func (app *App) HandleGoalsPage(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+	prof, _ := app.DB.GetProfile(username)
+	fullName := ""
+	email := ""
+	if prof != nil {
+		fullName = prof.FullName
+		email = prof.Email
+	}
+
+	data := struct {
+		Username string
+		FullName string
+		Email    string
+		Currency string
+	}{
+		Username: username,
+		FullName: fullName,
+		Email:    email,
+		Currency: curr,
+	}
+
+	app.renderTemplate(w, "goals.html", data)
+}
+
+func (app *App) HandleGoalsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+
+	switch r.Method {
+	case http.MethodGet:
+		goals, summary, err := app.DB.GetGoals(username)
+		if err != nil {
+			jsonError(w, "failed to get savings goals", http.StatusInternalServerError)
+			return
+		}
+		for i := range goals {
+			goals[i].TargetFmt = formatMoney(goals[i].TargetAmount, curr)
+			goals[i].SavedFmt = formatMoney(goals[i].SavedAmount, curr)
+			goals[i].RemainingFmt = formatMoney(goals[i].Remaining, curr)
+		}
+		summary.TotalSavedFmt = formatMoney(summary.TotalSaved, curr)
+		summary.TotalTargetFmt = formatMoney(summary.TotalTarget, curr)
+		summary.TotalRemainFmt = formatMoney(summary.TotalRemaining, curr)
+
+		jsonOK(w, map[string]any{
+			"goals":    goals,
+			"summary":  summary,
+			"currency": curr,
+		})
+
+	case http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		name := strings.TrimSpace(r.FormValue("name"))
+		targetAmountStr := strings.TrimSpace(r.FormValue("target_amount"))
+		targetDateStr := strings.TrimSpace(r.FormValue("target_date"))
+		emoji := strings.TrimSpace(r.FormValue("emoji"))
+		color := strings.TrimSpace(r.FormValue("color"))
+		category := strings.TrimSpace(r.FormValue("category"))
+
+		if name == "" || targetAmountStr == "" {
+			jsonError(w, "goal name and target amount are required", http.StatusBadRequest)
+			return
+		}
+
+		targetAmount, err := strconv.ParseFloat(targetAmountStr, 64)
+		if err != nil || targetAmount <= 0 {
+			jsonError(w, "target amount must be greater than zero", http.StatusBadRequest)
+			return
+		}
+
+		var targetDate *time.Time
+		if targetDateStr != "" {
+			if parsed, err := time.Parse("2006-01-02", targetDateStr); err == nil {
+				targetDate = &parsed
+			}
+		}
+
+		goal, err := app.DB.CreateGoal(username, name, targetAmount, targetDate, emoji, color, category)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		goal.TargetFmt = formatMoney(goal.TargetAmount, curr)
+		goal.SavedFmt = formatMoney(goal.SavedAmount, curr)
+		goal.RemainingFmt = formatMoney(goal.Remaining, curr)
+
+		w.WriteHeader(http.StatusCreated)
+		jsonOK(w, goal)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleGoalByID(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/api/goals/")
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[0])
+	if err != nil || id <= 0 {
+		jsonError(w, "invalid goal id", http.StatusBadRequest)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+
+	// Sub-route: /api/goals/{id}/deposit
+	if len(parts) == 2 && parts[1] == "deposit" {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		_ = r.ParseMultipartForm(1 << 20)
+		amountStr := strings.TrimSpace(r.FormValue("amount"))
+		note := strings.TrimSpace(r.FormValue("note"))
+		logTx := r.FormValue("log_transaction") == "true" || r.FormValue("log_transaction") == "1"
+
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil || amount <= 0 {
+			jsonError(w, "deposit amount must be greater than zero", http.StatusBadRequest)
+			return
+		}
+
+		goal, err := app.DB.DepositToGoal(id, username, amount, note, logTx)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		goal.TargetFmt = formatMoney(goal.TargetAmount, curr)
+		goal.SavedFmt = formatMoney(goal.SavedAmount, curr)
+		goal.RemainingFmt = formatMoney(goal.Remaining, curr)
+
+		_, _, balance, _ := app.DB.CalculateTotals(username)
+
+		jsonOK(w, map[string]any{
+			"status":      "deposited",
+			"goal":        goal,
+			"balance":     balance,
+			"balance_fmt": formatMoney(balance, curr),
+		})
+		return
+	}
+
+	// Sub-route: /api/goals/{id}/withdraw
+	if len(parts) == 2 && parts[1] == "withdraw" {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		_ = r.ParseMultipartForm(1 << 20)
+		amountStr := strings.TrimSpace(r.FormValue("amount"))
+		note := strings.TrimSpace(r.FormValue("note"))
+		logTx := r.FormValue("log_transaction") == "true" || r.FormValue("log_transaction") == "1"
+
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil || amount <= 0 {
+			jsonError(w, "withdrawal amount must be greater than zero", http.StatusBadRequest)
+			return
+		}
+
+		goal, err := app.DB.WithdrawFromGoal(id, username, amount, note, logTx)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		goal.TargetFmt = formatMoney(goal.TargetAmount, curr)
+		goal.SavedFmt = formatMoney(goal.SavedAmount, curr)
+		goal.RemainingFmt = formatMoney(goal.Remaining, curr)
+
+		_, _, balance, _ := app.DB.CalculateTotals(username)
+
+		jsonOK(w, map[string]any{
+			"status":      "withdrawn",
+			"goal":        goal,
+			"balance":     balance,
+			"balance_fmt": formatMoney(balance, curr),
+		})
+		return
+	}
+
+	// Root goal item: /api/goals/{id}
+	switch r.Method {
+	case http.MethodGet:
+		goal, contributions, err := app.DB.GetGoalByID(id, username)
+		if err != nil {
+			jsonError(w, "goal not found", http.StatusNotFound)
+			return
+		}
+		goal.TargetFmt = formatMoney(goal.TargetAmount, curr)
+		goal.SavedFmt = formatMoney(goal.SavedAmount, curr)
+		goal.RemainingFmt = formatMoney(goal.Remaining, curr)
+		for i := range contributions {
+			contributions[i].AmountFmt = formatMoney(contributions[i].Amount, curr)
+		}
+
+		jsonOK(w, map[string]any{
+			"goal":          goal,
+			"contributions": contributions,
+			"currency":      curr,
+		})
+
+	case http.MethodPut, http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		name := strings.TrimSpace(r.FormValue("name"))
+		targetAmountStr := strings.TrimSpace(r.FormValue("target_amount"))
+		targetDateStr := strings.TrimSpace(r.FormValue("target_date"))
+		emoji := strings.TrimSpace(r.FormValue("emoji"))
+		color := strings.TrimSpace(r.FormValue("color"))
+		category := strings.TrimSpace(r.FormValue("category"))
+		status := strings.TrimSpace(r.FormValue("status"))
+
+		if name == "" || targetAmountStr == "" {
+			jsonError(w, "goal name and target amount are required", http.StatusBadRequest)
+			return
+		}
+
+		targetAmount, err := strconv.ParseFloat(targetAmountStr, 64)
+		if err != nil || targetAmount <= 0 {
+			jsonError(w, "target amount must be greater than zero", http.StatusBadRequest)
+			return
+		}
+
+		var targetDate *time.Time
+		if targetDateStr != "" {
+			if parsed, err := time.Parse("2006-01-02", targetDateStr); err == nil {
+				targetDate = &parsed
+			}
+		}
+
+		goal, err := app.DB.UpdateGoal(id, username, name, targetAmount, targetDate, emoji, color, category, status)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		goal.TargetFmt = formatMoney(goal.TargetAmount, curr)
+		goal.SavedFmt = formatMoney(goal.SavedAmount, curr)
+		goal.RemainingFmt = formatMoney(goal.Remaining, curr)
+		jsonOK(w, goal)
+
+	case http.MethodDelete:
+		deleted, err := app.DB.DeleteGoal(id, username)
+		if err != nil || !deleted {
+			jsonError(w, "goal not found or delete failed", http.StatusNotFound)
+			return
+		}
+		jsonOK(w, map[string]string{"status": "deleted"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
 

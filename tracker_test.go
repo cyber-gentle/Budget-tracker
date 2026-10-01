@@ -498,4 +498,123 @@ func TestSubscriptionsFlow(t *testing.T) {
 	}
 }
 
+func TestGoalsFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "test_goals.db")
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to create db store: %v", err)
+	}
+
+	username := "goal_user"
+	err = store.Signup(username, "goal@spendly.app", "pass123")
+	if err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	targetDate := time.Now().AddDate(0, 3, 0) // 3 months from now
+
+	// 1. Create Goals
+	goal1, err := store.CreateGoal(username, "Emergency Fund", 50000, &targetDate, "🛡️", "#10B981", "emergency")
+	if err != nil {
+		t.Fatalf("failed to create goal 1: %v", err)
+	}
+	if goal1.Remaining != 50000 || goal1.Percentage != 0 {
+		t.Fatalf("unexpected goal state: %+v", goal1)
+	}
+
+	goal2, err := store.CreateGoal(username, "New Laptop", 120000, nil, "💻", "#3B82F6", "tech")
+	if err != nil {
+		t.Fatalf("failed to create goal 2: %v", err)
+	}
+
+	// 2. Get Goals & Summary
+	goals, summary, err := store.GetGoals(username)
+	if err != nil || len(goals) != 2 {
+		t.Fatalf("expected 2 goals, got %d (err: %v)", len(goals), err)
+	}
+	if summary.TotalTarget != 170000 || summary.TotalSaved != 0 || summary.TotalRemaining != 170000 {
+		t.Fatalf("unexpected summary: %+v", summary)
+	}
+
+	// 3. Deposit to Emergency Fund with logTransaction=true
+	updatedGoal1, err := store.DepositToGoal(goal1.ID, username, 20000, "Initial savings deposit", true)
+	if err != nil {
+		t.Fatalf("failed to deposit: %v", err)
+	}
+	if updatedGoal1.SavedAmount != 20000 || updatedGoal1.Remaining != 30000 || updatedGoal1.Percentage != 40 {
+		t.Fatalf("unexpected updated goal: %+v", updatedGoal1)
+	}
+
+	// Check expense transaction logged
+	txs, err := store.GetTransactions(username)
+	if err != nil || len(txs) != 1 {
+		t.Fatalf("expected 1 expense transaction logged, got %d", len(txs))
+	}
+	if txs[0].Amount != 20000 || txs[0].Type != "expense" {
+		t.Fatalf("unexpected transaction: %+v", txs[0])
+	}
+
+	// 4. Deposit remaining to complete Emergency Fund
+	completedGoal1, err := store.DepositToGoal(goal1.ID, username, 30000, "Final top up", false)
+	if err != nil {
+		t.Fatalf("failed to deposit: %v", err)
+	}
+	if completedGoal1.Status != "completed" || completedGoal1.Percentage != 100 || completedGoal1.Remaining != 0 {
+		t.Fatalf("expected goal to be completed: %+v", completedGoal1)
+	}
+
+	// 5. Withdraw partial amount from Emergency Fund
+	withdrawnGoal1, err := store.WithdrawFromGoal(goal1.ID, username, 5000, "Emergency car repair", true)
+	if err != nil {
+		t.Fatalf("failed to withdraw: %v", err)
+	}
+	if withdrawnGoal1.SavedAmount != 45000 || withdrawnGoal1.Status != "in_progress" {
+		t.Fatalf("expected goal to reopen to in_progress with 45000 saved, got: %+v", withdrawnGoal1)
+	}
+
+	// Check income transaction logged for withdrawal
+	txs, _ = store.GetTransactions(username)
+	if len(txs) != 2 {
+		t.Fatalf("expected 2 transactions, got %d", len(txs))
+	}
+
+	// 6. Test withdrawing more than saved fails
+	_, err = store.WithdrawFromGoal(goal1.ID, username, 999999, "Overdraw test", false)
+	if err == nil {
+		t.Fatalf("expected error when withdrawing more than saved, got nil")
+	}
+
+	// 7. Verify contributions ledger
+	goalWithLedger, contributions, err := store.GetGoalByID(goal1.ID, username)
+	if err != nil {
+		t.Fatalf("failed to get goal with ledger: %v", err)
+	}
+	if goalWithLedger.SavedAmount != 45000 {
+		t.Fatalf("expected 45000 saved, got %v", goalWithLedger.SavedAmount)
+	}
+	if len(contributions) != 3 { // 2 deposits, 1 withdrawal
+		t.Fatalf("expected 3 contributions, got %d", len(contributions))
+	}
+
+	// 8. Update Goal
+	newTargetDate := time.Now().AddDate(0, 6, 0)
+	updated2, err := store.UpdateGoal(goal2.ID, username, "MacBook Pro M3", 150000, &newTargetDate, "🍏", "#8B5CF6", "tech", "in_progress")
+	if err != nil || updated2.Name != "MacBook Pro M3" || updated2.TargetAmount != 150000 {
+		t.Fatalf("failed to update goal 2: %v", err)
+	}
+
+	// 9. Delete Goal
+	deleted, err := store.DeleteGoal(goal2.ID, username)
+	if err != nil || !deleted {
+		t.Fatalf("failed to delete goal: %v", err)
+	}
+
+	goalsAfter, _, _ := store.GetGoals(username)
+	if len(goalsAfter) != 1 {
+		t.Fatalf("expected 1 goal remaining, got %d", len(goalsAfter))
+	}
+}
+
+
 

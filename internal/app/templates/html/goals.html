@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savings Goals & Virtual Pots — Spendly</title>
+    
+    <link rel="icon" type="image/svg+xml" href="/static/assets/imgs/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/globals.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        offwhite: '#F8FAFC',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Synchronous anti-flash theme script
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('spendly-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header Navigation -->
+    <header class="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            
+            <!-- Logo & Desktop Navigation -->
+            <div class="flex items-center gap-6">
+                <a href="/dashboard" class="flex items-center gap-2.5 transition-opacity hover:opacity-85">
+                    <span class="w-8 h-8 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+                            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+                            <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                        </svg>
+                    </span>
+                    <span class="font-heading text-lg font-bold tracking-tight text-slate-900 dark:text-white">Spendly</span>
+                </a>
+
+                <nav class="hidden md:flex items-center gap-1.5">
+                    <a href="/dashboard" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Dashboard
+                    </a>
+                    <a href="/debts" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Debts & IOUs
+                    </a>
+                    <a href="/subscriptions" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Subscriptions
+                    </a>
+                    <a href="/goals" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors">
+                        Savings Goals
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Right Controls -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Theme Toggle Button -->
+                <button type="button" id="theme-toggle-btn" class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer" title="Toggle Light/Dark Theme">
+                    <svg id="theme-icon-sun" class="w-4 h-4 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg id="theme-icon-moon" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+
+                <!-- Currency Picker -->
+                <div class="relative">
+                    <select id="currency-select" class="appearance-none bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-colors cursor-pointer">
+                        <option value="₦" {{if eq .Currency "₦"}}selected{{end}}>₦ (NGN)</option>
+                        <option value="$" {{if eq .Currency "$"}}selected{{end}}>$ (USD)</option>
+                        <option value="€" {{if eq .Currency "€"}}selected{{end}}>€ (EUR)</option>
+                        <option value="£" {{if eq .Currency "£"}}selected{{end}}>£ (GBP)</option>
+                        <option value="¥" {{if eq .Currency "¥"}}selected{{end}}>¥ (JPY)</option>
+                        <option value="₹" {{if eq .Currency "₹"}}selected{{end}}>₹ (INR)</option>
+                        <option value="C$" {{if eq .Currency "C$"}}selected{{end}}>C$ (CAD)</option>
+                        <option value="A$" {{if eq .Currency "A$"}}selected{{end}}>A$ (AUD)</option>
+                        <option value="₵" {{if eq .Currency "₵"}}selected{{end}}>₵ (GHS)</option>
+                        <option value="KSh" {{if eq .Currency "KSh"}}selected{{end}}>KSh (KES)</option>
+                        <option value="R" {{if eq .Currency "R"}}selected{{end}}>R (ZAR)</option>
+                    </select>
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </span>
+                </div>
+
+                <!-- User Dropdown Menu -->
+                <div class="relative">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                        <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center uppercase">
+                            {{printf "%.1s" .Username}}
+                        </span>
+                        <div class="hidden lg:flex flex-col text-left">
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[100px] truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">@{{.Username}}</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <!-- Dropdown Content -->
+                    <div id="user-dropdown-menu" class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 hidden z-50">
+                        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                            <p class="text-xs font-bold text-slate-800 dark:text-white truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">{{if .Email}}{{.Email}}{{else}}@{{.Username}}{{end}}</p>
+                        </div>
+                        <div class="py-1">
+                            <a href="/dashboard" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="/debts" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3 14 10"/><path d="m3 21 7-7"/></svg>
+                                <span>Debts & IOUs</span>
+                            </a>
+                            <a href="/subscriptions" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                                <span>Subscriptions</span>
+                            </a>
+                            <a href="/goals" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                                <span>Savings Goals</span>
+                            </a>
+                        </div>
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-1">
+                            <form action="/api/logout" method="POST">
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                    <span>Log out</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Mobile Horizontal Tab Bar (Touch-Optimized) -->
+        <div class="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-3 py-1.5 overflow-x-auto no-scrollbar flex items-center gap-1.5">
+            <a href="/dashboard" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/debts" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3 14 10"/><path d="m3 21 7-7"/></svg>
+                <span>Debts</span>
+            </a>
+            <a href="/subscriptions" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                <span>Subscriptions</span>
+            </a>
+            <a href="/goals" class="shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow-xs flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <span>Savings Goals</span>
+            </a>
+        </div>
+    </header>
+ 
+    <!-- Nav Spacer -->
+    <div class="h-28 md:h-20" aria-hidden="true"></div>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 w-full space-y-6">
+
+        <!-- Page Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Savings Goals & Pots</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Lock away funds into virtual pockets, track target dates, and hit your milestones.</p>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button type="button" onclick="openCreateModal()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    <span>Create Savings Pot</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Metrics Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- Total Saved -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Total Saved</span>
+                    <span id="summary-overall-pct" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">0%</span>
+                </div>
+                <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-saved">₦0.00</h3>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
+                    <div id="summary-progress-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Total Target -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+                <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Total Target</span>
+                <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-target">₦0.00</h3>
+                <p class="text-[10px] sm:text-[11px] text-slate-400 mt-2 truncate">Across all savings pots</p>
+            </div>
+
+            <!-- Total Remaining -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+                <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Still Needed</span>
+                <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-remaining">₦0.00</h3>
+                <p class="text-[10px] sm:text-[11px] text-slate-400 mt-2 truncate">Remaining to reach 100%</p>
+            </div>
+
+            <!-- Active / Completed -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+                <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Pots Status</span>
+                <div class="flex items-baseline gap-1.5 mt-1.5">
+                    <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white" id="summary-active-count">0</h3>
+                    <span class="text-xs text-slate-400 font-medium">active</span>
+                    <span class="text-xs text-slate-300 dark:text-slate-700">/</span>
+                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400" id="summary-completed-count">0 reached</span>
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-slate-400 mt-2 truncate" id="summary-total-count">0 total pots</p>
+            </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+            <!-- Tabs -->
+            <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full sm:w-auto">
+                <button type="button" onclick="setFilter('all')" id="filter-tab-all" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer">
+                    All Pots
+                </button>
+                <button type="button" onclick="setFilter('in_progress')" id="filter-tab-in_progress" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+                    In Progress
+                </button>
+                <button type="button" onclick="setFilter('completed')" id="filter-tab-completed" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+                    Completed
+                </button>
+            </div>
+
+            <!-- Search input -->
+            <div class="relative w-full sm:w-64">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </span>
+                <input type="text" id="search-input" placeholder="Search goals or pots..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+            </div>
+        </div>
+
+        <!-- Goals Grid -->
+        <div id="goals-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            <!-- Loading placeholder -->
+            <div class="col-span-full py-16 text-center text-slate-400 text-xs">
+                Loading savings goals...
+            </div>
+        </div>
+
+        <!-- Empty State (Hidden by default) -->
+        <div id="goals-empty" class="hidden text-center py-16 px-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">No savings goals found</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto mt-1">Start locking money away into dedicated pots for emergencies, a dream vacation, new tech, or rainy days.</p>
+            <button type="button" onclick="openCreateModal()" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
+                + Create your first savings goal
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Modal: Create / Edit Goal -->
+    <div id="goal-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <span id="modal-emoji-preview" class="text-2xl">🎯</span>
+                    <h2 id="modal-title" class="font-heading font-bold text-base text-slate-900 dark:text-white">Create Savings Pot</h2>
+                </div>
+                <button type="button" onclick="closeGoalModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="goal-form" class="p-5 space-y-4 overflow-y-auto">
+                <input type="hidden" id="goal-id" value="">
+
+                <!-- Name -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Goal Name *</label>
+                    <input type="text" id="goal-name" required placeholder="e.g. Emergency Fund, New MacBook, Tokyo Trip" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <!-- Target Amount -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Target Amount (<span class="currency-label">{{.Currency}}</span>) *</label>
+                    <input type="number" step="0.01" min="1" id="goal-target" required placeholder="50000" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <!-- Target Date & Category -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Target Date (Optional)</label>
+                        <input type="date" id="goal-date" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Category</label>
+                        <select id="goal-category" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                            <option value="emergency">🛡️ Emergency</option>
+                            <option value="savings">💰 General Savings</option>
+                            <option value="vacation">🏖️ Vacation / Travel</option>
+                            <option value="tech">💻 Tech & Gadgets</option>
+                            <option value="vehicle">🚗 Car & Vehicle</option>
+                            <option value="home">🏡 House / Rent</option>
+                            <option value="education">🎓 Education</option>
+                            <option value="investing">📈 Investments</option>
+                            <option value="other">🎯 Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Emoji Picker Presets -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Pick Icon / Emoji</label>
+                    <input type="hidden" id="goal-emoji" value="🎯">
+                    <div class="grid grid-cols-8 gap-1.5" id="emoji-picker-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Color Swatches -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Goal Color Theme</label>
+                    <input type="hidden" id="goal-color" value="#10B981">
+                    <div class="flex items-center gap-2 flex-wrap" id="color-picker-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Status (Only when editing) -->
+                <div id="goal-status-container" class="hidden">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                    <select id="goal-status" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeGoalModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-colors cursor-pointer">Save Pot</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Deposit Money into Goal -->
+    <div id="deposit-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                        +
+                    </div>
+                    <h2 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Deposit to <span id="deposit-goal-name"></span></h2>
+                </div>
+                <button type="button" onclick="closeDepositModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="deposit-form" class="p-5 space-y-4">
+                <input type="hidden" id="deposit-goal-id">
+
+                <!-- Current Goal Status Snapshot -->
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">Saved so far</span>
+                        <span class="font-bold text-slate-800 dark:text-white" id="deposit-current-saved">₦0</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-slate-400 block text-[10px]">Remaining</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400" id="deposit-remaining">₦0</span>
+                    </div>
+                </div>
+
+                <!-- Quick Amount Chips -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">Quick Add Amount</label>
+                    <div class="grid grid-cols-4 gap-1.5" id="deposit-quick-chips">
+                        <button type="button" onclick="setDepositAmount(1000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">+1k</button>
+                        <button type="button" onclick="setDepositAmount(5000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">+5k</button>
+                        <button type="button" onclick="setDepositAmount(10000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">+10k</button>
+                        <button type="button" onclick="fillFullRemainingDeposit()" class="py-1 px-1.5 text-[11px] font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors">Fill Pot</button>
+                    </div>
+                </div>
+
+                <!-- Amount -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Deposit Amount (<span class="currency-label">{{.Currency}}</span>) *</label>
+                    <input type="number" step="0.01" min="1" id="deposit-amount" required placeholder="0.00" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold text-base focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <!-- Note -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Note (Optional)</label>
+                    <input type="text" id="deposit-note" placeholder="e.g. End of month stash" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <!-- Log Transaction Toggle -->
+                <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
+                    <input type="checkbox" id="deposit-log-tx" checked class="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                    <label for="deposit-log-tx" class="text-xs text-slate-600 dark:text-slate-300 select-none cursor-pointer">
+                        <span class="font-bold block text-slate-800 dark:text-white">Deduct from wallet balance</span>
+                        <span class="text-[10px] text-slate-400">Records an expense in your main budget transactions</span>
+                    </label>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeDepositModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-colors cursor-pointer">Confirm Deposit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Withdraw Money from Goal -->
+    <div id="withdraw-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+                        -
+                    </div>
+                    <h2 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Withdraw from <span id="withdraw-goal-name"></span></h2>
+                </div>
+                <button type="button" onclick="closeWithdrawModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="withdraw-form" class="p-5 space-y-4">
+                <input type="hidden" id="withdraw-goal-id">
+
+                <!-- Available Balance in Pot -->
+                <div class="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-amber-800 dark:text-amber-300 block text-[10px] font-semibold">Available in Pot</span>
+                        <span class="font-black text-amber-900 dark:text-amber-200 text-sm" id="withdraw-available-saved">₦0</span>
+                    </div>
+                    <button type="button" onclick="withdrawAllAvailable()" class="px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg hover:bg-amber-50 transition-colors shadow-xs">
+                        Withdraw All
+                    </button>
+                </div>
+
+                <!-- Amount -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Withdraw Amount (<span class="currency-label">{{.Currency}}</span>) *</label>
+                    <input type="number" step="0.01" min="1" id="withdraw-amount" required placeholder="0.00" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold text-base focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <!-- Note -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Reason / Note (Optional)</label>
+                    <input type="text" id="withdraw-note" placeholder="e.g. Unforeseen repair, bought items" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <!-- Log Transaction Toggle -->
+                <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
+                    <input type="checkbox" id="withdraw-log-tx" checked class="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer">
+                    <label for="withdraw-log-tx" class="text-xs text-slate-600 dark:text-slate-300 select-none cursor-pointer">
+                        <span class="font-bold block text-slate-800 dark:text-white">Return to wallet balance</span>
+                        <span class="text-[10px] text-slate-400">Records an income into your main budget balance</span>
+                    </label>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeWithdrawModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs transition-colors cursor-pointer">Confirm Withdrawal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Contributions / Activity Ledger -->
+    <div id="ledger-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <span id="ledger-emoji" class="text-xl">🎯</span>
+                    <div>
+                        <h2 class="font-heading font-bold text-sm text-slate-900 dark:text-white" id="ledger-goal-name">Vault Activity Ledger</h2>
+                        <p class="text-[10px] text-slate-400">Transaction history for this pot</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeLedgerModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Ledger Content -->
+            <div class="p-5 overflow-y-auto flex-1 space-y-3" id="ledger-list">
+                <div class="text-center py-8 text-xs text-slate-400">Loading ledger...</div>
+            </div>
+
+            <div class="p-3 border-t border-slate-100 dark:border-slate-800 text-right shrink-0">
+                <button type="button" onclick="closeLedgerModal()" class="px-4 py-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        let allGoals = [];
+        let goalSummary = {};
+        let currentFilter = 'all';
+        let currentCurrency = '{{.Currency}}';
+        let currentGoalForDeposit = null;
+        let currentGoalForWithdraw = null;
+
+        const emojiPresets = ['🎯', '🛡️', '🏖️', '💻', '🚗', '🏡', '🎓', '💍', '✈️', '📱', '🪙', '💎', '📈', '🎁', '🚀', '☕'];
+        const colorPresets = [
+            { name: 'Emerald', hex: '#10B981' },
+            { name: 'Blue', hex: '#3B82F6' },
+            { name: 'Purple', hex: '#8B5CF6' },
+            { name: 'Amber', hex: '#F59E0B' },
+            { name: 'Rose', hex: '#F43F5E' },
+            { name: 'Cyan', hex: '#06B6D4' },
+            { name: 'Indigo', hex: '#6366F1' },
+            { name: 'Fuchsia', hex: '#D946EF' }
+        ];
+
+        // Init emoji & color pickers
+        function initPickers() {
+            const emojiContainer = document.getElementById('emoji-picker-container');
+            emojiContainer.innerHTML = emojiPresets.map(emoji => `
+                <button type="button" onclick="selectEmoji('${emoji}')" class="emoji-btn h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer" data-emoji="${emoji}">
+                    ${emoji}
+                </button>
+            `).join('');
+
+            const colorContainer = document.getElementById('color-picker-container');
+            colorContainer.innerHTML = colorPresets.map(c => `
+                <button type="button" onclick="selectColor('${c.hex}')" class="color-btn w-7 h-7 rounded-full border-2 border-transparent transition-all cursor-pointer shadow-xs" style="background-color: ${c.hex};" data-color="${c.hex}" title="${c.name}"></button>
+            `).join('');
+
+            selectEmoji('🎯');
+            selectColor('#10B981');
+        }
+
+        function selectEmoji(emoji) {
+            document.getElementById('goal-emoji').value = emoji;
+            document.getElementById('modal-emoji-preview').textContent = emoji;
+            document.querySelectorAll('.emoji-btn').forEach(b => {
+                if (b.dataset.emoji === emoji) {
+                    b.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/60');
+                } else {
+                    b.classList.remove('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/60');
+                }
+            });
+        }
+
+        function selectColor(hex) {
+            document.getElementById('goal-color').value = hex;
+            document.querySelectorAll('.color-btn').forEach(b => {
+                if (b.dataset.color.toLowerCase() === hex.toLowerCase()) {
+                    b.classList.add('ring-2', 'ring-offset-2', 'ring-slate-900', 'dark:ring-white', 'dark:ring-offset-slate-900');
+                } else {
+                    b.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-900', 'dark:ring-white', 'dark:ring-offset-slate-900');
+                }
+            });
+        }
+
+        // Toast Notification Helper
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' 
+                ? 'bg-slate-900 dark:bg-emerald-600 text-white' 
+                : 'bg-rose-600 text-white';
+            toast.className = `${bgClass} pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 transition-all transform duration-200 translate-y-2 opacity-0`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
+                setTimeout(() => toast.remove(), 250);
+            }, 3000);
+        }
+
+        // Theme toggle
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        const moonIcon = document.getElementById('theme-icon-moon');
+        function updateThemeIcons() {
+            if (document.documentElement.classList.contains('dark')) {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        }
+        updateThemeIcons();
+        themeBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('spendly-theme', isDark ? 'dark' : 'light');
+            updateThemeIcons();
+        });
+
+        // User dropdown
+        const btnUserMenu = document.getElementById('btn-user-menu');
+        const userDropdown = document.getElementById('user-dropdown-menu');
+        btnUserMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+        document.addEventListener('click', () => userDropdown.classList.add('hidden'));
+
+        // Currency changer
+        document.getElementById('currency-select').addEventListener('change', async function() {
+            const newCurr = this.value;
+            try {
+                const res = await fetch('/api/currency', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `currency=${encodeURIComponent(newCurr)}`
+                });
+                if (res.ok) {
+                    currentCurrency = newCurr;
+                    document.querySelectorAll('.currency-label').forEach(el => el.textContent = newCurr);
+                    loadGoals();
+                    showToast(`Currency updated to ${newCurr}`);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        // Load Goals from API
+        async function loadGoals() {
+            try {
+                const res = await fetch('/api/goals');
+                if (!res.ok) throw new Error('Failed to load goals');
+                const data = await res.json();
+                allGoals = data.goals || [];
+                goalSummary = data.summary || {};
+                currentCurrency = data.currency || currentCurrency;
+
+                // Update summary metrics
+                document.getElementById('summary-total-saved').textContent = goalSummary.total_saved_fmt || (currentCurrency + '0.00');
+                document.getElementById('summary-total-target').textContent = goalSummary.total_target_fmt || (currentCurrency + '0.00');
+                document.getElementById('summary-total-remaining').textContent = goalSummary.total_remaining_fmt || (currentCurrency + '0.00');
+                document.getElementById('summary-active-count').textContent = goalSummary.in_progress_goals || 0;
+                document.getElementById('summary-completed-count').textContent = `${goalSummary.completed_goals || 0} reached`;
+                document.getElementById('summary-total-count').textContent = `${goalSummary.total_goals || 0} total pots`;
+                
+                const pct = goalSummary.overall_progress || 0;
+                document.getElementById('summary-overall-pct').textContent = `${pct}%`;
+                document.getElementById('summary-progress-bar').style.width = `${pct}%`;
+
+                renderGoals();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('goals-container').innerHTML = `
+                    <div class="col-span-full py-12 text-center text-rose-500 text-xs">
+                        Failed to load savings goals. Please refresh the page.
+                    </div>
+                `;
+            }
+        }
+
+        // Render Goals Grid
+        function renderGoals() {
+            const container = document.getElementById('goals-container');
+            const emptyEl = document.getElementById('goals-empty');
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+
+            const filtered = allGoals.filter(g => {
+                // Filter tab
+                if (currentFilter === 'in_progress' && g.status === 'completed') return false;
+                if (currentFilter === 'completed' && g.status !== 'completed') return false;
+                // Search
+                if (searchTerm) {
+                    const matchName = g.name.toLowerCase().includes(searchTerm);
+                    const matchCat = (g.category || '').toLowerCase().includes(searchTerm);
+                    if (!matchName && !matchCat) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            emptyEl.classList.add('hidden');
+
+            container.innerHTML = filtered.map(g => {
+                const isCompleted = g.status === 'completed' || g.saved_amount >= g.target_amount;
+                const statusBadge = isCompleted
+                    ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                         <span>🏆 Goal Reached!</span>
+                       </span>`
+                    : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                         <span>In Progress</span>
+                       </span>`;
+
+                // Days left badge
+                let daysBadge = '';
+                if (g.days_left !== undefined && g.days_left !== null) {
+                    if (g.days_left < 0) {
+                        daysBadge = `<span class="text-[10px] text-rose-500 font-semibold">Target passed (${Math.abs(g.days_left)}d ago)</span>`;
+                    } else if (g.days_left === 0) {
+                        daysBadge = `<span class="text-[10px] text-amber-500 font-bold">Target is Today!</span>`;
+                    } else if (g.days_left <= 14) {
+                        daysBadge = `<span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">${g.days_left} days left</span>`;
+                    } else {
+                        daysBadge = `<span class="text-[10px] text-slate-400">${g.days_left} days left</span>`;
+                    }
+                } else {
+                    daysBadge = `<span class="text-[10px] text-slate-400">No deadline</span>`;
+                }
+
+                const goalColor = g.color || '#10B981';
+
+                return `
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
+                        
+                        <!-- Top Row: Icon, Title, Dropdown -->
+                        <div>
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-xs" style="background-color: ${goalColor}18; border: 1.5px solid ${goalColor}40;">
+                                        ${g.emoji || '🎯'}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">${g.name}</h3>
+                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">${g.category || 'Savings'}</span>
+                                            <span class="text-slate-300 dark:text-slate-700">•</span>
+                                            ${daysBadge}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons: Edit / Delete -->
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" onclick="openEditModal(${g.id})" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit goal">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                    </button>
+                                    <button type="button" onclick="deleteGoal(${g.id}, '${g.name}')" class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete goal">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Status Badge -->
+                            <div class="mt-3.5 flex items-center justify-between">
+                                ${statusBadge}
+                                <span class="text-xs font-black" style="color: ${goalColor}">${g.percentage}%</span>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full mt-2 overflow-hidden p-0.5">
+                                <div class="h-full rounded-full transition-all duration-500" style="width: ${g.percentage}%; background-color: ${goalColor};"></div>
+                            </div>
+
+                            <!-- Financial Numbers -->
+                            <div class="mt-3 flex items-baseline justify-between text-xs">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block font-medium">Saved</span>
+                                    <span class="font-heading font-extrabold text-slate-900 dark:text-white text-sm">${g.saved_fmt || (currentCurrency + g.saved_amount)}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-slate-400 block font-medium">Target</span>
+                                    <span class="font-heading font-semibold text-slate-600 dark:text-slate-300 text-sm">${g.target_fmt || (currentCurrency + g.target_amount)}</span>
+                                </div>
+                            </div>
+
+                            <!-- Remaining Notice -->
+                            <div class="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
+                                <span>${isCompleted ? 'Target achieved! 🎉' : `${g.remaining_fmt || (currentCurrency + g.remaining)} remaining`}</span>
+                                <button type="button" onclick="openLedgerModal(${g.id})" class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+                                    View Activity
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card Action Buttons (Deposit / Withdraw) -->
+                        <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 gap-2">
+                            <button type="button" onclick="openDepositModal(${g.id})" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                <span>Deposit</span>
+                            </button>
+                            <button type="button" onclick="openWithdrawModal(${g.id})" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-98 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
+                                <span>Withdraw</span>
+                            </button>
+                        </div>
+
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            ['all', 'in_progress', 'completed'].forEach(tab => {
+                const el = document.getElementById(`filter-tab-${tab}`);
+                if (tab === filter) {
+                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer';
+                } else {
+                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer';
+                }
+            });
+            renderGoals();
+        }
+
+        document.getElementById('search-input').addEventListener('input', renderGoals);
+
+        // Modal Handlers: Create / Edit
+        function openCreateModal() {
+            document.getElementById('modal-title').textContent = 'Create Savings Pot';
+            document.getElementById('goal-id').value = '';
+            document.getElementById('goal-form').reset();
+            document.getElementById('goal-status-container').classList.add('hidden');
+            selectEmoji('🎯');
+            selectColor('#10B981');
+            document.getElementById('goal-modal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const goal = allGoals.find(g => g.id === id);
+            if (!goal) return;
+
+            document.getElementById('modal-title').textContent = 'Edit Savings Pot';
+            document.getElementById('goal-id').value = goal.id;
+            document.getElementById('goal-name').value = goal.name;
+            document.getElementById('goal-target').value = goal.target_amount;
+            document.getElementById('goal-date').value = goal.target_date_fmt || '';
+            document.getElementById('goal-category').value = goal.category || 'savings';
+            document.getElementById('goal-status').value = goal.status || 'in_progress';
+            document.getElementById('goal-status-container').classList.remove('hidden');
+
+            selectEmoji(goal.emoji || '🎯');
+            selectColor(goal.color || '#10B981');
+
+            document.getElementById('goal-modal').classList.remove('hidden');
+        }
+
+        function closeGoalModal() {
+            document.getElementById('goal-modal').classList.add('hidden');
+        }
+
+        // Form Submit: Create / Update
+        document.getElementById('goal-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('goal-id').value;
+            const name = document.getElementById('goal-name').value.trim();
+            const targetAmount = document.getElementById('goal-target').value;
+            const targetDate = document.getElementById('goal-date').value;
+            const category = document.getElementById('goal-category').value;
+            const emoji = document.getElementById('goal-emoji').value;
+            const color = document.getElementById('goal-color').value;
+            const status = document.getElementById('goal-status').value;
+
+            const params = new URLSearchParams();
+            params.append('name', name);
+            params.append('target_amount', targetAmount);
+            if (targetDate) params.append('target_date', targetDate);
+            params.append('category', category);
+            params.append('emoji', emoji);
+            params.append('color', color);
+            if (id) params.append('status', status);
+
+            const url = id ? `/api/goals/${id}` : '/api/goals';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                });
+                if (res.ok) {
+                    closeGoalModal();
+                    loadGoals();
+                    showToast(id ? 'Goal updated successfully' : 'Savings pot created!');
+                } else {
+                    const err = await res.json();
+                    showToast(err.error || 'Failed to save goal', 'error');
+                }
+            } catch (err) {
+                showToast('Network error while saving goal', 'error');
+            }
+        });
+
+        // Delete Goal
+        async function deleteGoal(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"? Any remaining saved funds in this pot won't be deleted from your actual transaction records.`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`/api/goals/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadGoals();
+                    showToast(`Deleted "${name}"`);
+                } else {
+                    showToast('Failed to delete goal', 'error');
+                }
+            } catch (e) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        // Modal Handlers: Deposit
+        function openDepositModal(id) {
+            const goal = allGoals.find(g => g.id === id);
+            if (!goal) return;
+            currentGoalForDeposit = goal;
+
+            document.getElementById('deposit-goal-id').value = goal.id;
+            document.getElementById('deposit-goal-name').textContent = goal.name;
+            document.getElementById('deposit-current-saved').textContent = goal.saved_fmt || (currentCurrency + goal.saved_amount);
+            document.getElementById('deposit-remaining').textContent = goal.remaining_fmt || (currentCurrency + goal.remaining);
+            document.getElementById('deposit-amount').value = '';
+            document.getElementById('deposit-note').value = '';
+            document.getElementById('deposit-modal').classList.remove('hidden');
+        }
+
+        function closeDepositModal() {
+            document.getElementById('deposit-modal').classList.add('hidden');
+        }
+
+        function setDepositAmount(amount) {
+            document.getElementById('deposit-amount').value = amount;
+        }
+
+        function fillFullRemainingDeposit() {
+            if (currentGoalForDeposit && currentGoalForDeposit.remaining > 0) {
+                document.getElementById('deposit-amount').value = currentGoalForDeposit.remaining;
+            }
+        }
+
+        document.getElementById('deposit-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('deposit-goal-id').value;
+            const amount = document.getElementById('deposit-amount').value;
+            const note = document.getElementById('deposit-note').value.trim();
+            const logTx = document.getElementById('deposit-log-tx').checked;
+
+            const params = new URLSearchParams();
+            params.append('amount', amount);
+            params.append('note', note);
+            params.append('log_transaction', logTx ? 'true' : 'false');
+
+            try {
+                const res = await fetch(`/api/goals/${id}/deposit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                });
+                if (res.ok) {
+                    closeDepositModal();
+                    loadGoals();
+                    showToast('Deposit recorded successfully! 🎉');
+                } else {
+                    const err = await res.json();
+                    showToast(err.error || 'Failed to deposit', 'error');
+                }
+            } catch (e) {
+                showToast('Network error', 'error');
+            }
+        });
+
+        // Modal Handlers: Withdraw
+        function openWithdrawModal(id) {
+            const goal = allGoals.find(g => g.id === id);
+            if (!goal) return;
+            if (goal.saved_amount <= 0) {
+                showToast('This pot currently has 0 saved funds to withdraw.', 'error');
+                return;
+            }
+            currentGoalForWithdraw = goal;
+
+            document.getElementById('withdraw-goal-id').value = goal.id;
+            document.getElementById('withdraw-goal-name').textContent = goal.name;
+            document.getElementById('withdraw-available-saved').textContent = goal.saved_fmt || (currentCurrency + goal.saved_amount);
+            document.getElementById('withdraw-amount').value = '';
+            document.getElementById('withdraw-amount').max = goal.saved_amount;
+            document.getElementById('withdraw-note').value = '';
+            document.getElementById('withdraw-modal').classList.remove('hidden');
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdraw-modal').classList.add('hidden');
+        }
+
+        function withdrawAllAvailable() {
+            if (currentGoalForWithdraw) {
+                document.getElementById('withdraw-amount').value = currentGoalForWithdraw.saved_amount;
+            }
+        }
+
+        document.getElementById('withdraw-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('withdraw-goal-id').value;
+            const amount = document.getElementById('withdraw-amount').value;
+            const note = document.getElementById('withdraw-note').value.trim();
+            const logTx = document.getElementById('withdraw-log-tx').checked;
+
+            const params = new URLSearchParams();
+            params.append('amount', amount);
+            params.append('note', note);
+            params.append('log_transaction', logTx ? 'true' : 'false');
+
+            try {
+                const res = await fetch(`/api/goals/${id}/withdraw`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                });
+                if (res.ok) {
+                    closeWithdrawModal();
+                    loadGoals();
+                    showToast('Withdrawal successful');
+                } else {
+                    const err = await res.json();
+                    showToast(err.error || 'Failed to withdraw', 'error');
+                }
+            } catch (e) {
+                showToast('Network error', 'error');
+            }
+        });
+
+        // Modal Handlers: Activity Ledger
+        async function openLedgerModal(id) {
+            const listEl = document.getElementById('ledger-list');
+            listEl.innerHTML = `<div class="text-center py-8 text-xs text-slate-400">Loading ledger...</div>`;
+            document.getElementById('ledger-modal').classList.remove('hidden');
+
+            try {
+                const res = await fetch(`/api/goals/${id}`);
+                if (!res.ok) throw new Error('Failed to load ledger');
+                const data = await res.json();
+                const goal = data.goal;
+                const contributions = data.contributions || [];
+
+                document.getElementById('ledger-goal-name').textContent = `${goal.name} Activity`;
+                document.getElementById('ledger-emoji').textContent = goal.emoji || '🎯';
+
+                if (contributions.length === 0) {
+                    listEl.innerHTML = `
+                        <div class="text-center py-10 text-xs text-slate-400">
+                            <p>No contributions recorded yet for this pot.</p>
+                            <p class="text-[10px] mt-1">Make a deposit to see your savings history here.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                listEl.innerHTML = contributions.map(c => {
+                    const isDeposit = c.type === 'deposit';
+                    const iconColor = isDeposit ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400';
+                    const amountColor = isDeposit ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
+                    const prefix = isDeposit ? '+' : '-';
+
+                    return `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-3">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg ${iconColor} flex items-center justify-center font-bold text-xs shrink-0">
+                                    ${prefix}
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate capitalize">${c.note || (isDeposit ? 'Deposit' : 'Withdrawal')}</h4>
+                                    <p class="text-[10px] text-slate-400">${c.date_fmt}</p>
+                                </div>
+                            </div>
+                            <span class="font-heading font-black text-xs sm:text-sm ${amountColor} shrink-0">
+                                ${prefix}${c.amount_fmt || (currentCurrency + c.amount)}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                listEl.innerHTML = `<div class="text-center py-6 text-xs text-rose-500">Failed to load ledger history.</div>`;
+            }
+        }
+
+        function closeLedgerModal() {
+            document.getElementById('ledger-modal').classList.add('hidden');
+        }
+
+        // Close modals on Escape key or outside click
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeGoalModal();
+                closeDepositModal();
+                closeWithdrawModal();
+                closeLedgerModal();
+            }
+        });
+
+        // Initialize page
+        initPickers();
+        loadGoals();
+    </script>
+</body>
+</html>

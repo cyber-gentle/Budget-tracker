@@ -127,6 +127,32 @@ func (s *DBStore) migrate() error {
 		created_at DATETIME
 	);
 	CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(username);
+
+	CREATE TABLE IF NOT EXISTS goals (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		name TEXT NOT NULL,
+		target_amount REAL NOT NULL,
+		saved_amount REAL NOT NULL DEFAULT 0,
+		category TEXT NOT NULL DEFAULT 'savings',
+		target_date DATETIME,
+		color TEXT DEFAULT '#10B981',
+		emoji TEXT DEFAULT '🎯',
+		status TEXT NOT NULL DEFAULT 'in_progress',
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(username);
+
+	CREATE TABLE IF NOT EXISTS goal_contributions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		goal_id INTEGER NOT NULL,
+		username TEXT NOT NULL,
+		amount REAL NOT NULL,
+		type TEXT NOT NULL,
+		note TEXT,
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_contributions_goal ON goal_contributions(goal_id);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
@@ -1158,4 +1184,461 @@ func (s *DBStore) GetMonthlyCommitment(username string) (float64, error) {
 		}
 	}
 	return total, nil
+}
+
+// ─── Savings Goals & Virtual Pots ──────────────────────────────────────────
+
+type Goal struct {
+	ID            int        `json:"id"`
+	Username      string     `json:"username"`
+	Name          string     `json:"name"`
+	TargetAmount  float64    `json:"target_amount"`
+	SavedAmount   float64    `json:"saved_amount"`
+	Remaining     float64    `json:"remaining"`
+	Percentage    int        `json:"percentage"`
+	TargetFmt     string     `json:"target_fmt,omitempty"`
+	SavedFmt      string     `json:"saved_fmt,omitempty"`
+	RemainingFmt  string     `json:"remaining_fmt,omitempty"`
+	Category      string     `json:"category"`
+	TargetDate    *time.Time `json:"target_date,omitempty"`
+	TargetDateFmt string     `json:"target_date_fmt,omitempty"`
+	DaysLeft      *int       `json:"days_left,omitempty"`
+	Color         string     `json:"color"`
+	Emoji         string     `json:"emoji"`
+	Status        string     `json:"status"` // "in_progress", "completed"
+	CreatedAt     time.Time  `json:"created_at"`
+}
+
+type GoalContribution struct {
+	ID        int       `json:"id"`
+	GoalID    int       `json:"goal_id"`
+	Username  string    `json:"username"`
+	Amount    float64   `json:"amount"`
+	AmountFmt string    `json:"amount_fmt,omitempty"`
+	Type      string    `json:"type"` // "deposit" or "withdrawal"
+	Note      string    `json:"note"`
+	CreatedAt time.Time `json:"created_at"`
+	DateFmt   string    `json:"date_fmt"`
+}
+
+type GoalSummary struct {
+	TotalSaved      float64 `json:"total_saved"`
+	TotalTarget     float64 `json:"total_target"`
+	TotalRemaining  float64 `json:"total_remaining"`
+	TotalSavedFmt   string  `json:"total_saved_fmt,omitempty"`
+	TotalTargetFmt  string  `json:"total_target_fmt,omitempty"`
+	TotalRemainFmt  string  `json:"total_remaining_fmt,omitempty"`
+	TotalGoals      int     `json:"total_goals"`
+	CompletedGoals  int     `json:"completed_goals"`
+	InProgressGoals int     `json:"in_progress_goals"`
+	OverallProgress int     `json:"overall_progress"`
+}
+
+func (s *DBStore) GetGoals(username string) ([]Goal, GoalSummary, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		"SELECT id, username, name, target_amount, saved_amount, category, target_date, color, emoji, status, created_at FROM goals WHERE username = ? ORDER BY status ASC, created_at DESC",
+		username,
+	)
+	if err != nil {
+		return nil, GoalSummary{}, err
+	}
+	defer rows.Close()
+
+	var goals []Goal
+	var summary GoalSummary
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	for rows.Next() {
+		var g Goal
+		var targetDate sql.NullTime
+		if err := rows.Scan(&g.ID, &g.Username, &g.Name, &g.TargetAmount, &g.SavedAmount, &g.Category, &targetDate, &g.Color, &g.Emoji, &g.Status, &g.CreatedAt); err != nil {
+			return nil, GoalSummary{}, err
+		}
+
+		if targetDate.Valid {
+			t := targetDate.Time
+			g.TargetDate = &t
+			g.TargetDateFmt = t.Format("2006-01-02")
+			targetDay := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+			days := int(targetDay.Sub(today).Hours() / 24)
+			g.DaysLeft = &days
+		}
+
+		rem := g.TargetAmount - g.SavedAmount
+		if rem < 0 {
+			rem = 0
+		}
+		g.Remaining = rem
+
+		pct := 0
+		if g.TargetAmount > 0 {
+			pct = int((g.SavedAmount / g.TargetAmount) * 100)
+			if pct > 100 {
+				pct = 100
+			}
+		}
+		g.Percentage = pct
+
+		if g.Color == "" {
+			g.Color = "#10B981"
+		}
+		if g.Emoji == "" {
+			g.Emoji = "🎯"
+		}
+
+		summary.TotalSaved += g.SavedAmount
+		summary.TotalTarget += g.TargetAmount
+		summary.TotalRemaining += rem
+		summary.TotalGoals++
+		if g.Status == "completed" || g.SavedAmount >= g.TargetAmount {
+			summary.CompletedGoals++
+		} else {
+			summary.InProgressGoals++
+		}
+
+		goals = append(goals, g)
+	}
+
+	if goals == nil {
+		goals = []Goal{}
+	}
+
+	if summary.TotalTarget > 0 {
+		summary.OverallProgress = int((summary.TotalSaved / summary.TotalTarget) * 100)
+		if summary.OverallProgress > 100 {
+			summary.OverallProgress = 100
+		}
+	}
+
+	return goals, summary, nil
+}
+
+func (s *DBStore) GetGoalByID(id int, username string) (*Goal, []GoalContribution, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var g Goal
+	var targetDate sql.NullTime
+	err := s.db.QueryRow(
+		"SELECT id, username, name, target_amount, saved_amount, category, target_date, color, emoji, status, created_at FROM goals WHERE id = ? AND username = ?",
+		id, username,
+	).Scan(&g.ID, &g.Username, &g.Name, &g.TargetAmount, &g.SavedAmount, &g.Category, &targetDate, &g.Color, &g.Emoji, &g.Status, &g.CreatedAt)
+	if err != nil {
+		return nil, nil, fmt.Errorf("goal not found: %w", err)
+	}
+
+	if targetDate.Valid {
+		t := targetDate.Time
+		g.TargetDate = &t
+		g.TargetDateFmt = t.Format("2006-01-02")
+	}
+
+	rem := g.TargetAmount - g.SavedAmount
+	if rem < 0 {
+		rem = 0
+	}
+	g.Remaining = rem
+
+	pct := 0
+	if g.TargetAmount > 0 {
+		pct = int((g.SavedAmount / g.TargetAmount) * 100)
+		if pct > 100 {
+			pct = 100
+		}
+	}
+	g.Percentage = pct
+
+	// Fetch contributions history
+	cRows, err := s.db.Query(
+		"SELECT id, goal_id, username, amount, type, note, created_at FROM goal_contributions WHERE goal_id = ? ORDER BY created_at DESC LIMIT 50",
+		id,
+	)
+	var contributions []GoalContribution
+	if err == nil {
+		defer cRows.Close()
+		for cRows.Next() {
+			var c GoalContribution
+			if err := cRows.Scan(&c.ID, &c.GoalID, &c.Username, &c.Amount, &c.Type, &c.Note, &c.CreatedAt); err == nil {
+				c.DateFmt = c.CreatedAt.Format("Jan 02, 2006 15:04")
+				contributions = append(contributions, c)
+			}
+		}
+	}
+	if contributions == nil {
+		contributions = []GoalContribution{}
+	}
+
+	return &g, contributions, nil
+}
+
+func (s *DBStore) CreateGoal(username, name string, targetAmount float64, targetDate *time.Time, emoji, color, category string) (*Goal, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("goal name is required")
+	}
+	if targetAmount <= 0 {
+		return nil, fmt.Errorf("target amount must be greater than zero")
+	}
+	emoji = strings.TrimSpace(emoji)
+	if emoji == "" {
+		emoji = "🎯"
+	}
+	color = strings.TrimSpace(color)
+	if color == "" {
+		color = "#10B981"
+	}
+	category = strings.ToLower(strings.TrimSpace(category))
+	if category == "" {
+		category = "savings"
+	}
+
+	res, err := s.db.Exec(
+		"INSERT INTO goals (username, name, target_amount, saved_amount, category, target_date, color, emoji, status, created_at) VALUES (?, ?, ?, 0, ?, ?, ?, ?, 'in_progress', ?)",
+		username, name, targetAmount, category, targetDate, color, emoji, time.Now(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := res.LastInsertId()
+	g := &Goal{
+		ID:           int(id),
+		Username:     username,
+		Name:         name,
+		TargetAmount: targetAmount,
+		SavedAmount:  0,
+		Remaining:    targetAmount,
+		Percentage:   0,
+		Category:     category,
+		TargetDate:   targetDate,
+		Color:        color,
+		Emoji:        emoji,
+		Status:       "in_progress",
+		CreatedAt:    time.Now(),
+	}
+	if targetDate != nil {
+		g.TargetDateFmt = targetDate.Format("2006-01-02")
+	}
+	return g, nil
+}
+
+func (s *DBStore) UpdateGoal(id int, username, name string, targetAmount float64, targetDate *time.Time, emoji, color, category, status string) (*Goal, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("goal name is required")
+	}
+	if targetAmount <= 0 {
+		return nil, fmt.Errorf("target amount must be greater than zero")
+	}
+	if emoji == "" {
+		emoji = "🎯"
+	}
+	if color == "" {
+		color = "#10B981"
+	}
+	if category == "" {
+		category = "savings"
+	}
+	if status != "completed" {
+		status = "in_progress"
+	}
+
+	_, err := s.db.Exec(
+		"UPDATE goals SET name = ?, target_amount = ?, target_date = ?, color = ?, emoji = ?, category = ?, status = ? WHERE id = ? AND username = ?",
+		name, targetAmount, targetDate, color, emoji, category, status, id, username,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	g := &Goal{
+		ID:           id,
+		Username:     username,
+		Name:         name,
+		TargetAmount: targetAmount,
+		Category:     category,
+		TargetDate:   targetDate,
+		Color:        color,
+		Emoji:        emoji,
+		Status:       status,
+	}
+	if targetDate != nil {
+		g.TargetDateFmt = targetDate.Format("2006-01-02")
+	}
+	return g, nil
+}
+
+func (s *DBStore) DeleteGoal(id int, username string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, _ = s.db.Exec("DELETE FROM goal_contributions WHERE goal_id = ? AND username = ?", id, username)
+	res, err := s.db.Exec("DELETE FROM goals WHERE id = ? AND username = ?", id, username)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected > 0, nil
+}
+
+func (s *DBStore) DepositToGoal(id int, username string, amount float64, note string, logTransaction bool) (*Goal, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if amount <= 0 {
+		return nil, fmt.Errorf("deposit amount must be greater than zero")
+	}
+
+	var g Goal
+	var targetDate sql.NullTime
+	err := s.db.QueryRow(
+		"SELECT id, username, name, target_amount, saved_amount, category, target_date, color, emoji, status, created_at FROM goals WHERE id = ? AND username = ?",
+		id, username,
+	).Scan(&g.ID, &g.Username, &g.Name, &g.TargetAmount, &g.SavedAmount, &g.Category, &targetDate, &g.Color, &g.Emoji, &g.Status, &g.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("goal not found: %w", err)
+	}
+
+	newSaved := g.SavedAmount + amount
+	newStatus := g.Status
+	if newSaved >= g.TargetAmount {
+		newStatus = "completed"
+	}
+
+	_, err = s.db.Exec(
+		"UPDATE goals SET saved_amount = ?, status = ? WHERE id = ? AND username = ?",
+		newSaved, newStatus, id, username,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Record contribution
+	if note == "" {
+		note = "Deposit into savings goal"
+	}
+	_, _ = s.db.Exec(
+		"INSERT INTO goal_contributions (goal_id, username, amount, type, note, created_at) VALUES (?, ?, ?, 'deposit', ?, ?)",
+		id, username, amount, note, time.Now(),
+	)
+
+	// Log transaction as an expense from main balance if requested
+	if logTransaction {
+		txNote := fmt.Sprintf("Deposit to Goal [%s]: %s", g.Name, note)
+		_, err = s.db.Exec(
+			"INSERT INTO transactions (username, amount, category, note, date, type) VALUES (?, ?, 'savings', ?, ?, 'expense')",
+			username, amount, txNote, time.Now(),
+		)
+		if err != nil {
+			log.Printf("failed to log deposit transaction: %v", err)
+		}
+	}
+
+	g.SavedAmount = newSaved
+	rem := g.TargetAmount - newSaved
+	if rem < 0 {
+		rem = 0
+	}
+	g.Remaining = rem
+	g.Status = newStatus
+	pct := int((newSaved / g.TargetAmount) * 100)
+	if pct > 100 {
+		pct = 100
+	}
+	g.Percentage = pct
+	if targetDate.Valid {
+		t := targetDate.Time
+		g.TargetDate = &t
+		g.TargetDateFmt = t.Format("2006-01-02")
+	}
+
+	return &g, nil
+}
+
+func (s *DBStore) WithdrawFromGoal(id int, username string, amount float64, note string, logTransaction bool) (*Goal, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if amount <= 0 {
+		return nil, fmt.Errorf("withdrawal amount must be greater than zero")
+	}
+
+	var g Goal
+	var targetDate sql.NullTime
+	err := s.db.QueryRow(
+		"SELECT id, username, name, target_amount, saved_amount, category, target_date, color, emoji, status, created_at FROM goals WHERE id = ? AND username = ?",
+		id, username,
+	).Scan(&g.ID, &g.Username, &g.Name, &g.TargetAmount, &g.SavedAmount, &g.Category, &targetDate, &g.Color, &g.Emoji, &g.Status, &g.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("goal not found: %w", err)
+	}
+
+	if amount > g.SavedAmount {
+		return nil, fmt.Errorf("cannot withdraw more than current saved amount (%.2f)", g.SavedAmount)
+	}
+
+	newSaved := g.SavedAmount - amount
+	newStatus := g.Status
+	if newSaved < g.TargetAmount {
+		newStatus = "in_progress"
+	}
+
+	_, err = s.db.Exec(
+		"UPDATE goals SET saved_amount = ?, status = ? WHERE id = ? AND username = ?",
+		newSaved, newStatus, id, username,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Record contribution
+	if note == "" {
+		note = "Withdrawal from savings goal"
+	}
+	_, _ = s.db.Exec(
+		"INSERT INTO goal_contributions (goal_id, username, amount, type, note, created_at) VALUES (?, ?, ?, 'withdrawal', ?, ?)",
+		id, username, amount, note, time.Now(),
+	)
+
+	// Log transaction as an income back into main balance if requested
+	if logTransaction {
+		txNote := fmt.Sprintf("Withdrawal from Goal [%s]: %s", g.Name, note)
+		_, err = s.db.Exec(
+			"INSERT INTO transactions (username, amount, category, note, date, type) VALUES (?, ?, 'savings', ?, ?, 'income')",
+			username, amount, txNote, time.Now(),
+		)
+		if err != nil {
+			log.Printf("failed to log withdrawal transaction: %v", err)
+		}
+	}
+
+	g.SavedAmount = newSaved
+	rem := g.TargetAmount - newSaved
+	if rem < 0 {
+		rem = 0
+	}
+	g.Remaining = rem
+	g.Status = newStatus
+	pct := int((newSaved / g.TargetAmount) * 100)
+	if pct > 100 {
+		pct = 100
+	}
+	g.Percentage = pct
+	if targetDate.Valid {
+		t := targetDate.Time
+		g.TargetDate = &t
+		g.TargetDateFmt = t.Format("2006-01-02")
+	}
+
+	return &g, nil
 }
