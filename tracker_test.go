@@ -412,4 +412,90 @@ func TestDebtsFlow(t *testing.T) {
 	}
 }
 
+func TestSubscriptionsFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "test_subs.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	username := "subuser"
+	err = store.Signup(username, "sub@spendly.app", "pass123")
+	if err != nil {
+		t.Fatalf("signup failed: %v", err)
+	}
+
+	// 1. Add subscriptions
+	dueDate1 := time.Now().AddDate(0, 0, 3)
+	sub1, err := store.AddSubscription(username, "Netflix", 4500, "entertainment", "monthly", dueDate1)
+	if err != nil {
+		t.Fatalf("failed to add sub1: %v", err)
+	}
+	if sub1.Name != "Netflix" || sub1.Amount != 4500 || sub1.BillingCycle != "monthly" {
+		t.Fatalf("unexpected sub1: %+v", sub1)
+	}
+
+	dueDate2 := time.Now().AddDate(0, 0, 10)
+	sub2, err := store.AddSubscription(username, "Gym Membership", 120000, "health", "yearly", dueDate2)
+	if err != nil {
+		t.Fatalf("failed to add sub2: %v", err)
+	}
+	if sub2.Name != "Gym Membership" || sub2.Amount != 120000 {
+		t.Fatalf("unexpected sub2: %+v", sub2)
+	}
+
+	// 2. Get Subscriptions
+	subs, err := store.GetSubscriptions(username)
+	if err != nil || len(subs) != 2 {
+		t.Fatalf("expected 2 subscriptions, got %d (err: %v)", len(subs), err)
+	}
+
+	// 3. Monthly commitment: 4500 + (120000/12 = 10000) = 14500
+	commitment, err := store.GetMonthlyCommitment(username)
+	if err != nil {
+		t.Fatalf("failed to get commitment: %v", err)
+	}
+	if commitment < 14499 || commitment > 14501 {
+		t.Fatalf("expected monthly commitment ~14500, got %v", commitment)
+	}
+
+	// 4. Pay Netflix subscription
+	paidSub, err := store.PaySubscription(sub1.ID, username)
+	if err != nil {
+		t.Fatalf("failed to pay subscription: %v", err)
+	}
+	// Verify next due date was rolled forward
+	if !paidSub.NextDueDate.After(dueDate1) {
+		t.Fatalf("expected next due date to advance beyond %v, got %v", dueDate1, paidSub.NextDueDate)
+	}
+
+	// Verify expense transaction was recorded
+	txs, err := store.GetTransactions(username)
+	if err != nil || len(txs) != 1 {
+		t.Fatalf("expected 1 expense transaction recorded, got %d", len(txs))
+	}
+	if txs[0].Amount != 4500 || txs[0].Type != "expense" {
+		t.Fatalf("unexpected transaction recorded: %+v", txs[0])
+	}
+
+	// 5. Update subscription
+	updated, err := store.UpdateSubscription(sub2.ID, username, "Premium Gym", 140000, "health", "yearly", dueDate2, "active")
+	if err != nil || updated.Name != "Premium Gym" {
+		t.Fatalf("failed to update subscription: %v", err)
+	}
+
+	// 6. Delete subscription
+	deleted, err := store.DeleteSubscription(sub1.ID, username)
+	if err != nil || !deleted {
+		t.Fatalf("failed to delete subscription: %v", err)
+	}
+
+	subsAfter, _ := store.GetSubscriptions(username)
+	if len(subsAfter) != 1 {
+		t.Fatalf("expected 1 subscription remaining, got %d", len(subsAfter))
+	}
+}
+
 

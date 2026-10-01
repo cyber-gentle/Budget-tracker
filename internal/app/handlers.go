@@ -69,6 +69,7 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/sign-up", app.HandleSignUp)
 	app.Mux.HandleFunc("/dashboard", app.HandleDashboard)
 	app.Mux.HandleFunc("/debts", app.HandleDebts)
+	app.Mux.HandleFunc("/subscriptions", app.HandleSubscriptionsPage)
 
 	// Auth APIs
 	app.Mux.HandleFunc("/api/signup", app.HandleSignupAPI)
@@ -82,6 +83,10 @@ func (app *App) routes() {
 	// Debts & IOUs APIs
 	app.Mux.HandleFunc("/api/debts", app.HandleDebtsAPI)
 	app.Mux.HandleFunc("/api/debts/", app.HandleDebtByID)
+
+	// Subscriptions & Recurring Bills APIs
+	app.Mux.HandleFunc("/api/subscriptions", app.HandleSubscriptionsAPI)
+	app.Mux.HandleFunc("/api/subscriptions/", app.HandleSubscriptionByID)
 
 	// Budgets, Analytics, Export, Currency APIs
 	app.Mux.HandleFunc("/api/budgets", app.HandleBudgets)
@@ -857,6 +862,208 @@ func (app *App) HandleDebtByID(w http.ResponseWriter, r *http.Request) {
 		deleted, err := app.DB.DeleteDebt(id, username)
 		if err != nil || !deleted {
 			jsonError(w, "debt not found or delete failed", http.StatusNotFound)
+			return
+		}
+		jsonOK(w, map[string]string{"status": "deleted"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// ─── Subscriptions & Recurring Bills Handlers ───────────────────────────────
+
+func (app *App) HandleSubscriptionsPage(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+	prof, _ := app.DB.GetProfile(username)
+	fullName := ""
+	email := ""
+	if prof != nil {
+		fullName = prof.FullName
+		email = prof.Email
+	}
+
+	data := struct {
+		Username string
+		FullName string
+		Email    string
+		Currency string
+	}{
+		Username: username,
+		FullName: fullName,
+		Email:    email,
+		Currency: curr,
+	}
+
+	app.renderTemplate(w, "subscriptions.html", data)
+}
+
+func (app *App) HandleSubscriptionsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+
+	switch r.Method {
+	case http.MethodGet:
+		subs, err := app.DB.GetSubscriptions(username)
+		if err != nil {
+			jsonError(w, "failed to get subscriptions", http.StatusInternalServerError)
+			return
+		}
+		for i := range subs {
+			subs[i].AmountFmt = formatMoney(subs[i].Amount, curr)
+		}
+		commitment, _ := app.DB.GetMonthlyCommitment(username)
+
+		jsonOK(w, map[string]any{
+			"subscriptions":          subs,
+			"monthly_commitment":     commitment,
+			"monthly_commitment_fmt": formatMoney(commitment, curr),
+			"count":                  len(subs),
+			"currency":               curr,
+		})
+
+	case http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		name := strings.TrimSpace(r.FormValue("name"))
+		amountStr := strings.TrimSpace(r.FormValue("amount"))
+		category := strings.TrimSpace(r.FormValue("category"))
+		billingCycle := strings.TrimSpace(r.FormValue("billing_cycle"))
+		nextDueDateStr := strings.TrimSpace(r.FormValue("next_due_date"))
+
+		if name == "" || amountStr == "" {
+			jsonError(w, "subscription name and amount are required", http.StatusBadRequest)
+			return
+		}
+
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil || amount <= 0 {
+			jsonError(w, "invalid amount", http.StatusBadRequest)
+			return
+		}
+
+		nextDueDate := time.Now()
+		if nextDueDateStr != "" {
+			if parsed, err := time.Parse("2006-01-02", nextDueDateStr); err == nil {
+				nextDueDate = parsed
+			}
+		}
+
+		sub, err := app.DB.AddSubscription(username, name, amount, category, billingCycle, nextDueDate)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		sub.AmountFmt = formatMoney(sub.Amount, curr)
+
+		w.WriteHeader(http.StatusCreated)
+		jsonOK(w, sub)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleSubscriptionByID(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/api/subscriptions/")
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[0])
+	if err != nil || id <= 0 {
+		jsonError(w, "invalid subscription id", http.StatusBadRequest)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+
+	// Check for /api/subscriptions/{id}/pay
+	if len(parts) == 2 && parts[1] == "pay" {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		sub, err := app.DB.PaySubscription(id, username)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		sub.AmountFmt = formatMoney(sub.Amount, curr)
+
+		_, _, balance, _ := app.DB.CalculateTotals(username)
+		commitment, _ := app.DB.GetMonthlyCommitment(username)
+
+		jsonOK(w, map[string]any{
+			"status":                 "paid",
+			"subscription":           sub,
+			"balance":                balance,
+			"balance_fmt":            formatMoney(balance, curr),
+			"monthly_commitment":     commitment,
+			"monthly_commitment_fmt": formatMoney(commitment, curr),
+		})
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPut, http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		name := strings.TrimSpace(r.FormValue("name"))
+		amountStr := strings.TrimSpace(r.FormValue("amount"))
+		category := strings.TrimSpace(r.FormValue("category"))
+		billingCycle := strings.TrimSpace(r.FormValue("billing_cycle"))
+		nextDueDateStr := strings.TrimSpace(r.FormValue("next_due_date"))
+		status := strings.TrimSpace(r.FormValue("status"))
+
+		if name == "" || amountStr == "" {
+			jsonError(w, "subscription name and amount are required", http.StatusBadRequest)
+			return
+		}
+
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil || amount <= 0 {
+			jsonError(w, "invalid amount", http.StatusBadRequest)
+			return
+		}
+
+		nextDueDate := time.Now()
+		if nextDueDateStr != "" {
+			if parsed, err := time.Parse("2006-01-02", nextDueDateStr); err == nil {
+				nextDueDate = parsed
+			}
+		}
+
+		sub, err := app.DB.UpdateSubscription(id, username, name, amount, category, billingCycle, nextDueDate, status)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		sub.AmountFmt = formatMoney(sub.Amount, curr)
+		jsonOK(w, sub)
+
+	case http.MethodDelete:
+		deleted, err := app.DB.DeleteSubscription(id, username)
+		if err != nil || !deleted {
+			jsonError(w, "subscription not found or delete failed", http.StatusNotFound)
 			return
 		}
 		jsonOK(w, map[string]string{"status": "deleted"})

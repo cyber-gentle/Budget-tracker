@@ -114,6 +114,19 @@ func (s *DBStore) migrate() error {
 		created_at DATETIME
 	);
 	CREATE INDEX IF NOT EXISTS idx_debts_user ON debts(username);
+
+	CREATE TABLE IF NOT EXISTS subscriptions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		name TEXT NOT NULL,
+		amount REAL NOT NULL,
+		category TEXT NOT NULL,
+		billing_cycle TEXT NOT NULL DEFAULT 'monthly',
+		next_due_date DATETIME NOT NULL,
+		status TEXT NOT NULL DEFAULT 'active',
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(username);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
@@ -869,4 +882,280 @@ func (s *DBStore) RecordDebtPayment(id int, username string, paymentAmount float
 	}
 
 	return &d, nil
+}
+
+// ─── Subscriptions & Recurring Bills ──────────────────────────────────────────
+
+type Subscription struct {
+	ID           int       `json:"id"`
+	Username     string    `json:"username"`
+	Name         string    `json:"name"`
+	Amount       float64   `json:"amount"`
+	AmountFmt    string    `json:"amount_fmt,omitempty"`
+	Category     string    `json:"category"`
+	BillingCycle string    `json:"billing_cycle"` // "monthly", "weekly", "yearly"
+	NextDueDate  time.Time `json:"next_due_date"`
+	DueDateFmt   string    `json:"due_date_fmt"`
+	DaysUntil    int       `json:"days_until"`
+	DueStatus    string    `json:"due_status"` // "overdue", "today", "soon", "upcoming"
+	Status       string    `json:"status"`     // "active", "paused", "cancelled"
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+func (s *DBStore) GetSubscriptions(username string) ([]Subscription, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		"SELECT id, username, name, amount, category, billing_cycle, next_due_date, status, created_at FROM subscriptions WHERE username = ? AND status != 'cancelled' ORDER BY next_due_date ASC",
+		username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var subs []Subscription
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	for rows.Next() {
+		var sub Subscription
+		if err := rows.Scan(&sub.ID, &sub.Username, &sub.Name, &sub.Amount, &sub.Category, &sub.BillingCycle, &sub.NextDueDate, &sub.Status, &sub.CreatedAt); err != nil {
+			return nil, err
+		}
+
+		sub.DueDateFmt = sub.NextDueDate.Format("2006-01-02")
+		dueDay := time.Date(sub.NextDueDate.Year(), sub.NextDueDate.Month(), sub.NextDueDate.Day(), 0, 0, 0, 0, sub.NextDueDate.Location())
+		days := int(dueDay.Sub(today).Hours() / 24)
+		sub.DaysUntil = days
+
+		if days < 0 {
+			sub.DueStatus = "overdue"
+		} else if days == 0 {
+			sub.DueStatus = "today"
+		} else if days <= 3 {
+			sub.DueStatus = "soon"
+		} else {
+			sub.DueStatus = "upcoming"
+		}
+
+		subs = append(subs, sub)
+	}
+
+	if subs == nil {
+		subs = []Subscription{}
+	}
+	return subs, nil
+}
+
+func (s *DBStore) AddSubscription(username, name string, amount float64, category, billingCycle string, nextDueDate time.Time) (*Subscription, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("subscription name is required")
+	}
+	if amount <= 0 {
+		return nil, fmt.Errorf("amount must be greater than zero")
+	}
+	category = strings.ToLower(strings.TrimSpace(category))
+	if category == "" {
+		category = "bills"
+	}
+	billingCycle = strings.ToLower(strings.TrimSpace(billingCycle))
+	if billingCycle != "weekly" && billingCycle != "yearly" {
+		billingCycle = "monthly"
+	}
+	if nextDueDate.IsZero() {
+		nextDueDate = time.Now()
+	}
+
+	res, err := s.db.Exec(
+		"INSERT INTO subscriptions (username, name, amount, category, billing_cycle, next_due_date, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'active', ?)",
+		username, name, amount, category, billingCycle, nextDueDate, time.Now(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := res.LastInsertId()
+	sub := &Subscription{
+		ID:           int(id),
+		Username:     username,
+		Name:         name,
+		Amount:       amount,
+		Category:     category,
+		BillingCycle: billingCycle,
+		NextDueDate:  nextDueDate,
+		DueDateFmt:   nextDueDate.Format("2006-01-02"),
+		Status:       "active",
+		CreatedAt:    time.Now(),
+	}
+
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	dueDay := time.Date(nextDueDate.Year(), nextDueDate.Month(), nextDueDate.Day(), 0, 0, 0, 0, nextDueDate.Location())
+	sub.DaysUntil = int(dueDay.Sub(today).Hours() / 24)
+	if sub.DaysUntil < 0 {
+		sub.DueStatus = "overdue"
+	} else if sub.DaysUntil == 0 {
+		sub.DueStatus = "today"
+	} else if sub.DaysUntil <= 3 {
+		sub.DueStatus = "soon"
+	} else {
+		sub.DueStatus = "upcoming"
+	}
+
+	return sub, nil
+}
+
+func (s *DBStore) UpdateSubscription(id int, username, name string, amount float64, category, billingCycle string, nextDueDate time.Time, status string) (*Subscription, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("subscription name is required")
+	}
+	if amount <= 0 {
+		return nil, fmt.Errorf("amount must be greater than zero")
+	}
+	category = strings.ToLower(strings.TrimSpace(category))
+	if category == "" {
+		category = "bills"
+	}
+	billingCycle = strings.ToLower(strings.TrimSpace(billingCycle))
+	if billingCycle != "weekly" && billingCycle != "yearly" {
+		billingCycle = "monthly"
+	}
+	status = strings.ToLower(strings.TrimSpace(status))
+	if status != "paused" && status != "cancelled" {
+		status = "active"
+	}
+
+	_, err := s.db.Exec(
+		"UPDATE subscriptions SET name = ?, amount = ?, category = ?, billing_cycle = ?, next_due_date = ?, status = ? WHERE id = ? AND username = ?",
+		name, amount, category, billingCycle, nextDueDate, status, id, username,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	sub := &Subscription{
+		ID:           id,
+		Username:     username,
+		Name:         name,
+		Amount:       amount,
+		Category:     category,
+		BillingCycle: billingCycle,
+		NextDueDate:  nextDueDate,
+		DueDateFmt:   nextDueDate.Format("2006-01-02"),
+		Status:       status,
+	}
+	return sub, nil
+}
+
+func (s *DBStore) DeleteSubscription(id int, username string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	res, err := s.db.Exec("DELETE FROM subscriptions WHERE id = ? AND username = ?", id, username)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected > 0, nil
+}
+
+func (s *DBStore) PaySubscription(id int, username string) (*Subscription, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var sub Subscription
+	err := s.db.QueryRow(
+		"SELECT id, username, name, amount, category, billing_cycle, next_due_date, status, created_at FROM subscriptions WHERE id = ? AND username = ?",
+		id, username,
+	).Scan(&sub.ID, &sub.Username, &sub.Name, &sub.Amount, &sub.Category, &sub.BillingCycle, &sub.NextDueDate, &sub.Status, &sub.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("subscription not found: %w", err)
+	}
+
+	// 1. Record expense transaction
+	txNote := fmt.Sprintf("%s (%s bill)", sub.Name, sub.BillingCycle)
+	_, err = s.db.Exec(
+		"INSERT INTO transactions (username, amount, category, note, date, type) VALUES (?, ?, ?, ?, ?, 'expense')",
+		username, sub.Amount, sub.Category, txNote, time.Now(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to log payment transaction: %w", err)
+	}
+
+	// 2. Advance next due date
+	next := sub.NextDueDate
+	switch strings.ToLower(sub.BillingCycle) {
+	case "weekly":
+		next = next.AddDate(0, 0, 7)
+	case "yearly":
+		next = next.AddDate(1, 0, 0)
+	default:
+		next = next.AddDate(0, 1, 0)
+	}
+
+	now := time.Now()
+	for next.Before(now) {
+		switch strings.ToLower(sub.BillingCycle) {
+		case "weekly":
+			next = next.AddDate(0, 0, 7)
+		case "yearly":
+			next = next.AddDate(1, 0, 0)
+		default:
+			next = next.AddDate(0, 1, 0)
+		}
+	}
+
+	_, err = s.db.Exec(
+		"UPDATE subscriptions SET next_due_date = ? WHERE id = ? AND username = ?",
+		next, id, username,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to advance subscription due date: %w", err)
+	}
+
+	sub.NextDueDate = next
+	sub.DueDateFmt = next.Format("2006-01-02")
+	return &sub, nil
+}
+
+func (s *DBStore) GetMonthlyCommitment(username string) (float64, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		"SELECT amount, billing_cycle FROM subscriptions WHERE username = ? AND status = 'active'",
+		username,
+	)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	var total float64
+	for rows.Next() {
+		var amount float64
+		var cycle string
+		if err := rows.Scan(&amount, &cycle); err != nil {
+			return 0, err
+		}
+		switch strings.ToLower(cycle) {
+		case "weekly":
+			total += amount * 4.333
+		case "yearly":
+			total += amount / 12.0
+		default: // monthly
+			total += amount
+		}
+	}
+	return total, nil
 }
