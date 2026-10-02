@@ -1072,8 +1072,9 @@
             try {
                 const res = await fetch('/api/categories');
                 if (!res.ok) return;
-                const cats = await res.json();
-                if (Array.isArray(cats) && cats.length > 0) {
+                const raw = await res.json();
+                const cats = Array.isArray(raw) ? raw : (raw.categories || []);
+                if (cats.length > 0) {
                     userCategories = cats;
                     EXPENSE_CATEGORIES = cats.filter(c => c.type === 'expense').map(c => ({
                         id: c.id,
@@ -2076,9 +2077,18 @@
             const color = document.getElementById('new-cat-color').value.trim() || '#10B981';
             const type = activeCategoryTab === 'income' ? 'income' : 'expense';
 
+            if (!label) {
+                errEl.textContent = 'Please enter a category name.';
+                errEl.classList.remove('hidden');
+                submitBtn.disabled = false;
+                return;
+            }
+
             try {
                 const fd = new FormData();
+                fd.set('name', label);
                 fd.set('label', label);
+                fd.set('emoji', icon);
                 fd.set('icon', icon);
                 fd.set('color', color);
                 fd.set('type', type);
@@ -2135,8 +2145,16 @@
             const icon = document.getElementById('edit-cat-icon').value.trim();
             const color = document.getElementById('edit-cat-color').value.trim();
 
+            if (!label) {
+                errEl.textContent = 'Please enter a category name.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
             const fd = new FormData();
+            fd.set('name', label);
             fd.set('label', label);
+            fd.set('emoji', icon);
             fd.set('icon', icon);
             fd.set('color', color);
 

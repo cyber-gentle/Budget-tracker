@@ -1377,14 +1377,49 @@ func (app *App) HandleCategoriesAPI(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "failed to fetch categories", http.StatusInternalServerError)
 			return
 		}
-		jsonOK(w, map[string]any{"categories": cats})
+		jsonOK(w, cats)
 
 	case http.MethodPost:
 		_ = r.ParseMultipartForm(1 << 20)
 		name := strings.TrimSpace(r.FormValue("name"))
+		if name == "" {
+			name = strings.TrimSpace(r.FormValue("label"))
+		}
 		catType := strings.TrimSpace(r.FormValue("type"))
 		emoji := strings.TrimSpace(r.FormValue("emoji"))
+		if emoji == "" {
+			emoji = strings.TrimSpace(r.FormValue("icon"))
+		}
 		color := strings.TrimSpace(r.FormValue("color"))
+
+		if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+			var body struct {
+				Name  string `json:"name"`
+				Label string `json:"label"`
+				Type  string `json:"type"`
+				Emoji string `json:"emoji"`
+				Icon  string `json:"icon"`
+				Color string `json:"color"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err == nil {
+				if body.Name != "" {
+					name = body.Name
+				} else if body.Label != "" {
+					name = body.Label
+				}
+				if body.Type != "" {
+					catType = body.Type
+				}
+				if body.Emoji != "" {
+					emoji = body.Emoji
+				} else if body.Icon != "" {
+					emoji = body.Icon
+				}
+				if body.Color != "" {
+					color = body.Color
+				}
+			}
+		}
 
 		if name == "" {
 			jsonError(w, "category name is required", http.StatusBadRequest)
@@ -1429,8 +1464,39 @@ func (app *App) HandleCategoryByID(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut, http.MethodPost:
 		_ = r.ParseMultipartForm(1 << 20)
 		name := strings.TrimSpace(r.FormValue("name"))
+		if name == "" {
+			name = strings.TrimSpace(r.FormValue("label"))
+		}
 		emoji := strings.TrimSpace(r.FormValue("emoji"))
+		if emoji == "" {
+			emoji = strings.TrimSpace(r.FormValue("icon"))
+		}
 		color := strings.TrimSpace(r.FormValue("color"))
+
+		if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+			var body struct {
+				Name  string `json:"name"`
+				Label string `json:"label"`
+				Emoji string `json:"emoji"`
+				Icon  string `json:"icon"`
+				Color string `json:"color"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err == nil {
+				if body.Name != "" {
+					name = body.Name
+				} else if body.Label != "" {
+					name = body.Label
+				}
+				if body.Emoji != "" {
+					emoji = body.Emoji
+				} else if body.Icon != "" {
+					emoji = body.Icon
+				}
+				if body.Color != "" {
+					color = body.Color
+				}
+			}
+		}
 
 		if name == "" {
 			jsonError(w, "category name is required", http.StatusBadRequest)
