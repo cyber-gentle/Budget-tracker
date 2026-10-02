@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Net Worth & Wealth Tracker — Spendly</title>
+    
+    <link rel="icon" type="image/svg+xml" href="/static/assets/imgs/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/globals.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        offwhite: '#F8FAFC',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Anti-flash theme script
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('spendly-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-offwhite dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Main Navigation Header -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Brand Logo & Title -->
+            <div class="flex items-center gap-3">
+                <a href="/dashboard" class="flex items-center gap-2.5 group">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <span class="font-heading font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">Spendly</span>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center gap-1 ml-6 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    <a href="/dashboard" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Dashboard</a>
+                    <a href="/debts" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Debts & IOUs</a>
+                    <a href="/subscriptions" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Subscriptions</a>
+                    <a href="/goals" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Savings Goals</a>
+                    <a href="/reports" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Reports & Analytics</a>
+                    <a href="/net-worth" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">Net Worth</a>
+                </nav>
+            </div>
+
+            <!-- Right Toolbar & Profile Dropdown -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                
+                <!-- Quick Add Custom Asset/Liability Button -->
+                <button type="button" id="btn-quick-add" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl transition-all shadow-sm cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>Add Item</span>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button type="button" id="theme-toggle-btn" class="p-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer" title="Toggle theme">
+                    <svg id="theme-icon-sun" class="hidden text-amber-400" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg id="theme-icon-moon" class="block text-slate-600 dark:text-slate-300" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+
+                <!-- Currency Selector -->
+                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <select id="currency-select" class="bg-transparent focus:outline-none cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <option value="₦" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">₦ (NGN)</option>
+                        <option value="$" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">$ (USD)</option>
+                        <option value="€" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">€ (EUR)</option>
+                        <option value="£" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">£ (GBP)</option>
+                    </select>
+                </div>
+
+                <!-- User Dropdown Menu -->
+                <div class="relative">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Account settings">
+                        <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-heading font-bold text-xs flex items-center justify-center uppercase shadow-sm">
+                            {{if .FullName}}{{printf "%.1s" .FullName}}{{else}}{{printf "%.1s" .Username}}{{end}}
+                        </span>
+                        <div class="hidden md:flex flex-col text-left">
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[100px] truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">@{{.Username}}</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <!-- Dropdown Content -->
+                    <div id="user-dropdown-menu" class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 hidden z-50">
+                        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                            <p class="text-xs font-bold text-slate-800 dark:text-white truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">{{if .Email}}{{.Email}}{{else}}@{{.Username}}{{end}}</p>
+                        </div>
+                        <div class="py-1">
+                            <a href="/dashboard" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="/debts" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <span>Debts & IOUs</span>
+                            </a>
+                            <a href="/subscriptions" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                                <span>Subscriptions</span>
+                            </a>
+                            <a href="/goals" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                                <span>Savings Goals</span>
+                            </a>
+                            <a href="/reports" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                                <span>Reports & Analytics</span>
+                            </a>
+                            <a href="/net-worth" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                <span>Net Worth & Wealth</span>
+                            </a>
+                        </div>
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-1">
+                            <form action="/api/logout" method="POST">
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                    <span>Log out</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Horizontal Tab Bar -->
+        <div class="md:hidden flex items-center gap-1 px-4 py-2 border-t border-slate-100 dark:border-slate-800 overflow-x-auto no-scrollbar">
+            <a href="/dashboard" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/debts" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>Debts</span>
+            </a>
+            <a href="/subscriptions" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/></svg>
+                <span>Subscriptions</span>
+            </a>
+            <a href="/goals" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/></svg>
+                <span>Goals</span>
+            </a>
+            <a href="/reports" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                <span>Reports</span>
+            </a>
+            <a href="/net-worth" class="shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <span>Net Worth</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+
+        <!-- Top Overview Hero Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Grand Net Worth Hero Card -->
+            <div class="lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800">
+                <div class="relative z-10 flex flex-col justify-between h-full space-y-6">
+                    <div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Total Net Worth
+                            </span>
+                            <span id="badge-solvency" class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                Solvent
+                            </span>
+                        </div>
+                        <div class="mt-3 flex items-baseline gap-3 flex-wrap">
+                            <h1 id="hero-net-worth" class="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight">
+                                {{.Currency}}0.00
+                            </h1>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2">
+                            Sum of all liquid accounts, savings pots, loans owed to you, minus total debts and commitments.
+                        </p>
+                    </div>
+
+                    <!-- Mini KPI Badges Row -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-800/80">
+                        <div class="bg-white/5 dark:bg-white/5 rounded-2xl p-3 border border-white/10">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Assets</span>
+                            <span id="stat-total-assets" class="text-base sm:text-lg font-extrabold text-emerald-400 mt-0.5 block">+{{.Currency}}0.00</span>
+                        </div>
+                        <div class="bg-white/5 dark:bg-white/5 rounded-2xl p-3 border border-white/10">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Liabilities</span>
+                            <span id="stat-total-liabilities" class="text-base sm:text-lg font-extrabold text-rose-400 mt-0.5 block">-{{.Currency}}0.00</span>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1 bg-white/5 dark:bg-white/5 rounded-2xl p-3 border border-white/10">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Debt-to-Asset</span>
+                            <span id="stat-debt-ratio" class="text-base sm:text-lg font-extrabold text-slate-200 mt-0.5 block">0.0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subtle Decorative Gradient Glow -->
+                <div class="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+            </div>
+
+            <!-- Financial Health Score Card -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Financial Health Score</h2>
+                        <span id="badge-health-rating" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                            Exceptional
+                        </span>
+                    </div>
+
+                    <!-- Gauge Metric Display -->
+                    <div class="mt-4 flex items-center gap-4">
+                        <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 flex items-center justify-center shadow-md shadow-emerald-500/10">
+                            <div class="w-full h-full bg-white dark:bg-slate-900 rounded-[14px] flex flex-col items-center justify-center">
+                                <span id="health-score-val" class="text-2xl font-heading font-extrabold text-slate-900 dark:text-white">0</span>
+                                <span class="text-[9px] uppercase font-bold text-slate-400">/ 100</span>
+                            </div>
+                        </div>
+                        <div class="flex-1 space-y-1">
+                            <p id="health-score-desc" class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                Solid financial stability with controlled debt and adequate liquidity runway.
+                            </p>
+                            <span id="runway-text" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold block">
+                                🛡️ 0.0 mo emergency runway
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-Metric Progress Bars -->
+                <div class="mt-6 space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div>
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                            <span>Debt Burden</span>
+                            <span id="bar-label-debt">Low</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div id="bar-fill-debt" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                            <span>Cash Cushion</span>
+                            <span id="bar-label-cushion">Good</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div id="bar-fill-cushion" class="h-full bg-teal-500 rounded-full transition-all duration-500" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                            <span>Savings Goals</span>
+                            <span id="bar-label-goals">Active</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div id="bar-fill-goals" class="h-full bg-indigo-500 rounded-full transition-all duration-500" style="width: 80%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wealth Trajectory & Growth Chart -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Wealth Trajectory & Growth</h2>
+                    <p class="text-xs text-slate-400">Assets vs. Liabilities trend and net capital trajectory over time</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold mr-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Assets
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 text-xs text-rose-500 font-semibold mr-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Liabilities
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 text-xs text-indigo-500 font-semibold">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Net Worth
+                    </span>
+                </div>
+            </div>
+
+            <!-- Chart Canvas Container -->
+            <div class="relative w-full h-64 sm:h-72">
+                <canvas id="netWorthChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Assets & Liabilities Breakdown Ledger (Side by Side) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- Left: Assets Ledger -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-sm flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
+                            🏛️
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Assets Breakdown</h3>
+                            <p class="text-[11px] text-slate-400">Accounts, savings goals, receivables & custom holdings</p>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-add-asset" class="px-2.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                        <span>Add Asset</span>
+                    </button>
+                </div>
+
+                <!-- Assets List -->
+                <div id="assets-list" class="space-y-2.5 flex-1">
+                    <div class="text-center py-8 text-xs text-slate-400">Loading assets...</div>
+                </div>
+
+                <!-- Asset Total Footer -->
+                <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500">Total Assets</span>
+                    <span id="footer-total-assets" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">+{{.Currency}}0.00</span>
+                </div>
+            </div>
+
+            <!-- Right: Liabilities Ledger -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-sm flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
+                            💳
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Liabilities Breakdown</h3>
+                            <p class="text-[11px] text-slate-400">Debts, commitments, monthly subscriptions & loans</p>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-add-liability" class="px-2.5 py-1 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                        <span>Add Liability</span>
+                    </button>
+                </div>
+
+                <!-- Liabilities List -->
+                <div id="liabilities-list" class="space-y-2.5 flex-1">
+                    <div class="text-center py-8 text-xs text-slate-400">Loading liabilities...</div>
+                </div>
+
+                <!-- Liability Total Footer -->
+                <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500">Total Liabilities</span>
+                    <span id="footer-total-liabilities" class="text-sm font-extrabold text-rose-600 dark:text-rose-400">-{{.Currency}}0.00</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Custom Asset/Liability Modal -->
+    <div id="modal-custom-item" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 id="modal-title" class="text-base font-bold text-slate-900 dark:text-white">Add Asset / Liability</h3>
+                <button type="button" id="btn-close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="form-custom-item" class="space-y-3.5">
+                <input type="hidden" id="item-id" value="">
+
+                <!-- Segmented Type Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Item Type</label>
+                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                        <button type="button" id="type-btn-asset" class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer bg-emerald-600 text-white shadow-xs">
+                            Asset (+)
+                        </button>
+                        <button type="button" id="type-btn-liability" class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                            Liability (−)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Name Input -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Name / Title</label>
+                    <input type="text" id="item-name" required placeholder="e.g., Stock Portfolio, Car Value, Student Loan" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <!-- Amount & Category Grid -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Amount / Value</label>
+                        <input type="number" step="any" min="0" id="item-amount" required placeholder="0.00" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Category</label>
+                        <select id="item-category" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <!-- Populated dynamically based on type -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Institution / Holding Platform -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Institution / Platform <span class="font-normal text-slate-400">(Optional)</span></label>
+                    <input type="text" id="item-institution" placeholder="e.g., Vanguard, Chase, Binance, Self-Held" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <!-- Notes -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Notes <span class="font-normal text-slate-400">(Optional)</span></label>
+                    <textarea id="item-notes" rows="2" placeholder="Additional details or account references" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" id="btn-cancel-modal" class="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" id="btn-save-modal" class="px-5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors cursor-pointer">
+                        Save Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="modal-delete-confirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            <div class="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto text-lg">
+                🗑️
+            </div>
+            <div class="text-center">
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">Delete Item?</h4>
+                <p id="delete-confirm-text" class="text-xs text-slate-500 dark:text-slate-400 mt-1">This custom item will be permanently removed from your net worth calculation.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="btn-cancel-delete" class="flex-1 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" id="btn-confirm-delete" class="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl transition-colors cursor-pointer shadow-sm">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white dark:bg-slate-800 dark:text-white text-xs font-semibold rounded-2xl shadow-xl border border-slate-700 transition-all duration-300 translate-y-16 opacity-0 pointer-events-none">
+        <span id="toast-icon">✓</span>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <!-- JavaScript Controller -->
+    <script>
+        let currentCurrency = '{{.Currency}}' || '₦';
+        let netWorthData = null;
+        let chartInstance = null;
+        let activeItemType = 'asset';
+        let pendingDeleteId = null;
+
+        // Theme management
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        const moonIcon = document.getElementById('theme-icon-moon');
+
+        function updateThemeUI() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('block');
+                moonIcon.classList.add('block');
+            }
+        }
+        updateThemeUI();
+
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('spendly-theme', isDark ? 'dark' : 'light');
+                updateThemeUI();
+                if (chartInstance && netWorthData) renderChart(netWorthData.trend);
+            });
+        }
+
+        // Profile menu toggle
+        const btnUserMenu = document.getElementById('btn-user-menu');
+        const userDropdown = document.getElementById('user-dropdown-menu');
+        if (btnUserMenu && userDropdown) {
+            btnUserMenu.addEventListener('click', e => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+            document.addEventListener('click', () => userDropdown.classList.add('hidden'));
+        }
+
+        // Currency dropdown change
+        const currencySelect = document.getElementById('currency-select');
+        if (currencySelect) {
+            currencySelect.value = currentCurrency;
+            currencySelect.addEventListener('change', async () => {
+                const newCurr = currencySelect.value;
+                try {
+                    const res = await fetch('/api/currency', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ currency: newCurr })
+                    });
+                    if (res.ok) {
+                        currentCurrency = newCurr;
+                        loadNetWorth();
+                        showToast(`Currency changed to ${newCurr}`);
+                    }
+                } catch (err) {
+                    console.error('Failed to change currency', err);
+                }
+            });
+        }
+
+        // Helpers
+        function fmtMoney(amount) {
+            const val = Number(amount || 0);
+            return currentCurrency + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function esc(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function showToast(msg, icon = '✓') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            document.getElementById('toast-icon').textContent = icon;
+            toast.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Category options by type
+        const assetCategories = [
+            { key: 'investment', label: '📈 Stocks / ETFs / Crypto' },
+            { key: 'property', label: '🏡 Real Estate & Property' },
+            { key: 'vehicle', label: '🚗 Vehicle / Automobile' },
+            { key: 'cash_savings', label: '💰 High-Yield Savings / Cash' },
+            { key: 'business', label: '💼 Business Equity' },
+            { key: 'jewelry', label: '💎 Luxury & Collectibles' },
+            { key: 'other', label: '✨ Other Asset' }
+        ];
+
+        const liabilityCategories = [
+            { key: 'loan', label: '📋 Personal / Bank Loan' },
+            { key: 'mortgage', label: '🏠 Mortgage / Property Loan' },
+            { key: 'credit_card', label: '💳 Credit Card Balance' },
+            { key: 'student_loan', label: '🎓 Student / Education Loan' },
+            { key: 'car_loan', label: '🚘 Auto Loan' },
+            { key: 'other', label: '⚠️ Other Liability' }
+        ];
+
+        function populateCategories(type) {
+            const select = document.getElementById('item-category');
+            const list = type === 'asset' ? assetCategories : liabilityCategories;
+            select.innerHTML = list.map(c => `<option value="${c.key}">${c.label}</option>`).join('');
+        }
+
+        function setModalType(type) {
+            activeItemType = type;
+            const btnAsset = document.getElementById('type-btn-asset');
+            const btnLiab = document.getElementById('type-btn-liability');
+            if (type === 'asset') {
+                btnAsset.className = 'py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer bg-emerald-600 text-white shadow-xs';
+                btnLiab.className = 'py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+            } else {
+                btnLiab.className = 'py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer bg-rose-600 text-white shadow-xs';
+                btnAsset.className = 'py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+            }
+            populateCategories(type);
+        }
+
+        document.getElementById('type-btn-asset').addEventListener('click', () => setModalType('asset'));
+        document.getElementById('type-btn-liability').addEventListener('click', () => setModalType('liability'));
+
+        // Modal controls
+        const modal = document.getElementById('modal-custom-item');
+        const btnQuickAdd = document.getElementById('btn-quick-add');
+        const btnAddAsset = document.getElementById('btn-add-asset');
+        const btnAddLiability = document.getElementById('btn-add-liability');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const btnCancelModal = document.getElementById('btn-cancel-modal');
+
+        function openModal(type = 'asset', item = null) {
+            document.getElementById('form-custom-item').reset();
+            document.getElementById('item-id').value = item ? item.id : '';
+            document.getElementById('modal-title').textContent = item ? 'Edit Item' : (type === 'asset' ? 'Add Custom Asset' : 'Add Custom Liability');
+            setModalType(item ? item.type : type);
+
+            if (item) {
+                document.getElementById('item-name').value = item.name;
+                document.getElementById('item-amount').value = item.amount;
+                document.getElementById('item-category').value = item.category;
+                document.getElementById('item-institution').value = item.institution || '';
+                document.getElementById('item-notes').value = item.notes || '';
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        if (btnQuickAdd) btnQuickAdd.addEventListener('click', () => openModal('asset'));
+        if (btnAddAsset) btnAddAsset.addEventListener('click', () => openModal('asset'));
+        if (btnAddLiability) btnAddLiability.addEventListener('click', () => openModal('liability'));
+        if (btnCloseModal) btnCloseModal.addEventListener('click', closeModal);
+        if (btnCancelModal) btnCancelModal.addEventListener('click', closeModal);
+
+        // Save Custom Item Form
+        document.getElementById('form-custom-item').addEventListener('submit', async e => {
+            e.preventDefault();
+            const id = document.getElementById('item-id').value;
+            const payload = {
+                name: document.getElementById('item-name').value.trim(),
+                type: activeItemType,
+                category: document.getElementById('item-category').value,
+                amount: parseFloat(document.getElementById('item-amount').value) || 0,
+                institution: document.getElementById('item-institution').value.trim(),
+                notes: document.getElementById('item-notes').value.trim()
+            };
+
+            try {
+                let res;
+                if (id) {
+                    res = await fetch(`/api/net-worth/items/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    res = await fetch('/api/net-worth/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                if (res.ok) {
+                    closeModal();
+                    showToast(id ? 'Item updated successfully' : 'Item added to your wealth ledger');
+                    loadNetWorth();
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'Failed to save item');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred while saving item');
+            }
+        });
+
+        // Delete Confirm Modal
+        const deleteModal = document.getElementById('modal-delete-confirm');
+        function confirmDelete(id, name) {
+            pendingDeleteId = id;
+            document.getElementById('delete-confirm-text').textContent = `Are you sure you want to delete "${name}"?`;
+            deleteModal.classList.remove('hidden');
+        }
+
+        document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+            pendingDeleteId = null;
+            deleteModal.classList.add('hidden');
+        });
+
+        document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+            if (!pendingDeleteId) return;
+            try {
+                const res = await fetch(`/api/net-worth/items/${pendingDeleteId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    deleteModal.classList.add('hidden');
+                    pendingDeleteId = null;
+                    showToast('Item deleted');
+                    loadNetWorth();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // Load Net Worth API
+        async function loadNetWorth() {
+            try {
+                const res = await fetch('/api/net-worth');
+                if (!res.ok) return;
+                netWorthData = await res.json();
+                currentCurrency = netWorthData.currency || currentCurrency;
+                renderOverview(netWorthData);
+                renderChart(netWorthData.trend);
+            } catch (err) {
+                console.error('Error fetching net worth:', err);
+            }
+        }
+
+        function renderOverview(data) {
+            // Hero
+            const heroEl = document.getElementById('hero-net-worth');
+            heroEl.textContent = (data.net_worth < 0 ? '-' : '') + fmtMoney(Math.abs(data.net_worth));
+            heroEl.className = 'text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight ' + (data.net_worth >= 0 ? 'text-white' : 'text-rose-400');
+
+            document.getElementById('stat-total-assets').textContent = '+' + fmtMoney(data.total_assets);
+            document.getElementById('stat-total-liabilities').textContent = '-' + fmtMoney(data.total_liabilities);
+            document.getElementById('footer-total-assets').textContent = '+' + fmtMoney(data.total_assets);
+            document.getElementById('footer-total-liabilities').textContent = '-' + fmtMoney(data.total_liabilities);
+            document.getElementById('stat-debt-ratio').textContent = (data.debt_to_asset_ratio || 0).toFixed(1) + '%';
+
+            // Solvency badge
+            const solvEl = document.getElementById('badge-solvency');
+            if (data.net_worth >= 0) {
+                solvEl.textContent = 'Solvent';
+                solvEl.className = 'px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            } else {
+                solvEl.textContent = 'Insolvent';
+                solvEl.className = 'px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30';
+            }
+
+            // Health Score
+            document.getElementById('health-score-val').textContent = data.health_score || 0;
+            document.getElementById('badge-health-rating').textContent = data.health_rating || 'Good';
+            document.getElementById('runway-text').textContent = `🛡️ ${(data.runway_months || 0).toFixed(1)} mo emergency runway`;
+
+            // Progress bars
+            const debtPct = Math.max(10, Math.min(100, 100 - (data.debt_to_asset_ratio || 0)));
+            document.getElementById('bar-fill-debt').style.width = debtPct + '%';
+            document.getElementById('bar-label-debt').textContent = data.debt_to_asset_ratio < 30 ? 'Low' : (data.debt_to_asset_ratio < 60 ? 'Moderate' : 'High');
+
+            const cushionPct = Math.max(10, Math.min(100, (data.runway_months || 0) * 16));
+            document.getElementById('bar-fill-cushion').style.width = cushionPct + '%';
+            document.getElementById('bar-label-cushion').textContent = data.runway_months >= 3 ? 'Strong' : 'Modest';
+
+            const goalsPct = data.savings_goals_assets > 0 ? 85 : 30;
+            document.getElementById('bar-fill-goals').style.width = goalsPct + '%';
+            document.getElementById('bar-label-goals').textContent = data.savings_goals_assets > 0 ? 'Active' : 'No Goals';
+
+            // Render Assets List
+            const assetsContainer = document.getElementById('assets-list');
+            if (!data.assets_list || data.assets_list.length === 0) {
+                assetsContainer.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">No assets recorded yet. Add wallets, savings goals or custom holdings!</div>';
+            } else {
+                assetsContainer.innerHTML = data.assets_list.map(it => `
+                    <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/20 transition-all">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base shrink-0 shadow-2xs">
+                                ${it.icon || '🏛️'}
+                            </span>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-slate-900 dark:text-white truncate">${esc(it.name)}</p>
+                                <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">${esc(it.subtitle || it.category)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 ml-3">
+                            <span class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">+${fmtMoney(it.amount)}</span>
+                            ${it.source === 'custom' ? `
+                                <div class="flex items-center gap-1">
+                                    <button type="button" onclick="editCustomItem(${it.id})" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer" title="Edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                                    </button>
+                                    <button type="button" onclick="confirmDelete(${it.id}, '${esc(it.name)}')" class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer" title="Delete">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render Liabilities List
+            const liabContainer = document.getElementById('liabilities-list');
+            if (!data.liabilities_list || data.liabilities_list.length === 0) {
+                liabContainer.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">No liabilities recorded. You have zero debt obligations!</div>';
+            } else {
+                liabContainer.innerHTML = data.liabilities_list.map(it => `
+                    <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-rose-500/20 transition-all">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base shrink-0 shadow-2xs">
+                                ${it.icon || '💳'}
+                            </span>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-slate-900 dark:text-white truncate">${esc(it.name)}</p>
+                                <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">${esc(it.subtitle || it.category)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 ml-3">
+                            <span class="text-xs font-extrabold text-rose-600 dark:text-rose-400">-${fmtMoney(it.amount)}</span>
+                            ${it.source === 'custom' ? `
+                                <div class="flex items-center gap-1">
+                                    <button type="button" onclick="editCustomItem(${it.id})" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer" title="Edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                                    </button>
+                                    <button type="button" onclick="confirmDelete(${it.id}, '${esc(it.name)}')" class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer" title="Delete">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        window.editCustomItem = function(id) {
+            if (!netWorthData || !netWorthData.custom_items) return;
+            const item = netWorthData.custom_items.find(x => x.id === id);
+            if (item) openModal(item.type, item);
+        };
+
+        // Render Chart.js
+        function renderChart(trendPoints) {
+            const canvas = document.getElementById('netWorthChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const labels = (trendPoints || []).map(p => p.label);
+            const assetData = (trendPoints || []).map(p => p.assets);
+            const liabData = (trendPoints || []).map(p => p.liabilities);
+            const netData = (trendPoints || []).map(p => p.net_worth);
+
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)';
+            const textColor = isDark ? '#94A3B8' : '#64748B';
+
+            // Create gradient for Net Worth fill
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.25)');
+            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Assets',
+                            data: assetData,
+                            borderColor: '#10B981',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.35
+                        },
+                        {
+                            label: 'Liabilities',
+                            data: liabData,
+                            borderColor: '#F43F5E',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.35
+                        },
+                        {
+                            label: 'Net Worth',
+                            data: netData,
+                            borderColor: '#6366F1',
+                            backgroundColor: gradient,
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#6366F1',
+                            tension: 0.35
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: isDark ? '#0F172A' : '#1E293B',
+                            titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+                            bodyFont: { family: 'Inter', size: 11 },
+                            padding: 10,
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${fmtMoney(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor, font: { family: 'Inter', size: 11 } }
+                        },
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: textColor,
+                                font: { family: 'Inter', size: 11 },
+                                callback: val => fmtMoney(val)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNetWorth();
+        });
+    </script>
+</body>
+</html>

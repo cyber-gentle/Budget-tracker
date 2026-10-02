@@ -1454,3 +1454,219 @@ func TestSplitExpensesAndSettlementFlow(t *testing.T) {
 		t.Fatalf("expected 200 from DELETE /api/splits/%d, got %d", createdSplit.ID, recDel.Code)
 	}
 }
+
+func TestNetWorthAndWealthFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "wealth_test.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	username := "wealthbuilder"
+	err = store.Signup(username, "wealth@spendly.app", "pass1234", "Wealth Builder")
+	if err != nil {
+		t.Fatalf("signup failed: %v", err)
+	}
+
+	sessionID, err := store.Login(username, "pass1234")
+	if err != nil {
+		t.Fatalf("login failed: %v", err)
+	}
+
+	application := app.NewApp(store)
+
+	// 1. Add baseline assets:
+	// A. Accounts / Wallets
+	_, err = store.CreateAccount(username, "High Yield Savings", "savings", "USD", "#2563eb", "🏦", 20000, false)
+	if err != nil {
+		t.Fatalf("failed to add account: %v", err)
+	}
+
+	// B. Savings Goal
+	goal, err := store.CreateGoal(username, "Home Down Payment", 50000, nil, "🏠", "#10b981", "Savings")
+	if err != nil {
+		t.Fatalf("failed to add goal: %v", err)
+	}
+	_, err = store.DepositToGoal(goal.ID, username, 10000, "Initial deposit", false)
+	if err != nil {
+		t.Fatalf("failed to deposit to goal: %v", err)
+	}
+
+	// C. Debts: Money someone owes the user (Asset / IOU)
+	_, err = store.CreateDebt(username, "Dave", "owing_me", 3000, nil, "Personal loan")
+	if err != nil {
+		t.Fatalf("failed to add owing_me debt: %v", err)
+	}
+
+	// 2. Add baseline liabilities:
+	// A. Debts user owes (Liability)
+	_, err = store.CreateDebt(username, "Credit Card Corp", "i_owe", 4000, nil, "Card balance")
+	if err != nil {
+		t.Fatalf("failed to add i_owe debt: %v", err)
+	}
+
+	// B. Subscription monthly cost (Liability)
+	subDue := time.Now().AddDate(0, 0, 14)
+	_, err = store.AddSubscription(username, "Streaming Bundle", 50, "Entertainment", "monthly", subDue)
+	if err != nil {
+		t.Fatalf("failed to add subscription: %v", err)
+	}
+
+	// 3. Check Initial Net Worth Overview via DB
+	overview, err := store.GetNetWorthOverview(username)
+	if err != nil {
+		t.Fatalf("failed to get net worth overview: %v", err)
+	}
+
+	// Expected assets: 20000 (account) + 10000 (goal) + 3000 (debt owed to user) = 33000
+	if overview.TotalAssets != 33000 {
+		t.Fatalf("expected total assets 33000, got %.2f", overview.TotalAssets)
+	}
+	// Expected liabilities: 4000 (debt user owes) + 50 (monthly sub) = 4050
+	if overview.TotalLiabilities != 4050 {
+		t.Fatalf("expected total liabilities 4050, got %.2f", overview.TotalLiabilities)
+	}
+	// Expected net worth: 33000 - 4050 = 28950
+	if overview.NetWorth != 28950 {
+		t.Fatalf("expected net worth 28950, got %.2f", overview.NetWorth)
+	}
+	if overview.SolvencyStatus != "Solvent" {
+		t.Fatalf("expected SolvencyStatus 'Solvent', got %q", overview.SolvencyStatus)
+	}
+	if overview.HealthScore <= 0 || overview.HealthScore > 100 {
+		t.Fatalf("expected health score between 1 and 100, got %d", overview.HealthScore)
+	}
+	if len(overview.Trend) == 0 {
+		t.Fatalf("expected non-empty trend points")
+	}
+
+	// 4. Test HTTP Page Endpoint GET /net-worth
+	reqPage := httptest.NewRequest(http.MethodGet, "/net-worth", nil)
+	reqPage.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recPage := httptest.NewRecorder()
+	application.ServeHTTP(recPage, reqPage)
+	if recPage.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from GET /net-worth, got %d", recPage.Code)
+	}
+	bodyPage := recPage.Body.String()
+	if !strings.Contains(bodyPage, "Net Worth") || !strings.Contains(bodyPage, "Financial Health") {
+		t.Fatalf("page body missing expected keywords: %s", bodyPage[:500])
+	}
+
+	// 5. Test HTTP API GET /api/net-worth
+	reqAPI := httptest.NewRequest(http.MethodGet, "/api/net-worth", nil)
+	reqAPI.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recAPI := httptest.NewRecorder()
+	application.ServeHTTP(recAPI, reqAPI)
+	if recAPI.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from GET /api/net-worth, got %d: %s", recAPI.Code, recAPI.Body.String())
+	}
+	var apiOverview app.NetWorthOverview
+	if err := json.Unmarshal(recAPI.Body.Bytes(), &apiOverview); err != nil {
+		t.Fatalf("failed to decode GET /api/net-worth response: %v", err)
+	}
+	if apiOverview.NetWorth != 28950 {
+		t.Fatalf("expected API net worth 28950, got %.2f", apiOverview.NetWorth)
+	}
+
+	// 6. Test POST /api/net-worth/items (Create custom asset)
+	assetJSON := `{
+		"category": "asset",
+		"asset_type": "investment",
+		"name": "Index Fund ETF",
+		"amount": 15000,
+		"notes": "S&P 500 Index"
+	}`
+	reqPostAsset := httptest.NewRequest(http.MethodPost, "/api/net-worth/items", strings.NewReader(assetJSON))
+	reqPostAsset.Header.Set("Content-Type", "application/json")
+	reqPostAsset.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recPostAsset := httptest.NewRecorder()
+	application.ServeHTTP(recPostAsset, reqPostAsset)
+	if recPostAsset.Code != http.StatusCreated {
+		t.Fatalf("expected 201 Created from POST /api/net-worth/items, got %d: %s", recPostAsset.Code, recPostAsset.Body.String())
+	}
+
+	var createdAssetRes struct {
+		Success bool                    `json:"success"`
+		Item    app.CustomAssetLiability `json:"item"`
+	}
+	if err := json.Unmarshal(recPostAsset.Body.Bytes(), &createdAssetRes); err != nil {
+		t.Fatalf("failed to parse created asset: %v", err)
+	}
+	createdAsset := createdAssetRes.Item
+	if createdAsset.ID == 0 || createdAsset.Amount != 15000 {
+		t.Fatalf("unexpected created asset: %+v", createdAsset)
+	}
+
+	// 7. Test POST /api/net-worth/items (Create custom liability)
+	liabJSON := `{
+		"category": "liability",
+		"asset_type": "other",
+		"name": "Tax Assessment",
+		"amount": 2500,
+		"notes": "Estimated Q4 tax"
+	}`
+	reqPostLiab := httptest.NewRequest(http.MethodPost, "/api/net-worth/items", strings.NewReader(liabJSON))
+	reqPostLiab.Header.Set("Content-Type", "application/json")
+	reqPostLiab.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recPostLiab := httptest.NewRecorder()
+	application.ServeHTTP(recPostLiab, reqPostLiab)
+	if recPostLiab.Code != http.StatusCreated {
+		t.Fatalf("expected 201 Created from POST /api/net-worth/items (liab), got %d: %s", recPostLiab.Code, recPostLiab.Body.String())
+	}
+	var createdLiabRes struct {
+		Success bool                    `json:"success"`
+		Item    app.CustomAssetLiability `json:"item"`
+	}
+	if err := json.Unmarshal(recPostLiab.Body.Bytes(), &createdLiabRes); err != nil {
+		t.Fatalf("failed to parse created liability: %v", err)
+	}
+	createdLiab := createdLiabRes.Item
+
+	// 8. Test PUT /api/net-worth/items/{id} (Update asset)
+	updateAssetJSON := fmt.Sprintf(`{
+		"category": "asset",
+		"asset_type": "investment",
+		"name": "Index Fund ETF",
+		"amount": 18000,
+		"notes": "S&P 500 Index + Dividends"
+	}`)
+	reqPut := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/net-worth/items/%d", createdAsset.ID), strings.NewReader(updateAssetJSON))
+	reqPut.Header.Set("Content-Type", "application/json")
+	reqPut.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recPut := httptest.NewRecorder()
+	application.ServeHTTP(recPut, reqPut)
+	if recPut.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from PUT /api/net-worth/items/%d, got %d: %s", createdAsset.ID, recPut.Code, recPut.Body.String())
+	}
+
+	// 9. Test DELETE /api/net-worth/items/{id} (Delete liability)
+	reqDeleteLiab := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/net-worth/items/%d", createdLiab.ID), nil)
+	reqDeleteLiab.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recDeleteLiab := httptest.NewRecorder()
+	application.ServeHTTP(recDeleteLiab, reqDeleteLiab)
+	if recDeleteLiab.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from DELETE /api/net-worth/items/%d, got %d: %s", createdLiab.ID, recDeleteLiab.Code, recDeleteLiab.Body.String())
+	}
+
+	// 10. Re-verify Net Worth after addition of $18,000 custom asset and removal of liability
+	// Total assets = 33000 + 18000 = 51000
+	// Total liabilities = 4050
+	// Net Worth = 51000 - 4050 = 46950
+	finalOverview, err := store.GetNetWorthOverview(username)
+	if err != nil {
+		t.Fatalf("failed to get final overview: %v", err)
+	}
+	if finalOverview.TotalAssets != 51000 {
+		t.Fatalf("expected 51000 total assets, got %.2f", finalOverview.TotalAssets)
+	}
+	if finalOverview.TotalLiabilities != 4050 {
+		t.Fatalf("expected 4050 total liabilities, got %.2f", finalOverview.TotalLiabilities)
+	}
+	if finalOverview.NetWorth != 46950 {
+		t.Fatalf("expected 46950 net worth, got %.2f", finalOverview.NetWorth)
+	}
+}
+

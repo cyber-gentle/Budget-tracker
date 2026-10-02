@@ -72,6 +72,7 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/subscriptions", app.HandleSubscriptionsPage)
 	app.Mux.HandleFunc("/goals", app.HandleGoalsPage)
 	app.Mux.HandleFunc("/reports", app.HandleReportsPage)
+	app.Mux.HandleFunc("/net-worth", app.HandleNetWorthPage)
 
 	// Auth APIs
 	app.Mux.HandleFunc("/api/signup", app.HandleSignupAPI)
@@ -122,6 +123,11 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/export", app.HandleExportCSV)
 	app.Mux.HandleFunc("/api/currency", app.HandleCurrencyAPI)
 	app.Mux.HandleFunc("/api/profile", app.HandleProfileAPI)
+
+	// Net Worth & Wealth APIs
+	app.Mux.HandleFunc("/api/net-worth", app.HandleNetWorthAPI)
+	app.Mux.HandleFunc("/api/net-worth/items", app.HandleCustomAssetLiabilityAPI)
+	app.Mux.HandleFunc("/api/net-worth/items/", app.HandleCustomAssetLiabilityByIDAPI)
 
 	// Health check
 	app.Mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -2261,5 +2267,187 @@ func (app *App) HandleSettleContactDebtsAPI(w http.ResponseWriter, r *http.Reque
 	}
 
 	jsonOK(w, res)
+}
+
+// ─── Net Worth & Asset / Liability Handlers ──────────────────────────────────
+
+func (app *App) HandleNetWorthPage(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+	prof, _ := app.DB.GetProfile(username)
+	fullName := ""
+	email := ""
+	if prof != nil {
+		fullName = prof.FullName
+		email = prof.Email
+	}
+
+	overview, err := app.DB.GetNetWorthOverview(username)
+	if err != nil {
+		overview = &NetWorthOverview{
+			Currency:        curr,
+			AssetsList:      []NetWorthItem{},
+			LiabilitiesList: []NetWorthItem{},
+			CustomItems:     []CustomAssetLiability{},
+			Trend:           []NetWorthTrendPoint{},
+		}
+	}
+
+	data := struct {
+		Username string
+		FullName string
+		Email    string
+		Currency string
+		Overview *NetWorthOverview
+	}{
+		Username: username,
+		FullName: fullName,
+		Email:    email,
+		Currency: curr,
+		Overview: overview,
+	}
+
+	app.renderTemplate(w, "net-worth.html", data)
+}
+
+func (app *App) HandleNetWorthAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	overview, err := app.DB.GetNetWorthOverview(username)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, overview)
+}
+
+func (app *App) HandleCustomAssetLiabilityAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		items, err := app.DB.GetCustomAssetLiabilities(username)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, map[string]any{"items": items})
+
+	case http.MethodPost:
+		var item CustomAssetLiability
+		contentType := r.Header.Get("Content-Type")
+		if strings.Contains(contentType, "application/json") {
+			if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+				jsonError(w, "invalid JSON payload", http.StatusBadRequest)
+				return
+			}
+		} else {
+			_ = r.ParseMultipartForm(1 << 20)
+			item.Name = r.FormValue("name")
+			item.Type = r.FormValue("type")
+			item.Category = r.FormValue("category")
+			item.Institution = r.FormValue("institution")
+			item.Notes = r.FormValue("notes")
+			item.Amount, _ = strconv.ParseFloat(r.FormValue("amount"), 64)
+		}
+
+		if strings.TrimSpace(item.Name) == "" {
+			jsonError(w, "name is required", http.StatusBadRequest)
+			return
+		}
+		if item.Amount < 0 {
+			jsonError(w, "amount cannot be negative", http.StatusBadRequest)
+			return
+		}
+
+		saved, err := app.DB.AddCustomAssetLiability(username, item)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(map[string]any{"success": true, "item": saved})
+
+	default:
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleCustomAssetLiabilityByIDAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(pathParts) < 4 {
+		jsonError(w, "invalid ID in path", http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(pathParts[3])
+	if err != nil || id <= 0 {
+		jsonError(w, "invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPut, http.MethodPatch:
+		var item CustomAssetLiability
+		contentType := r.Header.Get("Content-Type")
+		if strings.Contains(contentType, "application/json") {
+			if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+				jsonError(w, "invalid JSON payload", http.StatusBadRequest)
+				return
+			}
+		} else {
+			_ = r.ParseMultipartForm(1 << 20)
+			item.Name = r.FormValue("name")
+			item.Type = r.FormValue("type")
+			item.Category = r.FormValue("category")
+			item.Institution = r.FormValue("institution")
+			item.Notes = r.FormValue("notes")
+			item.Amount, _ = strconv.ParseFloat(r.FormValue("amount"), 64)
+		}
+
+		saved, err := app.DB.UpdateCustomAssetLiability(username, id, item)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		jsonOK(w, map[string]any{"success": true, "item": saved})
+
+	case http.MethodDelete:
+		ok, err := app.DB.DeleteCustomAssetLiability(username, id)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if !ok {
+			jsonError(w, "item not found", http.StatusNotFound)
+			return
+		}
+		jsonOK(w, map[string]any{"success": true})
+
+	default:
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 

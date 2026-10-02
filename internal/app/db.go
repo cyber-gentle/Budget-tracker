@@ -220,6 +220,31 @@ func (s *DBStore) migrate() error {
 		status TEXT NOT NULL DEFAULT 'pending'
 	);
 	CREATE INDEX IF NOT EXISTS idx_split_participants ON split_participants(split_id);
+
+	CREATE TABLE IF NOT EXISTS custom_assets_liabilities (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		name TEXT NOT NULL,
+		type TEXT NOT NULL,
+		category TEXT NOT NULL,
+		amount REAL NOT NULL,
+		institution TEXT DEFAULT '',
+		notes TEXT DEFAULT '',
+		updated_at DATETIME,
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_assets_user ON custom_assets_liabilities(username);
+
+	CREATE TABLE IF NOT EXISTS net_worth_snapshots (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		date TEXT NOT NULL,
+		total_assets REAL NOT NULL,
+		total_liabilities REAL NOT NULL,
+		net_worth REAL NOT NULL,
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_snapshots_user ON net_worth_snapshots(username);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
@@ -4182,4 +4207,552 @@ func (s *DBStore) SettleContactDebts(username, contactName, mode string, account
 	}
 
 	return res, nil
+}
+
+// ─── Net Worth & Asset / Liability Models & Methods ──────────────────────────
+
+type CustomAssetLiability struct {
+	ID          int       `json:"id"`
+	Username    string    `json:"username"`
+	Name        string    `json:"name"`
+	Type        string    `json:"type"`     // "asset" or "liability"
+	Category    string    `json:"category"` // "investment", "property", "vehicle", "crypto", "cash_savings", "loan", "mortgage", "credit_card", "other"
+	Amount      float64   `json:"amount"`
+	Institution string    `json:"institution"`
+	Notes       string    `json:"notes"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type NetWorthItem struct {
+	ID       int     `json:"id"`
+	Source   string  `json:"source"` // "account", "goal", "debt", "subscription", "custom"
+	Name     string  `json:"name"`
+	Type     string  `json:"type"` // "asset" or "liability"
+	Category string  `json:"category"`
+	Amount   float64 `json:"amount"`
+	Subtitle string  `json:"subtitle"`
+	Icon     string  `json:"icon"`
+	Color    string  `json:"color"`
+}
+
+type NetWorthTrendPoint struct {
+	Date        string  `json:"date"`
+	Label       string  `json:"label"`
+	Assets      float64 `json:"assets"`
+	Liabilities float64 `json:"liabilities"`
+	NetWorth    float64 `json:"net_worth"`
+}
+
+type NetWorthOverview struct {
+	Currency            string                 `json:"currency"`
+	TotalAssets         float64                `json:"total_assets"`
+	TotalLiabilities    float64                `json:"total_liabilities"`
+	NetWorth            float64                `json:"net_worth"`
+	LiquidAssets        float64                `json:"liquid_assets"`
+	SavingsGoalsAssets  float64                `json:"savings_goals_assets"`
+	ReceivablesAssets   float64                `json:"receivables_assets"`
+	CustomAssets        float64                `json:"custom_assets"`
+	BorrowedLiabilities float64                `json:"borrowed_liabilities"`
+	SubscriptionOblig   float64                `json:"subscription_obligations"`
+	CustomLiabilities   float64                `json:"custom_liabilities"`
+	DebtToAssetRatio    float64                `json:"debt_to_asset_ratio"`
+	SolvencyStatus      string                 `json:"solvency_status"`
+	HealthScore         int                    `json:"health_score"`
+	HealthRating        string                 `json:"health_rating"`
+	RunwayMonths        float64                `json:"runway_months"`
+	AssetsList          []NetWorthItem         `json:"assets_list"`
+	LiabilitiesList     []NetWorthItem         `json:"liabilities_list"`
+	CustomItems         []CustomAssetLiability `json:"custom_items"`
+	Trend               []NetWorthTrendPoint   `json:"trend"`
+}
+
+func getAssetIcon(cat string) string {
+	switch strings.ToLower(strings.TrimSpace(cat)) {
+	case "investment", "stocks", "etf", "mutual_funds":
+		return "📈"
+	case "property", "real_estate", "land":
+		return "🏡"
+	case "vehicle", "car":
+		return "🚗"
+	case "crypto", "bitcoin":
+		return "🪙"
+	case "cash_savings", "savings", "cash":
+		return "💰"
+	case "business", "equity":
+		return "💼"
+	case "jewelry", "gold", "luxury":
+		return "💎"
+	default:
+		return "✨"
+	}
+}
+
+func getLiabilityIcon(cat string) string {
+	switch strings.ToLower(strings.TrimSpace(cat)) {
+	case "mortgage", "home_loan":
+		return "🏠"
+	case "loan", "personal_loan":
+		return "📋"
+	case "student_loan", "education":
+		return "🎓"
+	case "credit_card":
+		return "💳"
+	case "car_loan", "auto_loan":
+		return "🚘"
+	case "business_loan":
+		return "🏦"
+	default:
+		return "⚠️"
+	}
+}
+
+func (s *DBStore) AddCustomAssetLiability(username string, item CustomAssetLiability) (*CustomAssetLiability, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	item.Username = username
+	item.Name = strings.TrimSpace(item.Name)
+	if item.Name == "" {
+		return nil, fmt.Errorf("name is required")
+	}
+	item.Type = strings.ToLower(strings.TrimSpace(item.Type))
+	if item.Type != "asset" && item.Type != "liability" {
+		item.Type = "asset"
+	}
+	item.Category = strings.TrimSpace(item.Category)
+	if item.Category == "" {
+		if item.Type == "asset" {
+			item.Category = "investment"
+		} else {
+			item.Category = "loan"
+		}
+	}
+	if item.Amount < 0 {
+		item.Amount = math.Abs(item.Amount)
+	}
+
+	now := time.Now()
+	res, err := s.db.Exec(
+		"INSERT INTO custom_assets_liabilities (username, name, type, category, amount, institution, notes, updated_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		username, item.Name, item.Type, item.Category, item.Amount, strings.TrimSpace(item.Institution), strings.TrimSpace(item.Notes), now, now,
+	)
+	if err != nil {
+		return nil, err
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+	item.ID = int(id)
+	item.CreatedAt = now
+	item.UpdatedAt = now
+	return &item, nil
+}
+
+func (s *DBStore) UpdateCustomAssetLiability(username string, id int, item CustomAssetLiability) (*CustomAssetLiability, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	item.Name = strings.TrimSpace(item.Name)
+	if item.Name == "" {
+		return nil, fmt.Errorf("name is required")
+	}
+	item.Type = strings.ToLower(strings.TrimSpace(item.Type))
+	if item.Type != "asset" && item.Type != "liability" {
+		item.Type = "asset"
+	}
+	item.Category = strings.TrimSpace(item.Category)
+	if item.Category == "" {
+		if item.Type == "asset" {
+			item.Category = "investment"
+		} else {
+			item.Category = "loan"
+		}
+	}
+	if item.Amount < 0 {
+		item.Amount = math.Abs(item.Amount)
+	}
+
+	now := time.Now()
+	res, err := s.db.Exec(
+		"UPDATE custom_assets_liabilities SET name = ?, type = ?, category = ?, amount = ?, institution = ?, notes = ?, updated_at = ? WHERE id = ? AND username = ?",
+		item.Name, item.Type, item.Category, item.Amount, strings.TrimSpace(item.Institution), strings.TrimSpace(item.Notes), now, id, username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	rowsAff, _ := res.RowsAffected()
+	if rowsAff == 0 {
+		return nil, fmt.Errorf("item not found")
+	}
+
+	item.ID = id
+	item.Username = username
+	item.UpdatedAt = now
+	return &item, nil
+}
+
+func (s *DBStore) DeleteCustomAssetLiability(username string, id int) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	res, err := s.db.Exec("DELETE FROM custom_assets_liabilities WHERE id = ? AND username = ?", id, username)
+	if err != nil {
+		return false, err
+	}
+	rowsAff, _ := res.RowsAffected()
+	return rowsAff > 0, nil
+}
+
+func (s *DBStore) GetCustomAssetLiabilities(username string) ([]CustomAssetLiability, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		"SELECT id, username, name, type, category, amount, institution, notes, updated_at, created_at FROM custom_assets_liabilities WHERE username = ? ORDER BY type ASC, amount DESC",
+		username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []CustomAssetLiability
+	for rows.Next() {
+		var it CustomAssetLiability
+		if err := rows.Scan(&it.ID, &it.Username, &it.Name, &it.Type, &it.Category, &it.Amount, &it.Institution, &it.Notes, &it.UpdatedAt, &it.CreatedAt); err != nil {
+			continue
+		}
+		list = append(list, it)
+	}
+	if list == nil {
+		list = []CustomAssetLiability{}
+	}
+	return list, nil
+}
+
+func (s *DBStore) RecordNetWorthSnapshot(username string, totalAssets, totalLiabilities, netWorth float64) error {
+	today := time.Now().Format("2006-01-02")
+	var existingID int
+	err := s.db.QueryRow("SELECT id FROM net_worth_snapshots WHERE username = ? AND date = ?", username, today).Scan(&existingID)
+	if err == nil && existingID > 0 {
+		_, err = s.db.Exec(
+			"UPDATE net_worth_snapshots SET total_assets = ?, total_liabilities = ?, net_worth = ?, created_at = ? WHERE id = ?",
+			totalAssets, totalLiabilities, netWorth, time.Now(), existingID,
+		)
+		return err
+	}
+	_, err = s.db.Exec(
+		"INSERT INTO net_worth_snapshots (username, date, total_assets, total_liabilities, net_worth, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+		username, today, totalAssets, totalLiabilities, netWorth, time.Now(),
+	)
+	return err
+}
+
+func (s *DBStore) GetNetWorthOverview(username string) (*NetWorthOverview, error) {
+	currency := "₦"
+	prof, _ := s.GetProfile(username)
+	if prof != nil && prof.Currency != "" {
+		currency = prof.Currency
+	}
+
+	overview := &NetWorthOverview{
+		Currency:        currency,
+		AssetsList:      []NetWorthItem{},
+		LiabilitiesList: []NetWorthItem{},
+		CustomItems:     []CustomAssetLiability{},
+		Trend:           []NetWorthTrendPoint{},
+	}
+
+	// 1. Liquid Accounts / Wallets
+	accounts, _ := s.GetAccounts(username)
+	for _, acc := range accounts {
+		overview.LiquidAssets += acc.CurrentBalance
+		overview.AssetsList = append(overview.AssetsList, NetWorthItem{
+			ID:       acc.ID,
+			Source:   "account",
+			Name:     acc.Name,
+			Type:     "asset",
+			Category: "Liquid Wallet (" + acc.Type + ")",
+			Amount:   acc.CurrentBalance,
+			Subtitle: fmt.Sprintf("%s balance", acc.Type),
+			Icon:     acc.Icon,
+			Color:    acc.Color,
+		})
+	}
+
+	// 2. Savings Goals
+	goals, _, _ := s.GetGoals(username)
+	for _, g := range goals {
+		if g.SavedAmount > 0 {
+			overview.SavingsGoalsAssets += g.SavedAmount
+			overview.AssetsList = append(overview.AssetsList, NetWorthItem{
+				ID:       g.ID,
+				Source:   "goal",
+				Name:     g.Name,
+				Type:     "asset",
+				Category: "Savings Goal",
+				Amount:   g.SavedAmount,
+				Subtitle: fmt.Sprintf("Target: %s%.2f (%d%%)", currency, g.TargetAmount, int((g.SavedAmount/g.TargetAmount)*100)),
+				Icon:     g.Emoji,
+				Color:    g.Color,
+			})
+		}
+	}
+
+	// 3. Debts (Receivables vs. Borrowed)
+	debts, _, _ := s.GetDebts(username)
+	for _, d := range debts {
+		if d.Status == "settled" {
+			continue
+		}
+		rem := d.Remaining
+		if rem <= 0.001 {
+			rem = d.Amount - d.AmountPaid
+		}
+		if rem <= 0.001 {
+			continue
+		}
+		dueStr := "No due date"
+		if d.DueDate != nil {
+			dueStr = "Due " + d.DueDate.Format("Jan 02")
+		} else if d.DueDateFmt != "" {
+			dueStr = "Due " + d.DueDateFmt
+		}
+
+		if d.Type == "owing_me" || d.Type == "lent" {
+			overview.ReceivablesAssets += rem
+			overview.AssetsList = append(overview.AssetsList, NetWorthItem{
+				ID:       d.ID,
+				Source:   "debt",
+				Name:     "Owed by " + d.PersonName,
+				Type:     "asset",
+				Category: "IOU Receivable",
+				Amount:   rem,
+				Subtitle: fmt.Sprintf("Total: %s%.2f | %s", currency, d.Amount, dueStr),
+				Icon:     "🤝",
+				Color:    "#10B981",
+			})
+		} else if d.Type == "i_owe" || d.Type == "borrowed" {
+			overview.BorrowedLiabilities += rem
+			overview.LiabilitiesList = append(overview.LiabilitiesList, NetWorthItem{
+				ID:       d.ID,
+				Source:   "debt",
+				Name:     "Owed to " + d.PersonName,
+				Type:     "liability",
+				Category: "Debt Payable",
+				Amount:   rem,
+				Subtitle: fmt.Sprintf("Total: %s%.2f | %s", currency, d.Amount, dueStr),
+				Icon:     "💸",
+				Color:    "#EF4444",
+			})
+		}
+	}
+
+	// 4. Subscriptions
+	subs, _ := s.GetSubscriptions(username)
+	for _, sub := range subs {
+		if sub.Status != "active" {
+			continue
+		}
+		monthlyAmt := sub.Amount
+		if strings.ToLower(sub.BillingCycle) == "yearly" {
+			monthlyAmt = sub.Amount / 12
+		}
+		overview.SubscriptionOblig += monthlyAmt
+		overview.LiabilitiesList = append(overview.LiabilitiesList, NetWorthItem{
+			ID:       sub.ID,
+			Source:   "subscription",
+			Name:     sub.Name,
+			Type:     "liability",
+			Category: "Subscription Outflow",
+			Amount:   monthlyAmt,
+			Subtitle: fmt.Sprintf("%s billing cycle", strings.Title(sub.BillingCycle)),
+			Icon:     "📅",
+			Color:    "#8B5CF6",
+		})
+	}
+
+	// 5. Custom Assets & Liabilities
+	customs, _ := s.GetCustomAssetLiabilities(username)
+	overview.CustomItems = customs
+	for _, ci := range customs {
+		if ci.Type == "asset" {
+			overview.CustomAssets += ci.Amount
+			sub := ci.Institution
+			if sub == "" {
+				sub = "Custom asset"
+			}
+			overview.AssetsList = append(overview.AssetsList, NetWorthItem{
+				ID:       ci.ID,
+				Source:   "custom",
+				Name:     ci.Name,
+				Type:     "asset",
+				Category: strings.Title(strings.ReplaceAll(ci.Category, "_", " ")),
+				Amount:   ci.Amount,
+				Subtitle: sub,
+				Icon:     getAssetIcon(ci.Category),
+				Color:    "#065F46",
+			})
+		} else {
+			overview.CustomLiabilities += ci.Amount
+			sub := ci.Institution
+			if sub == "" {
+				sub = "Custom liability"
+			}
+			overview.LiabilitiesList = append(overview.LiabilitiesList, NetWorthItem{
+				ID:       ci.ID,
+				Source:   "custom",
+				Name:     ci.Name,
+				Type:     "liability",
+				Category: strings.Title(strings.ReplaceAll(ci.Category, "_", " ")),
+				Amount:   ci.Amount,
+				Subtitle: sub,
+				Icon:     getLiabilityIcon(ci.Category),
+				Color:    "#991B1B",
+			})
+		}
+	}
+
+	// Totals
+	overview.TotalAssets = overview.LiquidAssets + overview.SavingsGoalsAssets + overview.ReceivablesAssets + overview.CustomAssets
+	overview.TotalLiabilities = overview.BorrowedLiabilities + overview.SubscriptionOblig + overview.CustomLiabilities
+	overview.NetWorth = overview.TotalAssets - overview.TotalLiabilities
+
+	// Key Ratios
+	if overview.TotalAssets > 0 {
+		overview.DebtToAssetRatio = (overview.TotalLiabilities / overview.TotalAssets) * 100
+	} else if overview.TotalLiabilities > 0 {
+		overview.DebtToAssetRatio = 100.0
+	} else {
+		overview.DebtToAssetRatio = 0.0
+	}
+
+	if overview.NetWorth >= 0 {
+		overview.SolvencyStatus = "Solvent"
+	} else {
+		overview.SolvencyStatus = "Insolvent"
+	}
+
+	// Average Monthly Expense & Runway
+	var avgMonthlyExpense float64
+	var totalExpensesLast3Months float64
+	threeMonthsAgo := time.Now().AddDate(0, -3, 0)
+	err := s.db.QueryRow(
+		"SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE username = ? AND type = 'expense' AND date >= ?",
+		username, threeMonthsAgo,
+	).Scan(&totalExpensesLast3Months)
+	if err == nil && totalExpensesLast3Months > 0 {
+		avgMonthlyExpense = totalExpensesLast3Months / 3.0
+	} else {
+		avgMonthlyExpense = overview.SubscriptionOblig
+	}
+
+	if avgMonthlyExpense > 0 {
+		overview.RunwayMonths = math.Round((overview.LiquidAssets/avgMonthlyExpense)*10) / 10
+	} else {
+		if overview.LiquidAssets > 0 {
+			overview.RunwayMonths = 12.0
+		} else {
+			overview.RunwayMonths = 0.0
+		}
+	}
+
+	// Financial Health Score Calculation (0 - 100)
+	score := 0
+	// 1. Debt to Asset Score (max 40)
+	if overview.TotalLiabilities <= 0.01 {
+		score += 40
+	} else if overview.DebtToAssetRatio < 15 {
+		score += 38
+	} else if overview.DebtToAssetRatio < 30 {
+		score += 32
+	} else if overview.DebtToAssetRatio < 50 {
+		score += 24
+	} else if overview.DebtToAssetRatio < 75 {
+		score += 15
+	} else if overview.DebtToAssetRatio < 100 {
+		score += 8
+	}
+
+	// 2. Liquidity & Emergency Cushion Score (max 30)
+	if overview.RunwayMonths >= 6 {
+		score += 30
+	} else if overview.RunwayMonths >= 3 {
+		score += 24
+	} else if overview.RunwayMonths >= 1 {
+		score += 16
+	} else if overview.LiquidAssets > 0 {
+		score += 10
+	}
+
+	// 3. Wealth & Savings Goal Progress (max 30)
+	if overview.SavingsGoalsAssets > 0 {
+		score += 15
+	}
+	if overview.NetWorth > 0 {
+		score += 15
+	}
+
+	if score > 100 {
+		score = 100
+	}
+	overview.HealthScore = score
+
+	if score >= 85 {
+		overview.HealthRating = "Exceptional"
+	} else if score >= 70 {
+		overview.HealthRating = "Strong"
+	} else if score >= 55 {
+		overview.HealthRating = "Healthy"
+	} else if score >= 40 {
+		overview.HealthRating = "Fair"
+	} else {
+		overview.HealthRating = "Needs Attention"
+	}
+
+	// Record today's snapshot asynchronously/synchronously
+	_ = s.RecordNetWorthSnapshot(username, overview.TotalAssets, overview.TotalLiabilities, overview.NetWorth)
+
+	// Build 6-Month Trend Points
+	now := time.Now()
+	for i := 5; i >= 0; i-- {
+		m := now.AddDate(0, -i, 0)
+		monthKey := m.Format("2006-01")
+		label := m.Format("Jan 06")
+
+		var snapAssets, snapLiab, snapNet float64
+		err := s.db.QueryRow(
+			"SELECT total_assets, total_liabilities, net_worth FROM net_worth_snapshots WHERE username = ? AND date LIKE ? ORDER BY date DESC LIMIT 1",
+			username, monthKey+"%",
+		).Scan(&snapAssets, &snapLiab, &snapNet)
+
+		if err != nil || (snapAssets == 0 && snapLiab == 0 && snapNet == 0 && i == 0) {
+			if i == 0 {
+				snapAssets = overview.TotalAssets
+				snapLiab = overview.TotalLiabilities
+				snapNet = overview.NetWorth
+			} else {
+				// Backfill approximation
+				factor := 1.0 - (float64(i) * 0.05)
+				if factor < 0.2 {
+					factor = 0.2
+				}
+				snapAssets = math.Round(overview.TotalAssets*factor*100) / 100
+				snapLiab = math.Round(overview.TotalLiabilities*factor*100) / 100
+				snapNet = snapAssets - snapLiab
+			}
+		}
+
+		overview.Trend = append(overview.Trend, NetWorthTrendPoint{
+			Date:        monthKey,
+			Label:       label,
+			Assets:      snapAssets,
+			Liabilities: snapLiab,
+			NetWorth:    snapNet,
+		})
+	}
+
+	return overview, nil
 }
