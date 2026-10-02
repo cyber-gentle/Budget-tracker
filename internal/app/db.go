@@ -166,6 +166,32 @@ func (s *DBStore) migrate() error {
 		created_at DATETIME
 	);
 	CREATE INDEX IF NOT EXISTS idx_categories_user ON categories(username);
+
+	CREATE TABLE IF NOT EXISTS accounts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		name TEXT NOT NULL,
+		type TEXT NOT NULL,
+		currency TEXT DEFAULT '₦',
+		initial_balance REAL NOT NULL DEFAULT 0,
+		color TEXT DEFAULT '#3B82F6',
+		icon TEXT DEFAULT '🏦',
+		is_default BOOLEAN DEFAULT 0,
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_accounts_user ON accounts(username);
+
+	CREATE TABLE IF NOT EXISTS account_transfers (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		from_account_id INTEGER NOT NULL,
+		to_account_id INTEGER NOT NULL,
+		amount REAL NOT NULL,
+		note TEXT,
+		date DATETIME,
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_transfers_user ON account_transfers(username);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
@@ -176,6 +202,7 @@ func (s *DBStore) migrate() error {
 	_, _ = s.db.Exec("ALTER TABLE users ADD COLUMN full_name TEXT DEFAULT ''")
 	_, _ = s.db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
 	_, _ = s.db.Exec("ALTER TABLE transactions ADD COLUMN tags TEXT DEFAULT ''")
+	_, _ = s.db.Exec("ALTER TABLE transactions ADD COLUMN account_id INTEGER DEFAULT 0")
 
 	return nil
 }
@@ -453,7 +480,7 @@ func parseTags(tags string) (string, []string) {
 	return strings.Join(cleaned, ","), cleaned
 }
 
-func (s *DBStore) AddTransactionWithTags(username string, amount float64, category, note, txnType, tags string, optDate ...time.Time) error {
+func (s *DBStore) AddTransactionFull(username string, amount float64, category, note, txnType, tags string, accountID int, optDate ...time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -465,17 +492,21 @@ func (s *DBStore) AddTransactionWithTags(username string, amount float64, catego
 	cleanTags, _ := parseTags(tags)
 
 	_, err := s.db.Exec(
-		"INSERT INTO transactions (username, amount, category, note, date, type, tags) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		username, amount, category, note, txDate, txnType, cleanTags,
+		"INSERT INTO transactions (username, amount, category, note, date, type, tags, account_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		username, amount, category, note, txDate, txnType, cleanTags, accountID,
 	)
 	return err
 }
 
-func (s *DBStore) AddTransaction(username string, amount float64, category, note, txnType string, optDate ...time.Time) error {
-	return s.AddTransactionWithTags(username, amount, category, note, txnType, "", optDate...)
+func (s *DBStore) AddTransactionWithTags(username string, amount float64, category, note, txnType, tags string, optDate ...time.Time) error {
+	return s.AddTransactionFull(username, amount, category, note, txnType, tags, 0, optDate...)
 }
 
-func (s *DBStore) UpdateTransactionWithTags(id int, username string, amount float64, category, note, txnType, tags string, optDate ...time.Time) (bool, error) {
+func (s *DBStore) AddTransaction(username string, amount float64, category, note, txnType string, optDate ...time.Time) error {
+	return s.AddTransactionFull(username, amount, category, note, txnType, "", 0, optDate...)
+}
+
+func (s *DBStore) UpdateTransactionFull(id int, username string, amount float64, category, note, txnType, tags string, accountID int, optDate ...time.Time) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -486,13 +517,13 @@ func (s *DBStore) UpdateTransactionWithTags(id int, username string, amount floa
 
 	if len(optDate) > 0 && !optDate[0].IsZero() {
 		res, err = s.db.Exec(
-			"UPDATE transactions SET amount = ?, category = ?, note = ?, type = ?, tags = ?, date = ? WHERE id = ? AND username = ?",
-			amount, category, note, txnType, cleanTags, optDate[0], id, username,
+			"UPDATE transactions SET amount = ?, category = ?, note = ?, type = ?, tags = ?, account_id = ?, date = ? WHERE id = ? AND username = ?",
+			amount, category, note, txnType, cleanTags, accountID, optDate[0], id, username,
 		)
 	} else {
 		res, err = s.db.Exec(
-			"UPDATE transactions SET amount = ?, category = ?, note = ?, type = ?, tags = ? WHERE id = ? AND username = ?",
-			amount, category, note, txnType, cleanTags, id, username,
+			"UPDATE transactions SET amount = ?, category = ?, note = ?, type = ?, tags = ?, account_id = ? WHERE id = ? AND username = ?",
+			amount, category, note, txnType, cleanTags, accountID, id, username,
 		)
 	}
 
@@ -503,8 +534,12 @@ func (s *DBStore) UpdateTransactionWithTags(id int, username string, amount floa
 	return affected > 0, nil
 }
 
+func (s *DBStore) UpdateTransactionWithTags(id int, username string, amount float64, category, note, txnType, tags string, optDate ...time.Time) (bool, error) {
+	return s.UpdateTransactionFull(id, username, amount, category, note, txnType, tags, 0, optDate...)
+}
+
 func (s *DBStore) UpdateTransaction(id int, username string, amount float64, category, note, txnType string, optDate ...time.Time) (bool, error) {
-	return s.UpdateTransactionWithTags(id, username, amount, category, note, txnType, "", optDate...)
+	return s.UpdateTransactionFull(id, username, amount, category, note, txnType, "", 0, optDate...)
 }
 
 func (s *DBStore) DeleteTransaction(id int, username string) (bool, error) {
@@ -524,7 +559,12 @@ func (s *DBStore) GetTransactions(username string) ([]Transaction, error) {
 	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
-		"SELECT id, amount, category, note, date, type, COALESCE(tags, '') FROM transactions WHERE username = ? ORDER BY date DESC, id DESC",
+		`SELECT t.id, t.amount, t.category, t.note, t.date, t.type, COALESCE(t.tags, ''),
+                COALESCE(t.account_id, 0), COALESCE(a.name, ''), COALESCE(a.icon, '')
+         FROM transactions t
+         LEFT JOIN accounts a ON a.id = t.account_id AND a.username = t.username
+         WHERE t.username = ?
+         ORDER BY t.date DESC, t.id DESC`,
 		username,
 	)
 	if err != nil {
@@ -536,7 +576,7 @@ func (s *DBStore) GetTransactions(username string) ([]Transaction, error) {
 	for rows.Next() {
 		var t Transaction
 		var rawTags string
-		if err := rows.Scan(&t.ID, &t.Amount, &t.Category, &t.Note, &t.Date, &t.Type, &rawTags); err != nil {
+		if err := rows.Scan(&t.ID, &t.Amount, &t.Category, &t.Note, &t.Date, &t.Type, &rawTags, &t.AccountID, &t.AccountName, &t.AccountIcon); err != nil {
 			log.Printf("scan error: %v", err)
 			continue
 		}
@@ -1978,4 +2018,492 @@ func (s *DBStore) DeleteCategory(id int, username string, reassignTo ...string) 
 	affected, _ := res.RowsAffected()
 	return affected > 0, nil
 }
+
+// ─── Multi-Account & Wallet Methods ──────────────────────────────────────────
+
+type Account struct {
+	ID             int       `json:"id"`
+	Username       string    `json:"username"`
+	Name           string    `json:"name"`
+	Type           string    `json:"type"` // bank, mobile_money, cash, savings, credit, other
+	Currency       string    `json:"currency"`
+	InitialBalance float64   `json:"initial_balance"`
+	CurrentBalance float64   `json:"current_balance"`
+	Color          string    `json:"color"`
+	Icon           string    `json:"icon"`
+	IsDefault      bool      `json:"is_default"`
+	TxCount        int       `json:"tx_count"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+type AccountTransfer struct {
+	ID              int       `json:"id"`
+	Username        string    `json:"username"`
+	FromAccountID   int       `json:"from_account_id"`
+	FromAccountName string    `json:"from_account_name,omitempty"`
+	FromAccountIcon string    `json:"from_account_icon,omitempty"`
+	ToAccountID     int       `json:"to_account_id"`
+	ToAccountName   string    `json:"to_account_name,omitempty"`
+	ToAccountIcon   string    `json:"to_account_icon,omitempty"`
+	Amount          float64   `json:"amount"`
+	Note            string    `json:"note"`
+	Date            time.Time `json:"date"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+
+func (s *DBStore) ensureDefaultAccounts(username string) error {
+	var count int
+	err := s.db.QueryRow("SELECT COUNT(1) FROM accounts WHERE username = ?", username).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+
+	curr := "₦"
+	var userCurr sql.NullString
+	_ = s.db.QueryRow("SELECT currency FROM users WHERE username = ?", username).Scan(&userCurr)
+	if userCurr.Valid && userCurr.String != "" {
+		curr = userCurr.String
+	}
+
+	now := time.Now()
+	defaults := []struct {
+		name      string
+		accType   string
+		color     string
+		icon      string
+		isDefault bool
+	}{
+		{"Main Bank", "bank", "#3B82F6", "🏦", true},
+		{"Mobile Money", "mobile_money", "#10B981", "📱", false},
+		{"Cash / Wallet", "cash", "#F59E0B", "💵", false},
+	}
+
+	for _, d := range defaults {
+		isDefVal := 0
+		if d.isDefault {
+			isDefVal = 1
+		}
+		_, _ = s.db.Exec(
+			"INSERT INTO accounts (username, name, type, currency, initial_balance, color, icon, is_default, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			username, d.name, d.accType, curr, 0.0, d.color, d.icon, isDefVal, now,
+		)
+	}
+	return nil
+}
+
+func (s *DBStore) GetAccounts(username string) ([]Account, error) {
+	s.mu.Lock()
+	_ = s.ensureDefaultAccounts(username)
+	s.mu.Unlock()
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		"SELECT id, username, name, type, currency, initial_balance, color, icon, is_default, created_at FROM accounts WHERE username = ? ORDER BY is_default DESC, id ASC",
+		username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []Account
+	var defaultAccID int
+	for rows.Next() {
+		var a Account
+		if err := rows.Scan(&a.ID, &a.Username, &a.Name, &a.Type, &a.Currency, &a.InitialBalance, &a.Color, &a.Icon, &a.IsDefault, &a.CreatedAt); err != nil {
+			continue
+		}
+		if a.IsDefault && defaultAccID == 0 {
+			defaultAccID = a.ID
+		}
+		a.CurrentBalance = a.InitialBalance
+		accounts = append(accounts, a)
+	}
+
+	if len(accounts) == 0 {
+		return []Account{}, nil
+	}
+	if defaultAccID == 0 {
+		defaultAccID = accounts[0].ID
+	}
+
+	// Sum income and expenses per account from transactions
+	txRows, err := s.db.Query(
+		"SELECT COALESCE(account_id, 0), type, SUM(amount), COUNT(1) FROM transactions WHERE username = ? GROUP BY COALESCE(account_id, 0), type",
+		username,
+	)
+	incomeByAcc := make(map[int]float64)
+	expenseByAcc := make(map[int]float64)
+	txCountByAcc := make(map[int]int)
+
+	if err == nil {
+		defer txRows.Close()
+		for txRows.Next() {
+			var accID int
+			var txnType string
+			var sumAmt float64
+			var cnt int
+			if err := txRows.Scan(&accID, &txnType, &sumAmt, &cnt); err == nil {
+				if accID == 0 {
+					accID = defaultAccID
+				}
+				txCountByAcc[accID] += cnt
+				if txnType == "income" {
+					incomeByAcc[accID] += sumAmt
+				} else if txnType == "expense" {
+					expenseByAcc[accID] += sumAmt
+				}
+			}
+		}
+	}
+
+	// Transfers Out
+	outRows, err := s.db.Query(
+		"SELECT from_account_id, SUM(amount) FROM account_transfers WHERE username = ? GROUP BY from_account_id",
+		username,
+	)
+	transfersOut := make(map[int]float64)
+	if err == nil {
+		defer outRows.Close()
+		for outRows.Next() {
+			var fID int
+			var amt float64
+			if err := outRows.Scan(&fID, &amt); err == nil {
+				transfersOut[fID] += amt
+			}
+		}
+	}
+
+	// Transfers In
+	inRows, err := s.db.Query(
+		"SELECT to_account_id, SUM(amount) FROM account_transfers WHERE username = ? GROUP BY to_account_id",
+		username,
+	)
+	transfersIn := make(map[int]float64)
+	if err == nil {
+		defer inRows.Close()
+		for inRows.Next() {
+			var tID int
+			var amt float64
+			if err := inRows.Scan(&tID, &amt); err == nil {
+				transfersIn[tID] += amt
+			}
+		}
+	}
+
+	for i := range accounts {
+		id := accounts[i].ID
+		inc := incomeByAcc[id]
+		exp := expenseByAcc[id]
+		tIn := transfersIn[id]
+		tOut := transfersOut[id]
+		accounts[i].CurrentBalance = accounts[i].InitialBalance + inc - exp + tIn - tOut
+		accounts[i].TxCount = txCountByAcc[id]
+	}
+
+	return accounts, nil
+}
+
+func (s *DBStore) GetAccountByID(id int, username string) (*Account, error) {
+	accounts, err := s.GetAccounts(username)
+	if err != nil {
+		return nil, err
+	}
+	for _, a := range accounts {
+		if a.ID == id {
+			return &a, nil
+		}
+	}
+	return nil, fmt.Errorf("account not found")
+}
+
+func (s *DBStore) CreateAccount(username, name, accType, currency, color, icon string, initialBalance float64, isDefault bool) (*Account, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("account name is required")
+	}
+	accType = strings.TrimSpace(accType)
+	if accType == "" {
+		accType = "bank"
+	}
+	if color == "" {
+		color = "#3B82F6"
+	}
+	if icon == "" {
+		switch accType {
+		case "bank":
+			icon = "🏦"
+		case "mobile_money":
+			icon = "📱"
+		case "cash":
+			icon = "💵"
+		case "savings":
+			icon = "💎"
+		case "credit":
+			icon = "💳"
+		default:
+			icon = "🏦"
+		}
+	}
+	if currency == "" {
+		currency = "₦"
+	}
+
+	if isDefault {
+		_, _ = s.db.Exec("UPDATE accounts SET is_default = 0 WHERE username = ?", username)
+	} else {
+		var count int
+		_ = s.db.QueryRow("SELECT COUNT(1) FROM accounts WHERE username = ?", username).Scan(&count)
+		if count == 0 {
+			isDefault = true
+		}
+	}
+
+	now := time.Now()
+	isDefInt := 0
+	if isDefault {
+		isDefInt = 1
+	}
+
+	res, err := s.db.Exec(
+		"INSERT INTO accounts (username, name, type, currency, initial_balance, color, icon, is_default, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		username, name, accType, currency, initialBalance, color, icon, isDefInt, now,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := res.LastInsertId()
+	acc := &Account{
+		ID:             int(id),
+		Username:       username,
+		Name:           name,
+		Type:           accType,
+		Currency:       currency,
+		InitialBalance: initialBalance,
+		CurrentBalance: initialBalance,
+		Color:          color,
+		Icon:           icon,
+		IsDefault:      isDefault,
+		TxCount:        0,
+		CreatedAt:      now,
+	}
+	return acc, nil
+}
+
+func (s *DBStore) UpdateAccount(id int, username, name, accType, currency, color, icon string, initialBalance float64, isDefault bool) (*Account, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("account name is required")
+	}
+	accType = strings.TrimSpace(accType)
+	if accType == "" {
+		accType = "bank"
+	}
+	if color == "" {
+		color = "#3B82F6"
+	}
+	if icon == "" {
+		switch accType {
+		case "bank":
+			icon = "🏦"
+		case "mobile_money":
+			icon = "📱"
+		case "cash":
+			icon = "💵"
+		case "savings":
+			icon = "💎"
+		case "credit":
+			icon = "💳"
+		default:
+			icon = "🏦"
+		}
+	}
+
+	if isDefault {
+		_, _ = s.db.Exec("UPDATE accounts SET is_default = 0 WHERE username = ?", username)
+	}
+
+	isDefInt := 0
+	if isDefault {
+		isDefInt = 1
+	}
+
+	res, err := s.db.Exec(
+		"UPDATE accounts SET name = ?, type = ?, currency = ?, initial_balance = ?, color = ?, icon = ?, is_default = ? WHERE id = ? AND username = ?",
+		name, accType, currency, initialBalance, color, icon, isDefInt, id, username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return nil, fmt.Errorf("account not found")
+	}
+
+	var acc Account
+	_ = s.db.QueryRow("SELECT id, username, name, type, currency, initial_balance, color, icon, is_default, created_at FROM accounts WHERE id = ? AND username = ?", id, username).
+		Scan(&acc.ID, &acc.Username, &acc.Name, &acc.Type, &acc.Currency, &acc.InitialBalance, &acc.Color, &acc.Icon, &acc.IsDefault, &acc.CreatedAt)
+
+	return &acc, nil
+}
+
+func (s *DBStore) DeleteAccount(id int, username string, reassignToAccountID int) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var count int
+	_ = s.db.QueryRow("SELECT COUNT(1) FROM accounts WHERE username = ?", username).Scan(&count)
+	if count <= 1 {
+		return false, fmt.Errorf("cannot delete your only account")
+	}
+
+	var isDefault bool
+	err := s.db.QueryRow("SELECT is_default FROM accounts WHERE id = ? AND username = ?", id, username).Scan(&isDefault)
+	if err != nil {
+		return false, fmt.Errorf("account not found")
+	}
+
+	if reassignToAccountID <= 0 || reassignToAccountID == id {
+		_ = s.db.QueryRow("SELECT id FROM accounts WHERE username = ? AND id != ? ORDER BY is_default DESC, id ASC LIMIT 1", username, id).Scan(&reassignToAccountID)
+	}
+
+	if isDefault {
+		_, _ = s.db.Exec("UPDATE accounts SET is_default = 1 WHERE id = ? AND username = ?", reassignToAccountID, username)
+	}
+
+	// Reassign transactions
+	_, _ = s.db.Exec("UPDATE transactions SET account_id = ? WHERE username = ? AND account_id = ?", reassignToAccountID, username, id)
+
+	// Clean up transfers involving this account
+	_, _ = s.db.Exec("DELETE FROM account_transfers WHERE username = ? AND (from_account_id = ? OR to_account_id = ?)", username, id, id)
+
+	res, err := s.db.Exec("DELETE FROM accounts WHERE id = ? AND username = ?", id, username)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected > 0, nil
+}
+
+func (s *DBStore) SetDefaultAccount(id int, username string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var exists int
+	err := s.db.QueryRow("SELECT COUNT(1) FROM accounts WHERE id = ? AND username = ?", id, username).Scan(&exists)
+	if err != nil || exists == 0 {
+		return fmt.Errorf("account not found")
+	}
+
+	_, _ = s.db.Exec("UPDATE accounts SET is_default = 0 WHERE username = ?", username)
+	_, err = s.db.Exec("UPDATE accounts SET is_default = 1 WHERE id = ? AND username = ?", id, username)
+	return err
+}
+
+func (s *DBStore) CreateAccountTransfer(username string, fromID, toID int, amount float64, note string, optDate ...time.Time) (*AccountTransfer, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if fromID == toID {
+		return nil, fmt.Errorf("source and destination accounts cannot be the same")
+	}
+	if amount <= 0 {
+		return nil, fmt.Errorf("transfer amount must be greater than zero")
+	}
+
+	var fromName, fromIcon string
+	err := s.db.QueryRow("SELECT name, icon FROM accounts WHERE id = ? AND username = ?", fromID, username).Scan(&fromName, &fromIcon)
+	if err != nil {
+		return nil, fmt.Errorf("source account not found")
+	}
+
+	var toName, toIcon string
+	err = s.db.QueryRow("SELECT name, icon FROM accounts WHERE id = ? AND username = ?", toID, username).Scan(&toName, &toIcon)
+	if err != nil {
+		return nil, fmt.Errorf("destination account not found")
+	}
+
+	txDate := time.Now()
+	if len(optDate) > 0 && !optDate[0].IsZero() {
+		txDate = optDate[0]
+	}
+	now := time.Now()
+
+	res, err := s.db.Exec(
+		"INSERT INTO account_transfers (username, from_account_id, to_account_id, amount, note, date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		username, fromID, toID, amount, strings.TrimSpace(note), txDate, now,
+	)
+	if err != nil {
+		return nil, err
+	}
+	id, _ := res.LastInsertId()
+
+	return &AccountTransfer{
+		ID:              int(id),
+		Username:        username,
+		FromAccountID:   fromID,
+		FromAccountName: fromName,
+		FromAccountIcon: fromIcon,
+		ToAccountID:     toID,
+		ToAccountName:   toName,
+		ToAccountIcon:   toIcon,
+		Amount:          amount,
+		Note:            note,
+		Date:            txDate,
+		CreatedAt:       now,
+	}, nil
+}
+
+func (s *DBStore) GetAccountTransfers(username string, limit int) ([]AccountTransfer, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if limit <= 0 {
+		limit = 50
+	}
+
+	rows, err := s.db.Query(
+		`SELECT t.id, t.username, t.from_account_id, COALESCE(fa.name, 'Unknown'), COALESCE(fa.icon, '🏦'),
+                t.to_account_id, COALESCE(ta.name, 'Unknown'), COALESCE(ta.icon, '🏦'),
+                t.amount, COALESCE(t.note, ''), t.date, t.created_at
+         FROM account_transfers t
+         LEFT JOIN accounts fa ON fa.id = t.from_account_id AND fa.username = t.username
+         LEFT JOIN accounts ta ON ta.id = t.to_account_id AND ta.username = t.username
+         WHERE t.username = ?
+         ORDER BY t.date DESC, t.id DESC
+         LIMIT ?`,
+		username, limit,
+	)
+	if err != nil {
+		return []AccountTransfer{}, err
+	}
+	defer rows.Close()
+
+	var transfers []AccountTransfer
+	for rows.Next() {
+		var tr AccountTransfer
+		if err := rows.Scan(&tr.ID, &tr.Username, &tr.FromAccountID, &tr.FromAccountName, &tr.FromAccountIcon,
+			&tr.ToAccountID, &tr.ToAccountName, &tr.ToAccountIcon, &tr.Amount, &tr.Note, &tr.Date, &tr.CreatedAt); err != nil {
+			continue
+		}
+		transfers = append(transfers, tr)
+	}
+	if transfers == nil {
+		transfers = []AccountTransfer{}
+	}
+	return transfers, nil
+}
+
 

@@ -20,8 +20,11 @@ type Transaction struct {
 	Note     string    `json:"note"`
 	Date     time.Time `json:"date"`
 	Type     string    `json:"type"` // "income" or "expense"
-	Tags     string    `json:"tags,omitempty"`
-	TagList  []string  `json:"tag_list,omitempty"`
+	Tags        string    `json:"tags,omitempty"`
+	TagList     []string  `json:"tag_list,omitempty"`
+	AccountID   int       `json:"account_id,omitempty"`
+	AccountName string    `json:"account_name,omitempty"`
+	AccountIcon string    `json:"account_icon,omitempty"`
 }
 
 // FinancialRecord defines common behavior for financial entities.

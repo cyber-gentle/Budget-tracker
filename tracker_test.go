@@ -719,6 +719,173 @@ func TestCategoriesAndTagsFlow(t *testing.T) {
 	}
 }
 
+func TestAccountsAndTransfersFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "test_accounts.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	username := "walletuser"
+	_ = store.Signup(username, "wallet@spendly.app", "pass12345", "Wallet Pro")
+
+	// 1. Initial accounts auto-seed
+	accounts, err := store.GetAccounts(username)
+	if err != nil {
+		t.Fatalf("failed to get accounts: %v", err)
+	}
+	if len(accounts) < 3 {
+		t.Fatalf("expected at least 3 seeded accounts, got %d", len(accounts))
+	}
+	defaultFound := false
+	var bankID, momoID int
+	for _, a := range accounts {
+		if a.IsDefault {
+			defaultFound = true
+			bankID = a.ID
+		}
+		if a.Type == "mobile_money" {
+			momoID = a.ID
+		}
+	}
+	if !defaultFound || bankID == 0 || momoID == 0 {
+		t.Fatalf("expected default bank account and mobile money account to be seeded")
+	}
+
+	// 2. Create custom account (Savings Vault) with initial balance
+	savingsAcc, err := store.CreateAccount(username, "Emergency Vault", "savings", "₦", "#10B981", "💎", 50000, false)
+	if err != nil {
+		t.Fatalf("failed to create savings account: %v", err)
+	}
+	if savingsAcc.CurrentBalance != 50000 {
+		t.Fatalf("expected initial balance 50000, got %v", savingsAcc.CurrentBalance)
+	}
+
+	// 3. Add transactions tied to specific accounts
+	// Income to Bank: +100,000
+	err = store.AddTransactionFull(username, 100000, "salary", "Monthly Salary", "income", "#salary", bankID)
+	if err != nil {
+		t.Fatalf("failed to add income: %v", err)
+	}
+
+	// Expense from Mobile Money: -15,000
+	err = store.AddTransactionFull(username, 15000, "utilities", "Internet Bill", "expense", "#wifi", momoID)
+	if err != nil {
+		t.Fatalf("failed to add expense: %v", err)
+	}
+
+	// Legacy transaction with account_id=0 (should map to default account bankID)
+	err = store.AddTransactionWithTags(username, 5000, "food", "Lunch", "expense", "")
+	if err != nil {
+		t.Fatalf("failed to add legacy transaction: %v", err)
+	}
+
+	// 4. Verify balances
+	accountsAfterTx, err := store.GetAccounts(username)
+	if err != nil {
+		t.Fatalf("failed to get updated accounts: %v", err)
+	}
+	var curBank, curMoMo, curSavings *app.Account
+	for i := range accountsAfterTx {
+		if accountsAfterTx[i].ID == bankID {
+			curBank = &accountsAfterTx[i]
+		} else if accountsAfterTx[i].ID == momoID {
+			curMoMo = &accountsAfterTx[i]
+		} else if accountsAfterTx[i].ID == savingsAcc.ID {
+			curSavings = &accountsAfterTx[i]
+		}
+	}
+	// Bank: 0 (initial) + 100,000 (income) - 5,000 (legacy food) = 95,000
+	if curBank.CurrentBalance != 95000 {
+		t.Fatalf("expected bank balance 95000, got %v", curBank.CurrentBalance)
+	}
+	// MoMo: 0 (initial) - 15,000 (expense) = -15,000
+	if curMoMo.CurrentBalance != -15000 {
+		t.Fatalf("expected momo balance -15000, got %v", curMoMo.CurrentBalance)
+	}
+	// Savings: 50,000
+	if curSavings.CurrentBalance != 50000 {
+		t.Fatalf("expected savings balance 50000, got %v", curSavings.CurrentBalance)
+	}
+
+	// 5. Transfer funds from Bank to Savings Vault (30,000)
+	tr, err := store.CreateAccountTransfer(username, bankID, savingsAcc.ID, 30000, "Fund emergency vault")
+	if err != nil {
+		t.Fatalf("failed to create transfer: %v", err)
+	}
+	if tr.Amount != 30000 || tr.FromAccountID != bankID || tr.ToAccountID != savingsAcc.ID {
+		t.Fatalf("unexpected transfer result: %+v", tr)
+	}
+
+	// Check balances after transfer
+	accountsAfterTr, _ := store.GetAccounts(username)
+	for i := range accountsAfterTr {
+		if accountsAfterTr[i].ID == bankID {
+			if accountsAfterTr[i].CurrentBalance != 65000 {
+				t.Fatalf("expected bank balance after transfer 65000, got %v", accountsAfterTr[i].CurrentBalance)
+			}
+		} else if accountsAfterTr[i].ID == savingsAcc.ID {
+			if accountsAfterTr[i].CurrentBalance != 80000 {
+				t.Fatalf("expected savings balance after transfer 80000, got %v", accountsAfterTr[i].CurrentBalance)
+			}
+		}
+	}
+
+	// 6. Check transfer history
+	transfers, err := store.GetAccountTransfers(username, 10)
+	if err != nil || len(transfers) != 1 {
+		t.Fatalf("expected 1 transfer in history, got %d (err: %v)", len(transfers), err)
+	}
+	if transfers[0].FromAccountName != "Main Bank" || transfers[0].ToAccountName != "Emergency Vault" {
+		t.Fatalf("expected proper joined account names in transfer: %+v", transfers[0])
+	}
+
+	// 7. Test invalid transfers
+	if _, err := store.CreateAccountTransfer(username, bankID, bankID, 5000, "same"); err == nil {
+		t.Fatalf("expected transfer to same account to fail")
+	}
+	if _, err := store.CreateAccountTransfer(username, bankID, savingsAcc.ID, -100, "neg"); err == nil {
+		t.Fatalf("expected negative transfer amount to fail")
+	}
+
+	// 8. Update account details
+	updatedAcc, err := store.UpdateAccount(savingsAcc.ID, username, "High-Yield Savings", "savings", "₦", "#6366F1", "📈", 60000, false)
+	if err != nil || updatedAcc.Name != "High-Yield Savings" || updatedAcc.Icon != "📈" {
+		t.Fatalf("failed to update account: %+v (err: %v)", updatedAcc, err)
+	}
+
+	// 9. Change default account
+	err = store.SetDefaultAccount(savingsAcc.ID, username)
+	if err != nil {
+		t.Fatalf("failed to set default account: %v", err)
+	}
+	checkAccs, _ := store.GetAccounts(username)
+	for _, a := range checkAccs {
+		if a.ID == savingsAcc.ID && !a.IsDefault {
+			t.Fatalf("expected savings account to be default now")
+		}
+		if a.ID == bankID && a.IsDefault {
+			t.Fatalf("expected previous default account to no longer be default")
+		}
+	}
+
+	// 10. Delete account with transaction reassignment
+	deleted, err := store.DeleteAccount(momoID, username, bankID)
+	if err != nil || !deleted {
+		t.Fatalf("failed to delete momo account: %v", err)
+	}
+	// Verify momo's transaction was reassigned to bankID
+	txs, _ := store.GetTransactions(username)
+	for _, tx := range txs {
+		if tx.Amount == 15000 && tx.AccountID != bankID {
+			t.Fatalf("expected transaction to be reassigned to bankID %d, got %d", bankID, tx.AccountID)
+		}
+	}
+}
+
+
 
 
 

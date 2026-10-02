@@ -98,6 +98,12 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/categories/", app.HandleCategoryByID)
 	app.Mux.HandleFunc("/api/tags", app.HandleTagsAPI)
 
+	// Multi-Account & Wallet APIs
+	app.Mux.HandleFunc("/api/accounts", app.HandleAccountsAPI)
+	app.Mux.HandleFunc("/api/accounts/transfer", app.HandleAccountTransferAPI)
+	app.Mux.HandleFunc("/api/accounts/transfers", app.HandleAccountTransfersListAPI)
+	app.Mux.HandleFunc("/api/accounts/", app.HandleAccountByID)
+
 	// Budgets, Analytics, Export, Currency APIs
 	app.Mux.HandleFunc("/api/budgets", app.HandleBudgets)
 	app.Mux.HandleFunc("/api/analytics", app.HandleAnalytics)
@@ -331,7 +337,8 @@ func (app *App) HandleTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tags := strings.TrimSpace(r.FormValue("tags"))
-		if err := app.DB.AddTransactionWithTags(username, amount, category, note, txnType, tags, txDate); err != nil {
+		accountID, _ := strconv.Atoi(strings.TrimSpace(r.FormValue("account_id")))
+		if err := app.DB.AddTransactionFull(username, amount, category, note, txnType, tags, accountID, txDate); err != nil {
 			jsonError(w, "failed to save transaction", http.StatusInternalServerError)
 			return
 		}
@@ -385,7 +392,8 @@ func (app *App) HandleTransactionByID(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tags := strings.TrimSpace(r.FormValue("tags"))
-		updated, err := app.DB.UpdateTransactionWithTags(id, username, amount, category, note, txnType, tags, optDate...)
+		accountID, _ := strconv.Atoi(strings.TrimSpace(r.FormValue("account_id")))
+		updated, err := app.DB.UpdateTransactionFull(id, username, amount, category, note, txnType, tags, accountID, optDate...)
 		if err != nil || !updated {
 			jsonError(w, "transaction not found or update failed", http.StatusNotFound)
 			return
@@ -1543,6 +1551,344 @@ func (app *App) HandleTagsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonOK(w, map[string]any{"tags": tags})
 }
+
+// ─── Multi-Account & Wallet Handlers ─────────────────────────────────────────
+
+func (app *App) HandleAccountsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		accounts, err := app.DB.GetAccounts(username)
+		if err != nil {
+			jsonError(w, "failed to fetch accounts", http.StatusInternalServerError)
+			return
+		}
+		curr := app.DB.GetCurrency(username)
+		totalBalance := 0.0
+		for _, a := range accounts {
+			if a.Type == "credit" {
+				totalBalance -= a.CurrentBalance
+			} else {
+				totalBalance += a.CurrentBalance
+			}
+		}
+		jsonOK(w, map[string]any{
+			"accounts":      accounts,
+			"total_balance": totalBalance,
+			"total_fmt":     formatMoney(totalBalance, curr),
+			"currency":      curr,
+		})
+
+	case http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		name := strings.TrimSpace(r.FormValue("name"))
+		accType := strings.TrimSpace(r.FormValue("type"))
+		currency := strings.TrimSpace(r.FormValue("currency"))
+		initBalStr := strings.TrimSpace(r.FormValue("initial_balance"))
+		color := strings.TrimSpace(r.FormValue("color"))
+		icon := strings.TrimSpace(r.FormValue("icon"))
+		if icon == "" {
+			icon = strings.TrimSpace(r.FormValue("emoji"))
+		}
+		isDefaultStr := strings.TrimSpace(r.FormValue("is_default"))
+		isDefault := isDefaultStr == "1" || strings.ToLower(isDefaultStr) == "true"
+
+		if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+			var body struct {
+				Name           string  `json:"name"`
+				Type           string  `json:"type"`
+				Currency       string  `json:"currency"`
+				InitialBalance float64 `json:"initial_balance"`
+				Color          string  `json:"color"`
+				Icon           string  `json:"icon"`
+				Emoji          string  `json:"emoji"`
+				IsDefault      bool    `json:"is_default"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err == nil {
+				if body.Name != "" {
+					name = body.Name
+				}
+				if body.Type != "" {
+					accType = body.Type
+				}
+				if body.Currency != "" {
+					currency = body.Currency
+				}
+				if body.InitialBalance != 0 {
+					initBalStr = fmt.Sprintf("%f", body.InitialBalance)
+				}
+				if body.Color != "" {
+					color = body.Color
+				}
+				if body.Icon != "" {
+					icon = body.Icon
+				} else if body.Emoji != "" {
+					icon = body.Emoji
+				}
+				if body.IsDefault {
+					isDefault = true
+				}
+			}
+		}
+
+		if name == "" {
+			jsonError(w, "account name is required", http.StatusBadRequest)
+			return
+		}
+
+		initialBalance := 0.0
+		if initBalStr != "" {
+			if parsed, err := strconv.ParseFloat(initBalStr, 64); err == nil {
+				initialBalance = parsed
+			}
+		}
+
+		acc, err := app.DB.CreateAccount(username, name, accType, currency, color, icon, initialBalance, isDefault)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		jsonOK(w, acc)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleAccountByID(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/api/accounts/")
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	if parts[0] == "transfer" {
+		app.HandleAccountTransferAPI(w, r)
+		return
+	}
+	if parts[0] == "transfers" {
+		app.HandleAccountTransfersListAPI(w, r)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[0])
+	if err != nil || id <= 0 {
+		jsonError(w, "invalid account id", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		acc, err := app.DB.GetAccountByID(id, username)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		jsonOK(w, acc)
+
+	case http.MethodPut, http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		name := strings.TrimSpace(r.FormValue("name"))
+		accType := strings.TrimSpace(r.FormValue("type"))
+		currency := strings.TrimSpace(r.FormValue("currency"))
+		initBalStr := strings.TrimSpace(r.FormValue("initial_balance"))
+		color := strings.TrimSpace(r.FormValue("color"))
+		icon := strings.TrimSpace(r.FormValue("icon"))
+		if icon == "" {
+			icon = strings.TrimSpace(r.FormValue("emoji"))
+		}
+		isDefaultStr := strings.TrimSpace(r.FormValue("is_default"))
+		isDefault := isDefaultStr == "1" || strings.ToLower(isDefaultStr) == "true"
+
+		if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+			var body struct {
+				Name           string  `json:"name"`
+				Type           string  `json:"type"`
+				Currency       string  `json:"currency"`
+				InitialBalance float64 `json:"initial_balance"`
+				Color          string  `json:"color"`
+				Icon           string  `json:"icon"`
+				Emoji          string  `json:"emoji"`
+				IsDefault      bool    `json:"is_default"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err == nil {
+				if body.Name != "" {
+					name = body.Name
+				}
+				if body.Type != "" {
+					accType = body.Type
+				}
+				if body.Currency != "" {
+					currency = body.Currency
+				}
+				if body.InitialBalance != 0 {
+					initBalStr = fmt.Sprintf("%f", body.InitialBalance)
+				}
+				if body.Color != "" {
+					color = body.Color
+				}
+				if body.Icon != "" {
+					icon = body.Icon
+				} else if body.Emoji != "" {
+					icon = body.Emoji
+				}
+				if body.IsDefault {
+					isDefault = true
+				}
+			}
+		}
+
+		if name == "" {
+			jsonError(w, "account name is required", http.StatusBadRequest)
+			return
+		}
+
+		initialBalance := 0.0
+		if initBalStr != "" {
+			if parsed, err := strconv.ParseFloat(initBalStr, 64); err == nil {
+				initialBalance = parsed
+			}
+		}
+
+		acc, err := app.DB.UpdateAccount(id, username, name, accType, currency, color, icon, initialBalance, isDefault)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		jsonOK(w, acc)
+
+	case http.MethodDelete:
+		_ = r.ParseMultipartForm(1 << 20)
+		reassignStr := strings.TrimSpace(r.FormValue("reassign_to"))
+		if reassignStr == "" {
+			reassignStr = strings.TrimSpace(r.URL.Query().Get("reassign_to"))
+		}
+		reassignID, _ := strconv.Atoi(reassignStr)
+
+		deleted, err := app.DB.DeleteAccount(id, username, reassignID)
+		if err != nil || !deleted {
+			msg := "account not found or cannot be deleted"
+			if err != nil {
+				msg = err.Error()
+			}
+			jsonError(w, msg, http.StatusBadRequest)
+			return
+		}
+		jsonOK(w, map[string]string{"status": "deleted"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleAccountTransferAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	_ = r.ParseMultipartForm(1 << 20)
+	fromID, _ := strconv.Atoi(strings.TrimSpace(r.FormValue("from_account_id")))
+	toID, _ := strconv.Atoi(strings.TrimSpace(r.FormValue("to_account_id")))
+	amountStr := strings.TrimSpace(r.FormValue("amount"))
+	note := strings.TrimSpace(r.FormValue("note"))
+	dateStr := strings.TrimSpace(r.FormValue("date"))
+
+	if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		var body struct {
+			FromAccountID int     `json:"from_account_id"`
+			ToAccountID   int     `json:"to_account_id"`
+			Amount        float64 `json:"amount"`
+			Note          string  `json:"note"`
+			Date          string  `json:"date"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err == nil {
+			if body.FromAccountID > 0 {
+				fromID = body.FromAccountID
+			}
+			if body.ToAccountID > 0 {
+				toID = body.ToAccountID
+			}
+			if body.Amount > 0 {
+				amountStr = fmt.Sprintf("%f", body.Amount)
+			}
+			if body.Note != "" {
+				note = body.Note
+			}
+			if body.Date != "" {
+				dateStr = body.Date
+			}
+		}
+	}
+
+	if fromID <= 0 || toID <= 0 {
+		jsonError(w, "source and destination accounts are required", http.StatusBadRequest)
+		return
+	}
+	if fromID == toID {
+		jsonError(w, "source and destination accounts cannot be the same", http.StatusBadRequest)
+		return
+	}
+
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil || amount <= 0 {
+		jsonError(w, "transfer amount must be greater than zero", http.StatusBadRequest)
+		return
+	}
+
+	txDate := time.Now()
+	if dateStr != "" {
+		if parsed, err := time.Parse("2006-01-02", dateStr); err == nil {
+			now := time.Now()
+			txDate = time.Date(parsed.Year(), parsed.Month(), parsed.Day(), now.Hour(), now.Minute(), now.Second(), 0, time.Local)
+		}
+	}
+
+	tr, err := app.DB.CreateAccountTransfer(username, fromID, toID, amount, note, txDate)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	jsonOK(w, tr)
+}
+
+func (app *App) HandleAccountTransfersListAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	transfers, err := app.DB.GetAccountTransfers(username, 50)
+	if err != nil {
+		jsonError(w, "failed to fetch transfers", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, map[string]any{"transfers": transfers})
+}
+
 
 
 

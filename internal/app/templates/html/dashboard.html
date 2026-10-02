@@ -196,6 +196,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                 <span>Categories</span>
             </button>
+            <button type="button" id="btn-mobile-wallets" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                <span>Wallets</span>
+            </button>
         </div>
     </header>
  
@@ -255,6 +259,50 @@
                 <p class="text-[11px] sm:text-xs text-rose-500/80 dark:text-rose-400/80 mt-0.5 sm:mt-1 font-medium flex items-center gap-1 truncate">
                     <span>●</span> Current period
                 </p>
+            </div>
+        </section>
+
+        <!-- ─── Wallets & Accounts Overview Section ────────────────────────────── -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-sm transition-colors">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3.5">
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-base shrink-0 shadow-xs border border-blue-200/60 dark:border-blue-800/60">
+                        💳
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="font-heading text-sm sm:text-base font-bold text-slate-900 dark:text-white">Wallets & Accounts</h2>
+                            <span id="accounts-total-pill" class="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
+                                Total: ₦0.00
+                            </span>
+                        </div>
+                        <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500">Bank, mobile money, cash & savings balances</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <!-- Active Account Filter Indicator (Clear Button) -->
+                    <div id="account-filter-indicator" class="hidden items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-1 rounded-lg border border-blue-200/60 dark:border-blue-800/60">
+                        <span id="account-filter-text">Filtered: Main Bank</span>
+                        <button type="button" id="btn-clear-account-filter" class="hover:text-blue-800 dark:hover:text-blue-200 font-bold ml-1 cursor-pointer">✕</button>
+                    </div>
+
+                    <!-- Transfer button -->
+                    <button type="button" id="btn-open-transfer" class="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs" title="Transfer between wallets">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+                        <span>Transfer</span>
+                    </button>
+                    <!-- Add / Manage Account button -->
+                    <button type="button" id="btn-open-accounts" class="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs" title="Manage wallets and accounts">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                        <span>+ Wallet</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Account Cards Horizontal Carousel (Touch & Snap Optimized) -->
+            <div id="accounts-cards-carousel" class="flex items-stretch gap-3 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar snap-x">
+                <div class="p-4 text-center text-xs text-slate-400 w-full">Loading wallets...</div>
             </div>
         </section>
 
@@ -430,7 +478,7 @@
                     <form id="add-tx-form" class="space-y-3">
                         <input type="hidden" name="type" id="add-tx-type" value="expense">
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <!-- Category -->
                             <div>
                                 <div class="flex items-center justify-between mb-1">
@@ -451,6 +499,19 @@
                                     <option value="bills">💡 Bills & Subscriptions</option>
                                     <option value="personal">✨ Personal Care</option>
                                     <option value="other">📦 Other Expense</option>
+                                </select>
+                            </div>
+
+                            <!-- Account / Wallet -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">Wallet / Account</label>
+                                    <button type="button" id="btn-quick-manage-accounts" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 cursor-pointer transition-colors" title="Manage wallets">
+                                        <span>+ Add</span>
+                                    </button>
+                                </div>
+                                <select name="account_id" id="add-account" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all cursor-pointer">
+                                    <option value="0">🏦 Main Bank</option>
                                 </select>
                             </div>
 
@@ -509,7 +570,7 @@
                         <!-- Search input + Filters -->
                         <div class="grid grid-cols-2 sm:grid-cols-12 gap-2 sm:gap-2.5">
                             <!-- Search Input -->
-                            <div class="col-span-2 sm:col-span-4 relative">
+                            <div class="col-span-2 sm:col-span-3 relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                 </span>
@@ -539,8 +600,8 @@
                                 </select>
                             </div>
 
-                            <!-- Category Filter (50% on mobile, 3/12 on desktop) -->
-                            <div class="col-span-1 sm:col-span-3">
+                            <!-- Category Filter (50% on mobile, 2/12 on desktop) -->
+                            <div class="col-span-1 sm:col-span-2">
                                 <select id="filter-category" class="w-full px-2 sm:px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer truncate">
                                     <option value="all">All Categories</option>
                                     <optgroup label="Expense Categories">
@@ -564,6 +625,13 @@
                                         <option value="gifts">🎁 Grants & Gifts</option>
                                         <option value="refunds">🔄 Refunds & Reimbursements</option>
                                     </optgroup>
+                                </select>
+                            </div>
+
+                            <!-- Account / Wallet Filter (col-span-2 on mobile, 2/12 on desktop) -->
+                            <div class="col-span-2 sm:col-span-2">
+                                <select id="filter-account" class="w-full px-2 sm:px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer truncate">
+                                    <option value="all">All Wallets</option>
                                 </select>
                             </div>
                         </div>
@@ -776,6 +844,12 @@
                         <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Date</label>
                         <input type="date" id="edit-date" name="date" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Wallet / Account</label>
+                    <select id="edit-account" name="account_id" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                    </select>
                 </div>
 
                 <div>
@@ -1005,6 +1079,200 @@
         </div>
     </div>
 
+    <!-- ─── Wallets & Accounts Manager Modal ────────────────────────────────────── -->
+    <div id="account-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl transition-colors overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-base">
+                        💳
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">Wallets & Accounts</h3>
+                        <p class="text-[11px] text-slate-400">Manage multiple accounts, banks, mobile money & cards</p>
+                    </div>
+                </div>
+                <button type="button" id="account-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+                <!-- Create/Edit Account Box -->
+                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200" id="account-form-title">+ Add New Wallet / Account</span>
+                        <button type="button" id="btn-cancel-account-edit" class="text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hidden cursor-pointer">Cancel Edit</button>
+                    </div>
+                    <form id="account-form" class="space-y-3">
+                        <input type="hidden" id="account-form-id" value="">
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                            <div class="sm:col-span-8">
+                                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Account Name</label>
+                                <input type="text" id="acc-name" required placeholder="e.g. GTBank, OPay, Main Savings" class="w-full h-9 px-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium">
+                            </div>
+                            <div class="sm:col-span-4">
+                                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Type</label>
+                                <select id="acc-type" class="w-full h-9 px-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                                    <option value="bank">🏦 Bank</option>
+                                    <option value="mobile_money">📱 Mobile Money</option>
+                                    <option value="cash">💵 Cash / Wallet</option>
+                                    <option value="savings">💎 Savings Vault</option>
+                                    <option value="credit">💳 Credit Card</option>
+                                    <option value="other">📦 Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Starting Balance (<span class="currency-label">₦</span>)</label>
+                                <input type="number" step="any" id="acc-init-bal" placeholder="0.00" class="w-full h-9 px-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-semibold">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Icon & Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="text" id="acc-icon" value="🏦" class="w-11 h-9 text-center text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500" title="Icon">
+                                    <input type="color" id="acc-color" value="#3B82F6" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer bg-transparent p-0" title="Color">
+                                    <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 ml-auto cursor-pointer">
+                                        <input type="checkbox" id="acc-default" class="rounded text-blue-600 focus:ring-0">
+                                        <span class="text-[11px] font-medium">Default</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Presets -->
+                        <div class="flex items-center justify-between gap-2 pt-0.5">
+                            <div class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5" id="acc-icon-presets">
+                                <button type="button" class="preset-acc-icon px-1.5 py-0.5 text-xs bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500" data-icon="🏦">🏦</button>
+                                <button type="button" class="preset-acc-icon px-1.5 py-0.5 text-xs bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500" data-icon="📱">📱</button>
+                                <button type="button" class="preset-acc-icon px-1.5 py-0.5 text-xs bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500" data-icon="💵">💵</button>
+                                <button type="button" class="preset-acc-icon px-1.5 py-0.5 text-xs bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500" data-icon="💎">💎</button>
+                                <button type="button" class="preset-acc-icon px-1.5 py-0.5 text-xs bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500" data-icon="💳">💳</button>
+                                <button type="button" class="preset-acc-icon px-1.5 py-0.5 text-xs bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500" data-icon="📈">📈</button>
+                                <button type="button" class="preset-acc-icon px-1.5 py-0.5 text-xs bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-500" data-icon="🪙">🪙</button>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0" id="acc-color-presets">
+                                <span class="preset-acc-color w-4 h-4 rounded-full cursor-pointer hover:scale-110 transition-transform" style="background:#3B82F6" data-color="#3B82F6"></span>
+                                <span class="preset-acc-color w-4 h-4 rounded-full cursor-pointer hover:scale-110 transition-transform" style="background:#10B981" data-color="#10B981"></span>
+                                <span class="preset-acc-color w-4 h-4 rounded-full cursor-pointer hover:scale-110 transition-transform" style="background:#F59E0B" data-color="#F59E0B"></span>
+                                <span class="preset-acc-color w-4 h-4 rounded-full cursor-pointer hover:scale-110 transition-transform" style="background:#8B5CF6" data-color="#8B5CF6"></span>
+                                <span class="preset-acc-color w-4 h-4 rounded-full cursor-pointer hover:scale-110 transition-transform" style="background:#EC4899" data-color="#EC4899"></span>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-rose-500 font-medium hidden" id="acc-form-error"></p>
+
+                        <button type="submit" id="btn-submit-account" class="w-full bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white text-xs font-semibold py-2 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                            <span id="btn-submit-account-text">Save Wallet</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Active Accounts List -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <span>Active Wallets</span>
+                        <span id="accounts-count-badge" class="text-[11px] font-semibold text-slate-400">0 wallets</span>
+                    </div>
+                    <div id="accounts-manager-list" class="space-y-2 max-h-56 overflow-y-auto pr-0.5">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex justify-end">
+                <button type="button" id="account-modal-done" class="px-4 py-1.5 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Transfer Funds Between Wallets Modal ────────────────────────────────────── -->
+    <div id="transfer-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl transition-colors overflow-hidden">
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
+                        ⇄
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">Transfer Funds</h3>
+                        <p class="text-[11px] text-slate-400">Move money between your wallets seamlessly</p>
+                    </div>
+                </div>
+                <button type="button" id="transfer-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="transfer-form" class="p-4 sm:p-5 space-y-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">From Wallet</label>
+                        <select id="transfer-from" required class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">To Wallet</label>
+                        <select id="transfer-to" required class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Amount (<span class="currency-label">₦</span>)</label>
+                        <input type="number" step="any" min="0.01" id="transfer-amount" required placeholder="0.00" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Date</label>
+                        <input type="date" id="transfer-date" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Note (optional)</label>
+                    <input type="text" id="transfer-note" placeholder="e.g. ATM cash withdrawal, Move to savings" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <p class="text-xs text-rose-500 font-medium hidden" id="transfer-error"></p>
+
+                <div class="flex gap-2.5 pt-2">
+                    <button type="button" id="transfer-cancel" class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                    <button type="submit" id="btn-submit-transfer" class="flex-1 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
+                        <span>Transfer Funds</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── Delete Account Confirmation Modal ────────────────────────────────────── -->
+    <div id="account-delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
+            <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+            </div>
+            <h4 class="font-heading font-bold text-slate-900 dark:text-white text-sm mb-1" id="account-delete-title">Delete Wallet?</h4>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">Choose where to reassign existing transactions from this wallet:</p>
+            <div class="mb-4 text-left">
+                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Reassign transactions to:</label>
+                <select id="account-delete-reassign" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none">
+                </select>
+            </div>
+            <p class="text-xs text-rose-500 font-medium hidden mb-3" id="account-delete-error"></p>
+            <div class="flex gap-2.5">
+                <button type="button" id="account-delete-cancel" class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                <button type="button" id="account-delete-confirm" class="flex-1 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ─── Application JavaScript Logic ────────────────────────────────────── -->
     <script>
         // Category Definitions by Type (Dynamic)
@@ -1056,6 +1324,9 @@
         let popularTags = [];
         let activeCategoryTab = 'expense';
         let pendingDeleteCatId = null;
+        let userAccounts = [];
+        let activeAccountFilter = 'all';
+        let pendingDeleteAccountId = null;
 
         const CATEGORY_EMOJI_PRESETS = [
             '🍔', '🍕', '☕', '🛒', '🛍️', '🚗', '⛽', '🏠', '💡', '📱',
@@ -1543,7 +1814,9 @@
                         </div>
                         <div class="min-w-0">
                             <p class="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">${esc(t.note || cat.label)}</p>
-                            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">${esc(fmtDate(t.date))} · <span class="font-medium text-slate-600 dark:text-slate-400">${esc(cat.label)}</span></p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                ${esc(fmtDate(t.date))} · <span class="font-medium text-slate-600 dark:text-slate-400">${esc(cat.label)}</span>${t.account_name ? ` · <span class="inline-flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]"><span class="shrink-0">${t.account_icon || '🏦'}</span> ${esc(t.account_name)}</span>` : ''}
+                            </p>
                             ${tagHtml}
                         </div>
                     </div>
@@ -1551,7 +1824,7 @@
                         <p class="text-xs sm:text-sm font-bold ${colorClass}">${sign}${fmtMoney(t.amount)}</p>
                         <div class="flex items-center gap-1 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <button class="edit-tx p-1 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors rounded-md hover:bg-slate-100 dark:hover:bg-slate-800" 
-                                data-id="${t.id}" data-amount="${t.amount}" data-category="${esc(t.category)}" data-note="${esc(t.note)}" data-type="${t.type}" data-date="${t.date ? t.date.split('T')[0] : ''}" data-tags="${esc(t.tags || '')}" title="Edit">
+                                data-id="${t.id}" data-amount="${t.amount}" data-category="${esc(t.category)}" data-note="${esc(t.note)}" data-type="${t.type}" data-date="${t.date ? t.date.split('T')[0] : ''}" data-tags="${esc(t.tags || '')}" data-account="${t.account_id || 0}" title="Edit">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             </button>
                             <button class="delete-tx p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40" 
@@ -1755,12 +2028,21 @@
             }
 
             // 2. Filter transactions for the list
+            const filterAccountEl = document.getElementById('filter-account');
+            const filterAccount = filterAccountEl ? filterAccountEl.value : activeAccountFilter;
+
             const filtered = allTransactions.filter(t => {
                 if (activeMonthFilter !== 'all') {
                     if (!t.date || !t.date.startsWith(resolvedYM)) return false;
                 }
                 if (filterType !== 'all' && t.type !== filterType) return false;
                 if (filterCategory !== 'all' && t.category !== filterCategory) return false;
+                if (filterAccount && filterAccount !== 'all') {
+                    const targetAccId = parseInt(filterAccount, 10);
+                    const defaultAcc = userAccounts.find(a => a.is_default);
+                    const effectiveAccId = t.account_id || (defaultAcc ? defaultAcc.id : 0);
+                    if (effectiveAccId !== targetAccId) return false;
+                }
                 if (query) {
                     const rawTagQuery = query.startsWith('#') ? query.slice(1).trim() : query;
                     const note = (t.note || '').toLowerCase();
@@ -1929,6 +2211,9 @@
             document.getElementById('edit-note').value = btn.dataset.note;
             if (document.getElementById('edit-tags')) {
                 document.getElementById('edit-tags').value = btn.dataset.tags || '';
+            }
+            if (document.getElementById('edit-account')) {
+                document.getElementById('edit-account').value = btn.dataset.account || '0';
             }
             const editType = btn.dataset.type || 'expense';
             const editCategory = btn.dataset.category || 'other';
@@ -2962,10 +3247,560 @@
             }
         }
 
+        // ─── Wallets & Multi-Account Balances Logic ─────────────────────────────────
+        async function loadAccounts() {
+            try {
+                const res = await fetch('/api/accounts');
+                if (!res.ok) return;
+                const data = await res.json();
+                userAccounts = data.accounts || [];
+
+                const totalEl = document.getElementById('wallets-total-balance');
+                if (totalEl) {
+                    totalEl.textContent = data.formatted_total || fmtMoney(data.total_balance || 0);
+                }
+
+                renderAccountCards(data.total_balance || 0);
+                populateAccountSelects();
+                renderAccountsManagerList();
+            } catch (err) {
+                console.error('Error loading accounts:', err);
+            }
+        }
+
+        function renderAccountCards(totalBal) {
+            const carousel = document.getElementById('accounts-cards-carousel');
+            if (!carousel) return;
+
+            if (!userAccounts.length) {
+                carousel.innerHTML = '<div class="p-4 text-center text-xs text-slate-400 w-full">No wallets configured. Click "+ Wallet" to add one.</div>';
+                return;
+            }
+
+            const isAllActive = activeAccountFilter === 'all';
+            let html = `
+                <!-- All Wallets Card -->
+                <div class="account-card shrink-0 snap-start w-48 sm:w-56 p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                    isAllActive 
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-blue-500/50 dark:bg-emerald-600 dark:border-emerald-600 dark:ring-emerald-400/50' 
+                        : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                }" data-account-id="all">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold ${
+                            isAllActive ? 'bg-white/20 text-white' : 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
+                        }">
+                            🌐
+                        </div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                            isAllActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                        }">${userAccounts.length} Wallets</span>
+                    </div>
+                    <div class="text-xs font-semibold ${isAllActive ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'} truncate">Total Balance</div>
+                    <div class="text-base sm:text-lg font-black tracking-tight mt-0.5 truncate">${fmtMoney(totalBal)}</div>
+                </div>
+            `;
+
+            for (const acc of userAccounts) {
+                const isActive = activeAccountFilter === String(acc.id);
+                const color = acc.color || '#3B82F6';
+                const typeLabels = {
+                    bank: 'Bank',
+                    mobile_money: 'Mobile Money',
+                    cash: 'Cash / Wallet',
+                    savings: 'Savings Vault',
+                    credit: 'Credit Card',
+                    other: 'Wallet'
+                };
+                const typeText = typeLabels[acc.type] || 'Wallet';
+
+                html += `
+                    <div class="account-card shrink-0 snap-start w-48 sm:w-56 p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                        isActive 
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-blue-500/50 dark:bg-emerald-600 dark:border-emerald-600 dark:ring-emerald-400/50' 
+                            : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                    }" data-account-id="${acc.id}">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shrink-0" style="${
+                                isActive ? 'background: rgba(255,255,255,0.2); color: #fff;' : `background-color: ${color}20; color: ${color}; border: 1.5px solid ${color}40;`
+                            }">
+                                ${acc.icon || '🏦'}
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                ${acc.is_default ? `
+                                    <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
+                                        isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                                    }">Default</span>
+                                ` : ''}
+                                <span class="text-[10px] font-semibold ${
+                                    isActive ? 'text-white/70' : 'text-slate-400'
+                                }">${typeText}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between gap-1">
+                            <div class="text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-800 dark:text-slate-200'}">${esc(acc.name)}</div>
+                            <span class="text-[10px] font-medium opacity-70 shrink-0">${acc.tx_count || 0} txs</span>
+                        </div>
+                        <div class="text-base sm:text-lg font-black tracking-tight mt-0.5 truncate ${
+                            isActive ? 'text-white' : (acc.current_balance < 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white')
+                        }">${acc.formatted_balance || fmtMoney(acc.current_balance)}</div>
+                    </div>
+                `;
+            }
+
+            carousel.innerHTML = html;
+
+            const filterIndicator = document.getElementById('account-filter-indicator');
+            const filterText = document.getElementById('account-filter-text');
+            if (filterIndicator && filterText) {
+                if (isAllActive) {
+                    filterIndicator.classList.add('hidden');
+                    filterIndicator.classList.remove('flex');
+                } else {
+                    const curAcc = userAccounts.find(a => String(a.id) === activeAccountFilter);
+                    filterText.textContent = curAcc ? `Wallet: ${curAcc.icon} ${curAcc.name}` : 'Filtered Wallet';
+                    filterIndicator.classList.remove('hidden');
+                    filterIndicator.classList.add('flex');
+                }
+            }
+        }
+
+        function populateAccountSelects() {
+            const addSelect = document.getElementById('add-account');
+            const editSelect = document.getElementById('edit-account');
+            const filterSelect = document.getElementById('filter-account');
+            const transferFrom = document.getElementById('transfer-from');
+            const transferTo = document.getElementById('transfer-to');
+            const reassignSelect = document.getElementById('account-delete-reassign');
+
+            if (!userAccounts.length) return;
+
+            const defaultAcc = userAccounts.find(a => a.is_default) || userAccounts[0];
+
+            if (addSelect) {
+                const prev = addSelect.value;
+                addSelect.innerHTML = userAccounts.map(a => `
+                    <option value="${a.id}" ${a.id === defaultAcc.id ? 'selected' : ''}>${a.icon || '🏦'} ${esc(a.name)} (${a.formatted_balance || fmtMoney(a.current_balance)})</option>
+                `).join('');
+                if (prev && userAccounts.some(a => String(a.id) === prev)) {
+                    addSelect.value = prev;
+                }
+            }
+
+            if (editSelect) {
+                const prev = editSelect.value;
+                editSelect.innerHTML = userAccounts.map(a => `
+                    <option value="${a.id}">${a.icon || '🏦'} ${esc(a.name)}</option>
+                `).join('');
+                if (prev) editSelect.value = prev;
+            }
+
+            if (filterSelect) {
+                const prev = filterSelect.value || activeAccountFilter;
+                filterSelect.innerHTML = `
+                    <option value="all">All Wallets</option>
+                    ${userAccounts.map(a => `<option value="${a.id}">${a.icon || '🏦'} ${esc(a.name)}</option>`).join('')}
+                `;
+                filterSelect.value = prev;
+            }
+
+            if (transferFrom && transferTo) {
+                const prevFrom = transferFrom.value;
+                const prevTo = transferTo.value;
+                const optionsHtml = userAccounts.map(a => `
+                    <option value="${a.id}">${a.icon || '🏦'} ${esc(a.name)} (${a.formatted_balance || fmtMoney(a.current_balance)})</option>
+                `).join('');
+                transferFrom.innerHTML = optionsHtml;
+                transferTo.innerHTML = optionsHtml;
+                if (prevFrom && userAccounts.some(a => String(a.id) === prevFrom)) {
+                    transferFrom.value = prevFrom;
+                }
+                if (prevTo && userAccounts.some(a => String(a.id) === prevTo)) {
+                    transferTo.value = prevTo;
+                } else if (userAccounts.length > 1) {
+                    transferTo.selectedIndex = 1;
+                }
+            }
+
+            if (reassignSelect) {
+                reassignSelect.innerHTML = userAccounts.map(a => `
+                    <option value="${a.id}">${a.icon || '🏦'} ${esc(a.name)}</option>
+                `).join('');
+            }
+        }
+
+        function setAccountFilter(accId) {
+            activeAccountFilter = String(accId);
+            const filterSelect = document.getElementById('filter-account');
+            if (filterSelect) filterSelect.value = activeAccountFilter;
+
+            const total = userAccounts.reduce((sum, a) => sum + (a.current_balance || 0), 0);
+            renderAccountCards(total);
+            applyFilters();
+        }
+
+        function renderAccountsManagerList() {
+            const listEl = document.getElementById('accounts-manager-list');
+            const countBadge = document.getElementById('accounts-count-badge');
+            if (!listEl) return;
+
+            if (countBadge) {
+                countBadge.textContent = `${userAccounts.length} wallet${userAccounts.length === 1 ? '' : 's'}`;
+            }
+
+            if (!userAccounts.length) {
+                listEl.innerHTML = '<p class="text-xs text-slate-400 py-3 text-center">No wallets configured.</p>';
+                return;
+            }
+
+            listEl.innerHTML = userAccounts.map(a => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 transition-colors">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 font-bold" style="background-color: ${a.color}20; color: ${a.color}; border: 1.5px solid ${a.color}40;">
+                            ${a.icon || '🏦'}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${esc(a.name)}</span>
+                                ${a.is_default ? '<span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">Default</span>' : ''}
+                            </div>
+                            <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">${a.formatted_balance || fmtMoney(a.current_balance)} · ${a.tx_count || 0} txs</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0 ml-2">
+                        <button type="button" class="btn-edit-account p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer" data-id="${a.id}" title="Edit Wallet">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        ${!a.is_default && userAccounts.length > 1 ? `
+                            <button type="button" class="btn-delete-account p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" data-id="${a.id}" data-name="${esc(a.name)}" title="Delete Wallet">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Account Carousel Click Delegation
+        const accountsCarouselEl = document.getElementById('accounts-cards-carousel');
+        if (accountsCarouselEl) {
+            accountsCarouselEl.addEventListener('click', e => {
+                const card = e.target.closest('.account-card');
+                if (!card) return;
+                const accId = card.dataset.accountId;
+                if (accId) setAccountFilter(accId);
+            });
+        }
+
+        // Account Filter Dropdown & Clear Indicator
+        const filterAccEl = document.getElementById('filter-account');
+        if (filterAccEl) {
+            filterAccEl.addEventListener('change', function() {
+                setAccountFilter(this.value);
+            });
+        }
+
+        const btnClearAccFilter = document.getElementById('btn-clear-account-filter');
+        if (btnClearAccFilter) {
+            btnClearAccFilter.addEventListener('click', () => {
+                setAccountFilter('all');
+            });
+        }
+
+        // Account Modal Open / Close Controls
+        function openAccountModal(editAcc = null) {
+            const modal = document.getElementById('account-modal');
+            const title = document.getElementById('account-form-title');
+            const cancelBtn = document.getElementById('btn-cancel-account-edit');
+            const submitBtn = document.getElementById('btn-submit-account-text');
+            const errEl = document.getElementById('acc-form-error');
+            if (errEl) errEl.classList.add('hidden');
+
+            if (editAcc) {
+                document.getElementById('account-form-id').value = editAcc.id;
+                document.getElementById('acc-name').value = editAcc.name;
+                document.getElementById('acc-type').value = editAcc.type;
+                document.getElementById('acc-init-bal').value = editAcc.initial_balance;
+                document.getElementById('acc-icon').value = editAcc.icon || '🏦';
+                document.getElementById('acc-color').value = editAcc.color || '#3B82F6';
+                document.getElementById('acc-default').checked = !!editAcc.is_default;
+                if (title) title.textContent = 'Edit Wallet / Account';
+                if (submitBtn) submitBtn.textContent = 'Update Wallet';
+                if (cancelBtn) cancelBtn.classList.remove('hidden');
+            } else {
+                document.getElementById('account-form').reset();
+                document.getElementById('account-form-id').value = '';
+                document.getElementById('acc-icon').value = '🏦';
+                document.getElementById('acc-color').value = '#3B82F6';
+                document.getElementById('acc-default').checked = userAccounts.length === 0;
+                if (title) title.textContent = '+ Add New Wallet / Account';
+                if (submitBtn) submitBtn.textContent = 'Save Wallet';
+                if (cancelBtn) cancelBtn.classList.add('hidden');
+            }
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeAccountModal() {
+            const modal = document.getElementById('account-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        ['btn-open-accounts', 'btn-quick-manage-accounts', 'btn-mobile-wallets'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', () => openAccountModal());
+        });
+
+        ['account-modal-close', 'account-modal-done'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', closeAccountModal);
+        });
+
+        const btnCancelAccEdit = document.getElementById('btn-cancel-account-edit');
+        if (btnCancelAccEdit) {
+            btnCancelAccEdit.addEventListener('click', () => openAccountModal());
+        }
+
+        // Account Preset Icon & Color
+        const accIconPresets = document.getElementById('acc-icon-presets');
+        if (accIconPresets) {
+            accIconPresets.addEventListener('click', e => {
+                const btn = e.target.closest('.preset-acc-icon');
+                if (!btn) return;
+                document.getElementById('acc-icon').value = btn.dataset.icon;
+            });
+        }
+
+        const accColorPresets = document.getElementById('acc-color-presets');
+        if (accColorPresets) {
+            accColorPresets.addEventListener('click', e => {
+                const chip = e.target.closest('.preset-acc-color');
+                if (!chip) return;
+                document.getElementById('acc-color').value = chip.dataset.color;
+            });
+        }
+
+        // Account Form Submit
+        const accForm = document.getElementById('account-form');
+        if (accForm) {
+            accForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const errEl = document.getElementById('acc-form-error');
+                if (errEl) errEl.classList.add('hidden');
+
+                const editId = document.getElementById('account-form-id').value;
+                const name = document.getElementById('acc-name').value.trim();
+                const type = document.getElementById('acc-type').value;
+                const initBal = parseFloat(document.getElementById('acc-init-bal').value) || 0;
+                const icon = document.getElementById('acc-icon').value.trim() || '🏦';
+                const color = document.getElementById('acc-color').value || '#3B82F6';
+                const isDefault = document.getElementById('acc-default').checked;
+
+                const payload = {
+                    name,
+                    type,
+                    initial_balance: initBal,
+                    icon,
+                    color,
+                    is_default: isDefault
+                };
+
+                const url = editId ? `/api/accounts/${editId}` : '/api/accounts';
+                const method = editId ? 'PUT' : 'POST';
+
+                try {
+                    const res = await fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        if (errEl) {
+                            errEl.textContent = data.error || 'Failed to save wallet';
+                            errEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                    showToast(editId ? 'Wallet updated!' : 'Wallet created!');
+                    openAccountModal(); // reset to new form
+                    await loadAccounts();
+                    await loadAll();
+                } catch (err) {
+                    console.error('Error saving account:', err);
+                    if (errEl) {
+                        errEl.textContent = 'Network error saving wallet';
+                        errEl.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
+        // Manager List Edit and Delete Click Handlers
+        const accountsManagerList = document.getElementById('accounts-manager-list');
+        if (accountsManagerList) {
+            accountsManagerList.addEventListener('click', e => {
+                const editBtn = e.target.closest('.btn-edit-account');
+                if (editBtn) {
+                    const acc = userAccounts.find(a => String(a.id) === editBtn.dataset.id);
+                    if (acc) openAccountModal(acc);
+                    return;
+                }
+                const delBtn = e.target.closest('.btn-delete-account');
+                if (delBtn) {
+                    pendingDeleteAccountId = delBtn.dataset.id;
+                    const delModal = document.getElementById('account-delete-modal');
+                    const delTitle = document.getElementById('account-delete-title');
+                    const reassignSelect = document.getElementById('account-delete-reassign');
+                    const errEl = document.getElementById('account-delete-error');
+                    if (errEl) errEl.classList.add('hidden');
+                    if (delTitle) delTitle.textContent = `Delete ${delBtn.dataset.name}?`;
+                    if (reassignSelect) {
+                        reassignSelect.innerHTML = userAccounts
+                            .filter(a => String(a.id) !== String(pendingDeleteAccountId))
+                            .map(a => `<option value="${a.id}">${a.icon || '🏦'} ${esc(a.name)}</option>`)
+                            .join('');
+                    }
+                    if (delModal) delModal.classList.remove('hidden');
+                }
+            });
+        }
+
+        const btnCancelDeleteAcc = document.getElementById('account-delete-cancel');
+        if (btnCancelDeleteAcc) {
+            btnCancelDeleteAcc.addEventListener('click', () => {
+                pendingDeleteAccountId = null;
+                document.getElementById('account-delete-modal').classList.add('hidden');
+            });
+        }
+
+        const btnConfirmDeleteAcc = document.getElementById('account-delete-confirm');
+        if (btnConfirmDeleteAcc) {
+            btnConfirmDeleteAcc.addEventListener('click', async () => {
+                if (!pendingDeleteAccountId) return;
+                const reassignSelect = document.getElementById('account-delete-reassign');
+                const reassignId = reassignSelect ? reassignSelect.value : '';
+                const errEl = document.getElementById('account-delete-error');
+
+                try {
+                    const res = await fetch(`/api/accounts/${pendingDeleteAccountId}?reassign_id=${reassignId}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        if (errEl) {
+                            errEl.textContent = data.error || 'Failed to delete wallet';
+                            errEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                    document.getElementById('account-delete-modal').classList.add('hidden');
+                    pendingDeleteAccountId = null;
+                    showToast('Wallet deleted and transactions reassigned');
+                    await loadAccounts();
+                    await loadAll();
+                } catch (err) {
+                    console.error('Error deleting account:', err);
+                    if (errEl) {
+                        errEl.textContent = 'Error deleting wallet';
+                        errEl.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
+        // ─── Transfer Modal Logic ───────────────────────────────────────────────────
+        function openTransferModal() {
+            const modal = document.getElementById('transfer-modal');
+            const errEl = document.getElementById('transfer-error');
+            const dateInput = document.getElementById('transfer-date');
+            if (errEl) errEl.classList.add('hidden');
+            if (dateInput && !dateInput.value) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+            populateAccountSelects();
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeTransferModal() {
+            const modal = document.getElementById('transfer-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        const btnOpenTransfer = document.getElementById('btn-open-transfer');
+        if (btnOpenTransfer) btnOpenTransfer.addEventListener('click', openTransferModal);
+
+        ['transfer-modal-close', 'transfer-cancel'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', closeTransferModal);
+        });
+
+        const transferForm = document.getElementById('transfer-form');
+        if (transferForm) {
+            transferForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const errEl = document.getElementById('transfer-error');
+                if (errEl) errEl.classList.add('hidden');
+
+                const fromId = parseInt(document.getElementById('transfer-from').value, 10);
+                const toId = parseInt(document.getElementById('transfer-to').value, 10);
+                const amount = parseFloat(document.getElementById('transfer-amount').value);
+                const date = document.getElementById('transfer-date').value || new Date().toISOString().split('T')[0];
+                const note = document.getElementById('transfer-note').value.trim();
+
+                if (fromId === toId) {
+                    if (errEl) {
+                        errEl.textContent = 'Source and destination wallets must be different';
+                        errEl.classList.remove('hidden');
+                    }
+                    return;
+                }
+
+                if (!amount || amount <= 0) {
+                    if (errEl) {
+                        errEl.textContent = 'Please enter a valid transfer amount';
+                        errEl.classList.remove('hidden');
+                    }
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/accounts/transfer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            from_account_id: fromId,
+                            to_account_id: toId,
+                            amount: amount,
+                            date: date,
+                            note: note
+                        })
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        if (errEl) {
+                            errEl.textContent = data.error || 'Failed to complete transfer';
+                            errEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                    closeTransferModal();
+                    transferForm.reset();
+                    showToast('Transfer completed successfully!');
+                    await loadAccounts();
+                    await loadAll();
+                } catch (err) {
+                    console.error('Error submitting transfer:', err);
+                    if (errEl) {
+                        errEl.textContent = 'Network error processing transfer';
+                        errEl.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
         // Master Load
         async function loadAll() {
             try {
-                await Promise.all([loadCategories(), loadTags()]);
+                await Promise.all([loadCategories(), loadTags(), loadAccounts()]);
                 const res = await fetch('/api/transactions');
                 allTransactions = await res.json().catch(() => []);
                 updateMonthFilterOptions();
@@ -2981,3 +3816,4 @@
     </script>
 </body>
 </html>
+
