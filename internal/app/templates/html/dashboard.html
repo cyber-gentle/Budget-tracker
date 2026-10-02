@@ -112,11 +112,6 @@
                     </select>
                 </div>
 
-                <!-- Export Button (Desktop & Mobile) -->
-                <button type="button" id="btn-export-header" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm cursor-pointer" title="Export transactions (CSV / JSON)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                    <span class="hidden sm:inline">Export</span>
-                </button>
 
                 <!-- User Profile Dropdown -->
                 <div class="relative">
@@ -215,10 +210,6 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
                 <span>Reports</span>
             </a>
-            <button type="button" id="btn-mobile-export" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                <span>Export</span>
-            </button>
         </div>
     </header>
  
@@ -4450,9 +4441,6 @@
         }
 
         // Triggers
-        const btnExportHeader = document.getElementById('btn-export-header');
-        if (btnExportHeader) btnExportHeader.addEventListener('click', () => openExportModal());
-
         const btnDropdownExport = document.getElementById('btn-dropdown-export');
         if (btnDropdownExport) {
             btnDropdownExport.addEventListener('click', () => {
@@ -4461,9 +4449,6 @@
                 openExportModal();
             });
         }
-
-        const btnMobileExport = document.getElementById('btn-mobile-export');
-        if (btnMobileExport) btnMobileExport.addEventListener('click', () => openExportModal());
 
         const btnTxExport = document.getElementById('btn-tx-export');
         if (btnTxExport) {
