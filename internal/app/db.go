@@ -193,6 +193,33 @@ func (s *DBStore) migrate() error {
 		created_at DATETIME
 	);
 	CREATE INDEX IF NOT EXISTS idx_transfers_user ON account_transfers(username);
+
+	CREATE TABLE IF NOT EXISTS splits (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		title TEXT NOT NULL,
+		total_amount REAL NOT NULL,
+		payer_name TEXT NOT NULL,
+		payer_is_user INTEGER NOT NULL DEFAULT 1,
+		category TEXT NOT NULL DEFAULT 'General',
+		date DATETIME NOT NULL,
+		split_type TEXT NOT NULL DEFAULT 'equal',
+		note TEXT,
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_splits_user ON splits(username);
+
+	CREATE TABLE IF NOT EXISTS split_participants (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		split_id INTEGER NOT NULL,
+		username TEXT NOT NULL,
+		name TEXT NOT NULL,
+		share_amount REAL NOT NULL,
+		is_user INTEGER NOT NULL DEFAULT 0,
+		debt_id INTEGER DEFAULT NULL,
+		status TEXT NOT NULL DEFAULT 'pending'
+	);
+	CREATE INDEX IF NOT EXISTS idx_split_participants ON split_participants(split_id);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
@@ -204,6 +231,7 @@ func (s *DBStore) migrate() error {
 	_, _ = s.db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
 	_, _ = s.db.Exec("ALTER TABLE transactions ADD COLUMN tags TEXT DEFAULT ''")
 	_, _ = s.db.Exec("ALTER TABLE transactions ADD COLUMN account_id INTEGER DEFAULT 0")
+	_, _ = s.db.Exec("ALTER TABLE debts ADD COLUMN split_id INTEGER DEFAULT NULL")
 
 	return nil
 }
@@ -3575,5 +3603,583 @@ func (s *DBStore) Apply503020AutoBudget(username string, baseIncome ...float64) 
 	return s.GetBudgets(username)
 }
 
+// ─── Split Expenses & Settlement Calculator Methods ─────────────────────────
 
+type SplitExpense struct {
+	ID           int                `json:"id"`
+	Username     string             `json:"username"`
+	Title        string             `json:"title"`
+	TotalAmount  float64            `json:"total_amount"`
+	PayerName    string             `json:"payer_name"`
+	PayerIsUser  bool               `json:"payer_is_user"`
+	Category     string             `json:"category"`
+	Date         time.Time          `json:"date"`
+	DateFmt      string             `json:"date_fmt"`
+	SplitType    string             `json:"split_type"` // "equal", "exact", "percent"
+	Note         string             `json:"note"`
+	CreatedAt    time.Time          `json:"created_at"`
+	Participants []SplitParticipant `json:"participants"`
+	UserShare    float64            `json:"user_share"`
+	SettledCount int                `json:"settled_count"`
+	TotalCount   int                `json:"total_count"`
+	IsSettled    bool               `json:"is_settled"`
+}
 
+type SplitParticipant struct {
+	ID          int     `json:"id"`
+	SplitID     int     `json:"split_id"`
+	Username    string  `json:"username"`
+	Name        string  `json:"name"`
+	ShareAmount float64 `json:"share_amount"`
+	IsUser      bool    `json:"is_user"`
+	DebtID      *int    `json:"debt_id,omitempty"`
+	Status      string  `json:"status"` // "pending", "settled"
+}
+
+type SplitParticipantInput struct {
+	Name        string  `json:"name"`
+	ShareAmount float64 `json:"share_amount"`
+	IsUser      bool    `json:"is_user"`
+}
+
+type ContactSettlement struct {
+	ContactName string  `json:"contact_name"`
+	TheyOweYou  float64 `json:"they_owe_you"` // Total unpaid debts where type = 'owing_me'
+	YouOweThem  float64 `json:"you_owe_them"` // Total unpaid debts where type = 'i_owe'
+	NetAmount   float64 `json:"net_amount"`   // TheyOweYou - YouOweThem
+	Status      string  `json:"status"`       // "they_owe", "you_owe", "even"
+	ActiveDebts []Debt  `json:"active_debts"`
+	DebtIDs     []int   `json:"debt_ids"`
+}
+
+type SettlementOverview struct {
+	Contacts           []ContactSettlement `json:"contacts"`
+	TotalReceivableNet float64             `json:"total_receivable_net"`
+	TotalPayableNet    float64             `json:"total_payable_net"`
+	OverallNet         float64             `json:"overall_net"`
+	ContactsCount      int                 `json:"contacts_count"`
+}
+
+type SettlementResult struct {
+	ContactName  string  `json:"contact_name"`
+	Mode         string  `json:"mode"`
+	OffsetAmount float64 `json:"offset_amount"`
+	NetSettled   float64 `json:"net_settled"`
+	Message      string  `json:"message"`
+}
+
+func (s *DBStore) CreateSplitExpense(
+	username, title, category, note string,
+	totalAmount float64,
+	date time.Time,
+	payerName string,
+	payerIsUser bool,
+	splitType string,
+	participants []SplitParticipantInput,
+	logTx bool,
+	accountID int,
+) (*SplitExpense, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	username = strings.TrimSpace(username)
+	title = strings.TrimSpace(title)
+	if username == "" || title == "" {
+		return nil, fmt.Errorf("title is required")
+	}
+	if totalAmount <= 0 {
+		return nil, fmt.Errorf("total amount must be greater than zero")
+	}
+	if len(participants) < 2 {
+		return nil, fmt.Errorf("at least 2 participants are required to split an expense")
+	}
+
+	var sumShares float64
+	hasUser := false
+	for i, p := range participants {
+		p.Name = strings.TrimSpace(p.Name)
+		if p.Name == "" {
+			return nil, fmt.Errorf("all participants must have a name")
+		}
+		if p.ShareAmount < 0 {
+			return nil, fmt.Errorf("participant share cannot be negative")
+		}
+		sumShares += p.ShareAmount
+		if p.IsUser || strings.EqualFold(p.Name, "you") || strings.EqualFold(p.Name, username) {
+			participants[i].IsUser = true
+			participants[i].Name = "You"
+			hasUser = true
+		}
+	}
+
+	if !hasUser {
+		for i, p := range participants {
+			if strings.EqualFold(p.Name, "you") {
+				participants[i].IsUser = true
+				hasUser = true
+				break
+			}
+		}
+	}
+
+	if math.Abs(sumShares-totalAmount) > 0.08 {
+		return nil, fmt.Errorf("sum of participant shares (%.2f) does not match total amount (%.2f)", sumShares, totalAmount)
+	}
+
+	payerName = strings.TrimSpace(payerName)
+	if payerName == "" || strings.EqualFold(payerName, "you") || strings.EqualFold(payerName, username) {
+		payerName = "You"
+		payerIsUser = true
+	}
+
+	if splitType == "" {
+		splitType = "equal"
+	}
+	if category == "" {
+		category = "General"
+	}
+	if date.IsZero() {
+		date = time.Now()
+	}
+
+	payerIsUserInt := 0
+	if payerIsUser {
+		payerIsUserInt = 1
+	}
+
+	createdAt := time.Now()
+	res, err := s.db.Exec(
+		"INSERT INTO splits (username, title, total_amount, payer_name, payer_is_user, category, date, split_type, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		username, title, totalAmount, payerName, payerIsUserInt, category, date, splitType, note, createdAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create split: %w", err)
+	}
+
+	splitID64, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+	splitID := int(splitID64)
+
+	var userShare float64
+	for _, p := range participants {
+		if p.IsUser {
+			userShare = p.ShareAmount
+		}
+	}
+
+	// Insert participants and corresponding IOUs/Debts
+	for _, p := range participants {
+		isUserInt := 0
+		if p.IsUser {
+			isUserInt = 1
+		}
+
+		var debtID *int
+		if payerIsUser && !p.IsUser && p.ShareAmount > 0 {
+			resD, errD := s.db.Exec(
+				"INSERT INTO debts (username, person_name, amount, amount_paid, type, due_date, note, status, created_at, split_id) VALUES (?, ?, ?, 0, 'owing_me', NULL, ?, 'unpaid', ?, ?)",
+				username, p.Name, p.ShareAmount, "Split: "+title, createdAt, splitID,
+			)
+			if errD == nil {
+				dID64, _ := resD.LastInsertId()
+				dID := int(dID64)
+				debtID = &dID
+			}
+		} else if !payerIsUser && p.IsUser && p.ShareAmount > 0 {
+			resD, errD := s.db.Exec(
+				"INSERT INTO debts (username, person_name, amount, amount_paid, type, due_date, note, status, created_at, split_id) VALUES (?, ?, ?, 0, 'i_owe', NULL, ?, 'unpaid', ?, ?)",
+				username, payerName, p.ShareAmount, fmt.Sprintf("Split: %s (paid by %s)", title, payerName), createdAt, splitID,
+			)
+			if errD == nil {
+				dID64, _ := resD.LastInsertId()
+				dID := int(dID64)
+				debtID = &dID
+			}
+		}
+
+		_, err = s.db.Exec(
+			"INSERT INTO split_participants (split_id, username, name, share_amount, is_user, debt_id, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')",
+			splitID, username, p.Name, p.ShareAmount, isUserInt, debtID,
+		)
+		if err != nil {
+			log.Printf("failed to insert split participant %s: %v", p.Name, err)
+		}
+	}
+
+	// Log transaction if requested
+	if logTx && payerIsUser && userShare > 0 {
+		txNote := fmt.Sprintf("Split: %s (Your share)", title)
+		_, _ = s.db.Exec(
+			"INSERT INTO transactions (username, amount, category, note, date, type, tags, account_id) VALUES (?, ?, ?, ?, ?, 'expense', 'split', ?)",
+			username, userShare, category, txNote, date, accountID,
+		)
+	}
+
+	return s.getSplitByIDLocked(splitID, username)
+}
+
+func (s *DBStore) GetSplits(username string) ([]SplitExpense, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		"SELECT id, username, title, total_amount, payer_name, payer_is_user, category, date, split_type, note, created_at FROM splits WHERE username = ? ORDER BY date DESC, id DESC",
+		username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var splits []SplitExpense
+	for rows.Next() {
+		var sp SplitExpense
+		var payerIsUserInt int
+		if err := rows.Scan(&sp.ID, &sp.Username, &sp.Title, &sp.TotalAmount, &sp.PayerName, &payerIsUserInt, &sp.Category, &sp.Date, &sp.SplitType, &sp.Note, &sp.CreatedAt); err != nil {
+			log.Printf("scan split error: %v", err)
+			continue
+		}
+		sp.PayerIsUser = (payerIsUserInt == 1)
+		sp.DateFmt = sp.Date.Format("2006-01-02")
+
+		parts, err := s.getSplitParticipantsLocked(sp.ID)
+		if err == nil {
+			sp.Participants = parts
+			settledCount := 0
+			for _, p := range parts {
+				if p.IsUser {
+					sp.UserShare = p.ShareAmount
+				}
+				if p.Status == "settled" {
+					settledCount++
+				}
+			}
+			sp.SettledCount = settledCount
+			sp.TotalCount = len(parts)
+			sp.IsSettled = (len(parts) > 0 && settledCount == len(parts))
+		}
+
+		splits = append(splits, sp)
+	}
+
+	return splits, nil
+}
+
+func (s *DBStore) GetSplitByID(id int, username string) (*SplitExpense, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.getSplitByIDLocked(id, username)
+}
+
+func (s *DBStore) getSplitByIDLocked(id int, username string) (*SplitExpense, error) {
+	var sp SplitExpense
+	var payerIsUserInt int
+	err := s.db.QueryRow(
+		"SELECT id, username, title, total_amount, payer_name, payer_is_user, category, date, split_type, note, created_at FROM splits WHERE id = ? AND username = ?",
+		id, username,
+	).Scan(&sp.ID, &sp.Username, &sp.Title, &sp.TotalAmount, &sp.PayerName, &payerIsUserInt, &sp.Category, &sp.Date, &sp.SplitType, &sp.Note, &sp.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	sp.PayerIsUser = (payerIsUserInt == 1)
+	sp.DateFmt = sp.Date.Format("2006-01-02")
+
+	parts, err := s.getSplitParticipantsLocked(sp.ID)
+	if err == nil {
+		sp.Participants = parts
+		settledCount := 0
+		for _, p := range parts {
+			if p.IsUser {
+				sp.UserShare = p.ShareAmount
+			}
+			if p.Status == "settled" {
+				settledCount++
+			}
+		}
+		sp.SettledCount = settledCount
+		sp.TotalCount = len(parts)
+		sp.IsSettled = (len(parts) > 0 && settledCount == len(parts))
+	}
+
+	return &sp, nil
+}
+
+func (s *DBStore) getSplitParticipantsLocked(splitID int) ([]SplitParticipant, error) {
+	rows, err := s.db.Query(
+		"SELECT id, split_id, username, name, share_amount, is_user, debt_id, status FROM split_participants WHERE split_id = ? ORDER BY is_user DESC, id ASC",
+		splitID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var parts []SplitParticipant
+	for rows.Next() {
+		var p SplitParticipant
+		var isUserInt int
+		var debtID sql.NullInt64
+		if err := rows.Scan(&p.ID, &p.SplitID, &p.Username, &p.Name, &p.ShareAmount, &isUserInt, &debtID, &p.Status); err != nil {
+			continue
+		}
+		p.IsUser = (isUserInt == 1)
+		if debtID.Valid {
+			d := int(debtID.Int64)
+			p.DebtID = &d
+
+			var dStatus string
+			if err := s.db.QueryRow("SELECT status FROM debts WHERE id = ?", d).Scan(&dStatus); err == nil {
+				if dStatus == "settled" {
+					p.Status = "settled"
+				}
+			}
+		}
+		parts = append(parts, p)
+	}
+	return parts, nil
+}
+
+func (s *DBStore) DeleteSplit(id int, username string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, _ = s.db.Exec("DELETE FROM debts WHERE split_id = ? AND username = ?", id, username)
+	_, _ = s.db.Exec("DELETE FROM split_participants WHERE split_id = ?", id)
+
+	res, err := s.db.Exec("DELETE FROM splits WHERE id = ? AND username = ?", id, username)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected > 0, nil
+}
+
+// GetSettlementOverview aggregates debts by contact to calculate mutual net balances.
+func (s *DBStore) GetSettlementOverview(username string) (*SettlementOverview, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		"SELECT id, username, person_name, amount, amount_paid, type, due_date, note, status, created_at FROM debts WHERE username = ? AND status != 'settled' ORDER BY person_name ASC, created_at DESC",
+		username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	contactMap := make(map[string]*ContactSettlement)
+	var contactOrder []string
+
+	for rows.Next() {
+		var d Debt
+		var dueDate sql.NullTime
+		if err := rows.Scan(&d.ID, &d.Username, &d.PersonName, &d.Amount, &d.AmountPaid, &d.Type, &dueDate, &d.Note, &d.Status, &d.CreatedAt); err != nil {
+			continue
+		}
+		if dueDate.Valid {
+			t := dueDate.Time
+			d.DueDate = &t
+			d.DueDateFmt = t.Format("2006-01-02")
+		}
+		rem := d.Amount - d.AmountPaid
+		if rem < 0 {
+			rem = 0
+		}
+		d.Remaining = rem
+
+		cName := strings.TrimSpace(d.PersonName)
+		lookupKey := strings.ToLower(cName)
+
+		cs, exists := contactMap[lookupKey]
+		if !exists {
+			cs = &ContactSettlement{
+				ContactName: cName,
+			}
+			contactMap[lookupKey] = cs
+			contactOrder = append(contactOrder, lookupKey)
+		}
+
+		if d.Type == "owing_me" {
+			cs.TheyOweYou += rem
+		} else {
+			cs.YouOweThem += rem
+		}
+		cs.ActiveDebts = append(cs.ActiveDebts, d)
+		cs.DebtIDs = append(cs.DebtIDs, d.ID)
+	}
+
+	overview := &SettlementOverview{
+		Contacts: make([]ContactSettlement, 0),
+	}
+
+	for _, key := range contactOrder {
+		cs := contactMap[key]
+		cs.NetAmount = cs.TheyOweYou - cs.YouOweThem
+
+		if cs.NetAmount > 0.005 {
+			cs.Status = "they_owe"
+			overview.TotalReceivableNet += cs.NetAmount
+		} else if cs.NetAmount < -0.005 {
+			cs.Status = "you_owe"
+			overview.TotalPayableNet += math.Abs(cs.NetAmount)
+		} else {
+			cs.Status = "even"
+		}
+
+		overview.Contacts = append(overview.Contacts, *cs)
+	}
+
+	overview.OverallNet = overview.TotalReceivableNet - overview.TotalPayableNet
+	overview.ContactsCount = len(overview.Contacts)
+
+	sort.Slice(overview.Contacts, func(i, j int) bool {
+		return math.Abs(overview.Contacts[i].NetAmount) > math.Abs(overview.Contacts[j].NetAmount)
+	})
+
+	return overview, nil
+}
+
+// SettleContactDebts simplifies or completes settlement with a contact.
+func (s *DBStore) SettleContactDebts(username, contactName, mode string, accountID int, logTx bool) (*SettlementResult, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	contactName = strings.TrimSpace(contactName)
+	if contactName == "" {
+		return nil, fmt.Errorf("contact name is required")
+	}
+
+	rows, err := s.db.Query(
+		"SELECT id, amount, amount_paid, type FROM debts WHERE username = ? AND LOWER(TRIM(person_name)) = LOWER(?) AND status != 'settled'",
+		username, contactName,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	type activeItem struct {
+		id         int
+		amount     float64
+		amountPaid float64
+		rem        float64
+		debtType   string
+	}
+
+	var owingMeList []activeItem
+	var iOweList []activeItem
+	var totalOwingMe, totalIOwe float64
+
+	for rows.Next() {
+		var it activeItem
+		if err := rows.Scan(&it.id, &it.amount, &it.amountPaid, &it.debtType); err != nil {
+			continue
+		}
+		it.rem = it.amount - it.amountPaid
+		if it.rem <= 0 {
+			continue
+		}
+		if it.debtType == "owing_me" {
+			owingMeList = append(owingMeList, it)
+			totalOwingMe += it.rem
+		} else {
+			iOweList = append(iOweList, it)
+			totalIOwe += it.rem
+		}
+	}
+
+	currency := "₦"
+	var userCurr string
+	if err := s.db.QueryRow("SELECT currency FROM users WHERE username = ?", username).Scan(&userCurr); err == nil && userCurr != "" {
+		currency = userCurr
+	}
+
+	res := &SettlementResult{
+		ContactName: contactName,
+		Mode:        mode,
+	}
+
+	if mode == "offset_only" {
+		offset := math.Min(totalOwingMe, totalIOwe)
+		if offset <= 0.005 {
+			return nil, fmt.Errorf("no mutual debts to offset with %s (debts are only in one direction)", contactName)
+		}
+
+		remOffset := offset
+		for _, it := range owingMeList {
+			if remOffset <= 0 {
+				break
+			}
+			deduct := math.Min(it.rem, remOffset)
+			newPaid := it.amountPaid + deduct
+			newStatus := "partial"
+			if newPaid >= it.amount-0.005 {
+				newPaid = it.amount
+				newStatus = "settled"
+			}
+			_, _ = s.db.Exec("UPDATE debts SET amount_paid = ?, status = ? WHERE id = ?", newPaid, newStatus, it.id)
+			remOffset -= deduct
+		}
+
+		remOffset = offset
+		for _, it := range iOweList {
+			if remOffset <= 0 {
+				break
+			}
+			deduct := math.Min(it.rem, remOffset)
+			newPaid := it.amountPaid + deduct
+			newStatus := "partial"
+			if newPaid >= it.amount-0.005 {
+				newPaid = it.amount
+				newStatus = "settled"
+			}
+			_, _ = s.db.Exec("UPDATE debts SET amount_paid = ?, status = ? WHERE id = ?", newPaid, newStatus, it.id)
+			remOffset -= deduct
+		}
+
+		res.OffsetAmount = offset
+		res.Message = fmt.Sprintf("Successfully simplified debts! Offset %s%.2f of mutual debt with %s.", currency, offset, contactName)
+		return res, nil
+	}
+
+	// Full Settlement Mode
+	net := totalOwingMe - totalIOwe
+	res.NetSettled = net
+
+	for _, it := range append(owingMeList, iOweList...) {
+		_, _ = s.db.Exec("UPDATE debts SET amount_paid = amount, status = 'settled' WHERE id = ?", it.id)
+	}
+
+	_, _ = s.db.Exec(
+		"UPDATE split_participants SET status = 'settled' WHERE username = ? AND LOWER(TRIM(name)) = LOWER(?)",
+		username, contactName,
+	)
+
+	if logTx && math.Abs(net) > 0.005 {
+		now := time.Now()
+		if net > 0 {
+			_, _ = s.db.Exec(
+				"INSERT INTO transactions (username, amount, category, note, date, type, tags, account_id) VALUES (?, ?, 'Debt Repayment', ?, ?, 'income', 'settlement', ?)",
+				username, net, fmt.Sprintf("Settlement received from %s", contactName), now, accountID,
+			)
+		} else {
+			_, _ = s.db.Exec(
+				"INSERT INTO transactions (username, amount, category, note, date, type, tags, account_id) VALUES (?, ?, 'Debt Repayment', ?, ?, 'expense', 'settlement', ?)",
+				username, -net, fmt.Sprintf("Settlement paid to %s", contactName), now, accountID,
+			)
+		}
+	}
+
+	if net > 0.005 {
+		res.Message = fmt.Sprintf("All settled! %s paid you %s%.2f. Account is now completely squared up.", contactName, currency, net)
+	} else if net < -0.005 {
+		res.Message = fmt.Sprintf("All settled! You paid %s %s%.2f. Account is now completely squared up.", contactName, currency, -net)
+	} else {
+		res.Message = fmt.Sprintf("All debts with %s were fully offset and squared up to %s0.00.", contactName, currency)
+	}
+
+	return res, nil
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -1269,8 +1270,187 @@ func TestSmartBudgetingRulesFlow(t *testing.T) {
 	}
 }
 
+func TestSplitExpensesAndSettlementFlow(t *testing.T) {
+	tempDB := filepath.Join(t.TempDir(), "test_splits.db")
+	store, err := app.NewDBStore(tempDB, "")
+	if err != nil {
+		t.Fatalf("failed to create db store: %v", err)
+	}
 
+	username := "splitter_user"
+	err = store.Signup(username, "splitter@test.com", "pass123", "Split Master")
+	if err != nil {
+		t.Fatalf("failed to signup: %v", err)
+	}
 
+	// 1. Create a split expense: Dinner at Bistro, Total: 90000, 3 participants (You: 30000, Alice: 30000, Bob: 30000)
+	parts := []app.SplitParticipantInput{
+		{Name: "You", ShareAmount: 30000, IsUser: true},
+		{Name: "Alice", ShareAmount: 30000, IsUser: false},
+		{Name: "Bob", ShareAmount: 30000, IsUser: false},
+	}
+	split, err := store.CreateSplitExpense(
+		username, "Team Dinner at Bistro", "Food", "Celebration dinner",
+		90000, time.Now(), "You", true, "equal", parts, true, 0,
+	)
+	if err != nil {
+		t.Fatalf("failed to create split expense: %v", err)
+	}
 
+	if split.ID <= 0 || split.TotalAmount != 90000 {
+		t.Fatalf("unexpected split: %+v", split)
+	}
+	if len(split.Participants) != 3 {
+		t.Fatalf("expected 3 participants, got %d", len(split.Participants))
+	}
+	if split.UserShare != 30000 {
+		t.Fatalf("expected user share 30000, got %.2f", split.UserShare)
+	}
 
+	// Verify automated IOU creation in debts table
+	debts, summary, err := store.GetDebts(username)
+	if err != nil {
+		t.Fatalf("failed to get debts: %v", err)
+	}
+	if len(debts) != 2 {
+		t.Fatalf("expected 2 active IOUs created for Alice and Bob, got %d", len(debts))
+	}
+	if summary.TotalOwedToUser != 60000 {
+		t.Fatalf("expected total owed to user 60000, got %.2f", summary.TotalOwedToUser)
+	}
 
+	// 2. Add a debt where User owes Alice 10,000 for Movie Tickets
+	_, err = store.CreateDebt(username, "Alice", "i_owe", 10000, nil, "Movie tickets")
+	if err != nil {
+		t.Fatalf("failed to create debt user owes Alice: %v", err)
+	}
+
+	// 3. Test Settlement Overview Calculation
+	overview, err := store.GetSettlementOverview(username)
+	if err != nil {
+		t.Fatalf("failed to get settlement overview: %v", err)
+	}
+	if overview.ContactsCount != 2 {
+		t.Fatalf("expected 2 contacts with open balances (Alice, Bob), got %d", overview.ContactsCount)
+	}
+
+	var aliceContact *app.ContactSettlement
+	for _, c := range overview.Contacts {
+		if strings.EqualFold(c.ContactName, "Alice") {
+			aliceContact = &c
+			break
+		}
+	}
+	if aliceContact == nil {
+		t.Fatalf("expected Alice in settlement overview")
+	}
+	if aliceContact.TheyOweYou != 30000 || aliceContact.YouOweThem != 10000 {
+		t.Fatalf("expected Alice they_owe=30000, you_owe=10000, got they_owe=%.2f, you_owe=%.2f", aliceContact.TheyOweYou, aliceContact.YouOweThem)
+	}
+	if aliceContact.NetAmount != 20000 || aliceContact.Status != "they_owe" {
+		t.Fatalf("expected Alice net 20000 (they_owe), got %.2f (%s)", aliceContact.NetAmount, aliceContact.Status)
+	}
+
+	// 4. Test Mutual Debt Simplification (offset_only)
+	offsetRes, err := store.SettleContactDebts(username, "Alice", "offset_only", 0, false)
+	if err != nil {
+		t.Fatalf("failed to offset debts with Alice: %v", err)
+	}
+	if offsetRes.OffsetAmount != 10000 {
+		t.Fatalf("expected offset 10000, got %.2f", offsetRes.OffsetAmount)
+	}
+
+	// After offset, Alice should now owe 20,000 net, and User owes Alice 0
+	overviewAfterOffset, err := store.GetSettlementOverview(username)
+	if err != nil {
+		t.Fatalf("failed to get overview after offset: %v", err)
+	}
+	for _, c := range overviewAfterOffset.Contacts {
+		if strings.EqualFold(c.ContactName, "Alice") {
+			if c.TheyOweYou != 20000 || c.YouOweThem != 0 || c.NetAmount != 20000 {
+				t.Fatalf("after offset, expected Alice they_owe=20000, you_owe=0, got they_owe=%.2f, you_owe=%.2f", c.TheyOweYou, c.YouOweThem)
+			}
+		}
+	}
+
+	// 5. Test Full Settlement with transaction recording
+	settleRes, err := store.SettleContactDebts(username, "Alice", "full", 0, true)
+	if err != nil {
+		t.Fatalf("failed to full settle with Alice: %v", err)
+	}
+	if settleRes.NetSettled != 20000 {
+		t.Fatalf("expected net settled 20000, got %.2f", settleRes.NetSettled)
+	}
+
+	// Verify all debts with Alice are settled
+	overviewAfterSettle, err := store.GetSettlementOverview(username)
+	if err != nil {
+		t.Fatalf("failed to get overview after settle: %v", err)
+	}
+	for _, c := range overviewAfterSettle.Contacts {
+		if strings.EqualFold(c.ContactName, "Alice") {
+			t.Fatalf("Alice should have no remaining active debts, but found: %+v", c)
+		}
+	}
+
+	// 6. Test HTTP APIs
+	application := app.NewApp(store)
+	sessionID, err := store.Login(username, "pass123")
+	if err != nil {
+		t.Fatalf("login failed: %v", err)
+	}
+
+	// A. GET /api/splits
+	reqSplits := httptest.NewRequest(http.MethodGet, "/api/splits", nil)
+	reqSplits.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recSplits := httptest.NewRecorder()
+	application.ServeHTTP(recSplits, reqSplits)
+	if recSplits.Code != http.StatusOK {
+		t.Fatalf("expected 200 from GET /api/splits, got %d", recSplits.Code)
+	}
+
+	// B. POST /api/splits
+	newSplitJSON := `{
+		"title": "Groceries Run",
+		"total_amount": 50000,
+		"payer_name": "You",
+		"payer_is_user": true,
+		"category": "Groceries",
+		"split_type": "equal",
+		"participants": [
+			{"name": "You", "share_amount": 25000, "is_user": true},
+			{"name": "Charlie", "share_amount": 25000, "is_user": false}
+		]
+	}`
+	reqPostSplit := httptest.NewRequest(http.MethodPost, "/api/splits", strings.NewReader(newSplitJSON))
+	reqPostSplit.Header.Set("Content-Type", "application/json")
+	reqPostSplit.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recPostSplit := httptest.NewRecorder()
+	application.ServeHTTP(recPostSplit, reqPostSplit)
+	if recPostSplit.Code != http.StatusCreated {
+		t.Fatalf("expected 201 from POST /api/splits, got %d: %s", recPostSplit.Code, recPostSplit.Body.String())
+	}
+
+	var createdSplit app.SplitExpense
+	if err := json.Unmarshal(recPostSplit.Body.Bytes(), &createdSplit); err != nil {
+		t.Fatalf("failed to decode created split: %v", err)
+	}
+
+	// C. GET /api/settlements
+	reqSettlements := httptest.NewRequest(http.MethodGet, "/api/settlements", nil)
+	reqSettlements.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recSettlements := httptest.NewRecorder()
+	application.ServeHTTP(recSettlements, reqSettlements)
+	if recSettlements.Code != http.StatusOK {
+		t.Fatalf("expected 200 from GET /api/settlements, got %d", recSettlements.Code)
+	}
+
+	// D. DELETE /api/splits/{id}
+	reqDel := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/splits/%d", createdSplit.ID), nil)
+	reqDel.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recDel := httptest.NewRecorder()
+	application.ServeHTTP(recDel, reqDel)
+	if recDel.Code != http.StatusOK {
+		t.Fatalf("expected 200 from DELETE /api/splits/%d, got %d", createdSplit.ID, recDel.Code)
+	}
+}

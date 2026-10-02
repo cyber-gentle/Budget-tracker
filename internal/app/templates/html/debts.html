@@ -47,11 +47,11 @@
         })();
     </script>
 </head>
-<body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200">
+<body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200 overflow-x-hidden w-full">
 
     <!-- Top Navigation Header -->
     <header class="fixed top-0 left-0 right-0 z-40 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
             
             <!-- Left: Logo & Nav Links -->
             <div class="flex items-center gap-6">
@@ -193,112 +193,200 @@
     <div class="h-28 sm:h-20" aria-hidden="true"></div>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 flex-grow">
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-6 flex-grow">
 
-        <!-- Header Title & Action Button -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-                <h1 class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Debts & IOUs</h1>
-                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Track money people owe you and debts you owe, with automated transaction logging.</p>
+                <h1 class="font-heading text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Debts & IOUs</h1>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">Track money people owe you, debts you owe, and split shared group expenses.</p>
             </div>
-            <div>
-                <button type="button" id="btn-add-debt" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <span>Add Debt / Loan</span>
+            <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                <button type="button" id="btn-split-expense" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer truncate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="sm:w-[15px] sm:h-[15px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span class="truncate">Split Expense</span>
+                </button>
+                <button type="button" id="btn-add-debt" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 bg-slate-900 dark:bg-slate-800 hover:bg-black dark:hover:bg-slate-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer truncate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="sm:w-[15px] sm:h-[15px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span class="truncate">+ Add Debt</span>
                 </button>
             </div>
         </div>
 
         <!-- Executive Summary Cards -->
-        <section class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <section class="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4">
             <!-- Owing You (Receivables) -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-sm transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5">
                     <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 truncate pr-1">People Owing You</span>
                     <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                         <svg class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
                     </span>
                 </div>
                 <p class="font-heading text-lg sm:text-2xl md:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 truncate" id="summary-owing-me">0</p>
-                <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium truncate" id="summary-owing-me-count">0 active loans</p>
+                <p class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 font-medium truncate" id="summary-owing-me-count">0 active loans</p>
             </div>
 
             <!-- You Owe (Debts) -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-sm transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5">
                     <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400 truncate pr-1">You Owe (Debts)</span>
                     <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center shrink-0">
                         <svg class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
                     </span>
                 </div>
                 <p class="font-heading text-lg sm:text-2xl md:text-3xl font-extrabold text-rose-500 dark:text-rose-400 truncate" id="summary-i-owe">0</p>
-                <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium truncate" id="summary-i-owe-count">0 pending debts</p>
+                <p class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 font-medium truncate" id="summary-i-owe-count">0 pending debts</p>
             </div>
 
             <!-- Net Loan Position -->
-            <div class="col-span-2 md:col-span-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-sm transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+            <div class="col-span-2 md:col-span-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5">
                     <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate pr-1">Net Position</span>
                     <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                        <svg class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        <svg class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                     </span>
                 </div>
                 <p class="font-heading text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white truncate" id="summary-net">0</p>
-                <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium truncate" id="summary-net-desc">Calculated as (Owed To You - You Owe)</p>
+                <p class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 font-medium truncate" id="summary-net-desc">Calculated as (Owed To You - You Owe)</p>
             </div>
         </section>
 
-        <!-- Controls Bar: Tabs, Filters, Search -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-sm transition-colors">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                
-                <!-- Category Tabs: All / Owing Me / I Owe -->
-                <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold self-start sm:self-auto">
-                    <button type="button" data-tab="all" class="tab-btn px-4 py-1.5 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer">
-                        All Records
-                    </button>
-                    <button type="button" data-tab="owing_me" class="tab-btn px-4 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
-                        People Owing You
-                    </button>
-                    <button type="button" data-tab="i_owe" class="tab-btn px-4 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
-                        You Owe (Debts)
-                    </button>
+        <!-- Category Tabs Bar (Touch & Phone-Optimized Segmented Control) -->
+        <div class="bg-slate-100/90 dark:bg-slate-800/80 p-1 sm:p-1.5 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 shadow-xs transition-colors">
+            <div class="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                <button type="button" data-tab="all" class="tab-btn shrink-0 px-3 sm:px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                    All Records
+                </button>
+                <button type="button" data-tab="owing_me" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                    <span class="sm:hidden">Owing You</span>
+                    <span class="hidden sm:inline">People Owing You</span>
+                </button>
+                <button type="button" data-tab="i_owe" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                    <span class="sm:hidden">You Owe</span>
+                    <span class="hidden sm:inline">You Owe (Debts)</span>
+                </button>
+                <button type="button" data-tab="splits" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Splits</span>
+                    <span id="tab-splits-count" class="hidden px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">0</span>
+                </button>
+                <button type="button" data-tab="settlements" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span class="sm:hidden">Settlements</span>
+                    <span class="hidden sm:inline">Settlement Calculator</span>
+                    <span id="tab-settlements-badge" class="hidden px-1.5 py-0.2 rounded-md bg-indigo-100 dark:bg-indigo-900/60 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ─── Debts & Loans View ────────────────────────────────────────────── -->
+        <div id="debts-view" class="space-y-4">
+            <!-- Search & Filter Controls -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-72">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </span>
+                    <input type="text" id="debts-search" placeholder="Search person or note..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all font-medium">
                 </div>
 
-                <!-- Search & Status Filter -->
-                <div class="flex items-center gap-2.5">
-                    <!-- Search Input -->
-                    <div class="relative w-full sm:w-60">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                        </span>
-                        <input type="text" id="debts-search" placeholder="Search person or note..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all">
-                    </div>
-
-                    <!-- Status Filter -->
+                <!-- Status Filter -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">Status:</span>
                     <select id="debts-filter-status" class="px-3 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-colors cursor-pointer">
                         <option value="all">All Statuses</option>
                         <option value="active" selected>Active (Pending / Partial)</option>
                         <option value="settled">Settled Only</option>
                     </select>
                 </div>
+            </div>
 
+            <!-- Debts List Container -->
+            <div id="debts-container" class="space-y-3">
+                <div id="debts-loading" class="py-16 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
+                    Loading debts and loans...
+                </div>
+                <div id="debts-empty" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl py-16 text-center px-4 hidden transition-colors">
+                    <div class="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto mb-3 text-2xl">
+                        🤝
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">No records found</h3>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">Click "Add Debt / Loan" above to start tracking money you lent or money you owe.</p>
+                </div>
+                <div id="debts-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0"></div>
             </div>
         </div>
 
-        <!-- Debts List Container -->
-        <div id="debts-container" class="space-y-3">
-            <div id="debts-loading" class="py-16 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
-                Loading debts and loans...
-            </div>
-            <div id="debts-empty" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl py-16 text-center px-4 hidden transition-colors">
-                <div class="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto mb-3 text-2xl">
-                    🤝
+        <!-- ─── Splits View ──────────────────────────────────────────────────────── -->
+        <div id="splits-view" class="hidden space-y-4">
+            <div class="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm transition-colors">
+                <div class="min-w-0 flex-1">
+                    <h2 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2 truncate">
+                        <span>🍕</span>
+                        <span class="truncate">Shared & Split Expenses</span>
+                    </h2>
+                    <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">Bills divided among groups with synchronized IOUs.</p>
                 </div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">No records found</h3>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">Click "Add Debt / Loan" above to start tracking money you lent or money you owe.</p>
+                <button type="button" id="btn-splits-new" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-colors cursor-pointer shadow-xs shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>+ Split</span>
+                </button>
             </div>
-            <div id="debts-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+            <div id="splits-empty" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl py-16 text-center px-4 hidden transition-colors">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+                    🍕
+                </div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">No split expenses yet</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">Split a dinner, trip, or rent bill with friends or roommates to start tracking shared shares.</p>
+            </div>
+
+            <div id="splits-list" class="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full min-w-0"></div>
+        </div>
+
+        <!-- ─── Settlement Calculator View ──────────────────────────────────────── -->
+        <div id="settlements-view" class="hidden space-y-4">
+            <!-- Settlement KPI banner -->
+            <section class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm transition-colors">
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 truncate block">Net Receivable</span>
+                    <p class="font-heading text-lg sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate" id="settle-kpi-receivable">0</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">Others owe you</p>
+                </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm transition-colors">
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400 truncate block">Net Payable</span>
+                    <p class="font-heading text-lg sm:text-2xl font-extrabold text-rose-500 dark:text-rose-400 mt-0.5 truncate" id="settle-kpi-payable">0</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">You owe others</p>
+                </div>
+                <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm transition-colors">
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 truncate block">Overall Net</span>
+                    <p class="font-heading text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5 truncate" id="settle-kpi-overall">0</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate" id="settle-kpi-desc">After mutual offsets</p>
+                </div>
+            </section>
+
+            <!-- Mutual Netting Explanation Card -->
+            <div class="bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/60 rounded-2xl p-4 flex items-start gap-3">
+                <span class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 text-base">
+                    💡
+                </span>
+                <div class="text-xs text-indigo-950 dark:text-indigo-200 leading-relaxed">
+                    <strong class="font-semibold text-indigo-900 dark:text-indigo-100">Smart Debt Simplifier & Mutual Netting</strong>:
+                    Instead of sending multiple payments back and forth, Spendly automatically offsets mutual IOUs. If you owe Alice ₦10,000 and Alice owes you ₦30,000, you can simplify the debt so Alice just pays you ₦20,000.
+                </div>
+            </div>
+
+            <!-- Contacts Settlement Grid -->
+            <div id="settlements-empty" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl py-16 text-center px-4 hidden transition-colors">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+                    ✨
+                </div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">All contacts are squared up!</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">No outstanding debts or receivables exist with any contact.</p>
+            </div>
+
+            <div id="settlements-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full min-w-0"></div>
         </div>
 
     </main>
@@ -306,8 +394,8 @@
     <!-- ─── Modals ──────────────────────────────────────────────────────────── -->
 
     <!-- Add / Edit Debt Modal -->
-    <div id="debt-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto transition-colors">
+    <div id="debt-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-2.5 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto transition-colors">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h3 id="debt-modal-title" class="font-heading font-bold text-base text-slate-900 dark:text-white">Add Debt or Loan</h3>
@@ -374,8 +462,8 @@
     </div>
 
     <!-- Record Payment / Settle Modal -->
-    <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl transition-colors">
+    <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-2.5 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-md shadow-2xl transition-colors">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Record Payment</h3>
@@ -448,6 +536,215 @@
                     Delete
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Split Expense Modal -->
+    <div id="split-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-2.5 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto transition-colors">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>👥</span>
+                        <span>Split an Expense</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Divide a group bill and generate tracked IOUs</p>
+                </div>
+                <button type="button" id="split-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <div id="split-modal-error" class="hidden mb-4 p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs rounded-xl font-medium"></div>
+
+            <form id="split-form" class="space-y-4">
+                <!-- Bill Title & Total Amount -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Expense Title / Description</label>
+                        <input type="text" id="split-title" required placeholder="e.g. Dinner at Pasta House, Groceries, Airbnb" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Total Amount (<span class="currency-label">{{.Currency}}</span>)</label>
+                        <input type="number" step="any" min="0.01" id="split-total-amount" required placeholder="0.00" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-bold text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Category</label>
+                        <select id="split-category" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-semibold cursor-pointer">
+                            <option value="Food & Dining">Food & Dining</option>
+                            <option value="Groceries">Groceries</option>
+                            <option value="Travel & Vacation">Travel & Vacation</option>
+                            <option value="Housing & Rent">Housing & Rent</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Payer & Wallet & Date -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Paid By</label>
+                        <select id="split-payer-select" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium cursor-pointer">
+                            <option value="You">You (You paid)</option>
+                            <option value="other">Someone else paid...</option>
+                        </select>
+                    </div>
+                    <div id="split-custom-payer-box" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Payer Name</label>
+                        <input type="text" id="split-custom-payer" placeholder="e.g. Alice" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                    </div>
+                    <div id="split-wallet-box">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Paid from Wallet</label>
+                        <select id="split-wallet-select" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium cursor-pointer">
+                            <option value="0">Default Wallet</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Date</label>
+                        <input type="date" id="split-date" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                    </div>
+                </div>
+
+                <!-- Split Mode Selection -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Split Method</label>
+                    <div class="grid grid-cols-3 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold text-center">
+                        <button type="button" data-mode="equal" class="split-mode-btn py-1.5 px-2 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer">
+                            Equal (÷)
+                        </button>
+                        <button type="button" data-mode="exact" class="split-mode-btn py-1.5 px-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                            Exact ($)
+                        </button>
+                        <button type="button" data-mode="percent" class="split-mode-btn py-1.5 px-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                            Percent (%)
+                        </button>
+                    </div>
+                    <input type="hidden" id="split-mode-val" value="equal">
+                </div>
+
+                <!-- Participants Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Participants & Shares</label>
+                        <button type="button" id="btn-add-participant" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer">
+                            <span>+ Add Person</span>
+                        </button>
+                    </div>
+
+                    <div id="participants-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Live Validation Status Pill -->
+                    <div id="split-balance-pill" class="mt-2.5 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-xs flex items-center justify-between font-medium">
+                        <span class="text-slate-600 dark:text-slate-400" id="split-balance-text">Enter total amount to calculate shares</span>
+                        <span class="font-bold text-slate-900 dark:text-white" id="split-balance-status">--</span>
+                    </div>
+                </div>
+
+                <!-- Note -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Optional Note</label>
+                    <input type="text" id="split-note" placeholder="e.g. 4-way split for birthday dinner" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
+                <!-- Options -->
+                <div class="pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300">
+                        <input type="checkbox" id="split-log-transaction" checked class="rounded border-slate-300 text-slate-900 focus:ring-0">
+                        <span>Record my personal share as an expense in transactions</span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" id="split-modal-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" id="split-modal-submit" class="px-5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
+                        <span>Create Split & Sync IOUs</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settle Up Modal -->
+    <div id="settle-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-2.5 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto transition-colors">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>⚡</span>
+                        <span>Settle Up with <span id="settle-modal-name"></span></span>
+                    </h3>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" id="settle-modal-desc">Clear balances and log transaction</p>
+                </div>
+                <button type="button" id="settle-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <div id="settle-modal-error" class="hidden mb-4 p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs rounded-xl font-medium"></div>
+
+            <form id="settle-form" class="space-y-4">
+                <input type="hidden" id="settle-contact-name" value="">
+
+                <!-- Net Balance Banner -->
+                <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-center">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-1">Net Balance</span>
+                    <p class="font-heading text-2xl font-extrabold text-slate-900 dark:text-white" id="settle-net-amount">0.00</p>
+                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 inline-block mt-1" id="settle-net-status">Alice owes you</span>
+                </div>
+
+                <!-- Settlement Mode Toggle -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Action</label>
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+                            <input type="radio" name="settle-mode" value="full" checked class="mt-0.5 text-emerald-600 focus:ring-0">
+                            <div>
+                                <span class="text-xs font-bold text-slate-900 dark:text-slate-100 block">Complete Settlement</span>
+                                <span class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight block mt-0.5">Mark all active debts with this person as fully settled.</span>
+                            </div>
+                        </label>
+                        <label id="settle-mode-offset-label" class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+                            <input type="radio" name="settle-mode" value="offset_only" class="mt-0.5 text-indigo-600 focus:ring-0">
+                            <div>
+                                <span class="text-xs font-bold text-slate-900 dark:text-slate-100 block">Mutual Offset Only (Simplify)</span>
+                                <span class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight block mt-0.5">Cancel overlapping mutual debts without cash moving; keep remainder active.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Wallet Account Selection -->
+                <div id="settle-wallet-section">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Wallet Account</label>
+                    <select id="settle-wallet-select" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium cursor-pointer">
+                        <option value="0">Default Wallet</option>
+                    </select>
+                </div>
+
+                <!-- Log Transaction Option -->
+                <div id="settle-log-tx-section">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300">
+                        <input type="checkbox" id="settle-log-transaction" checked class="rounded border-slate-300 text-slate-900 focus:ring-0">
+                        <span id="settle-log-desc">Record settlement transaction in wallet</span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" id="settle-modal-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" id="settle-modal-submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white rounded-xl transition-all shadow-sm cursor-pointer">
+                        Confirm Settle Up
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -535,18 +832,43 @@
             loadDebts();
         });
 
-        // Tab Switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => {
-                    b.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
-                    b.classList.add('text-slate-500', 'dark:text-slate-400');
-                });
-                btn.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
-                btn.classList.remove('text-slate-500', 'dark:text-slate-400');
-                activeTab = btn.dataset.tab;
-                renderDebts();
+        // Tab Switching Logic
+        function switchTab(tab) {
+            activeTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                if (b.dataset.tab === tab) {
+                    b.classList.add('bg-white', 'dark:bg-slate-900', 'text-slate-900', 'dark:text-white', 'shadow-xs', 'font-bold');
+                    b.classList.remove('text-slate-500', 'dark:text-slate-400', 'font-semibold');
+                } else {
+                    b.classList.remove('bg-white', 'dark:bg-slate-900', 'text-slate-900', 'dark:text-white', 'shadow-xs', 'font-bold');
+                    b.classList.add('text-slate-500', 'dark:text-slate-400', 'font-semibold');
+                }
             });
+
+            const debtsView = document.getElementById('debts-view');
+            const splitsView = document.getElementById('splits-view');
+            const settlementsView = document.getElementById('settlements-view');
+
+            if (tab === 'splits') {
+                debtsView.classList.add('hidden');
+                settlementsView.classList.add('hidden');
+                splitsView.classList.remove('hidden');
+                loadSplits();
+            } else if (tab === 'settlements') {
+                debtsView.classList.add('hidden');
+                splitsView.classList.add('hidden');
+                settlementsView.classList.remove('hidden');
+                loadSettlements();
+            } else {
+                splitsView.classList.add('hidden');
+                settlementsView.classList.add('hidden');
+                debtsView.classList.remove('hidden');
+                renderDebts();
+            }
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
         });
 
         // Search & Status filters
@@ -648,7 +970,7 @@
                 const initials = (d.person_name || '?').substring(0, 2).toUpperCase();
 
                 return `
-                    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-700 flex flex-col justify-between">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-700 flex flex-col justify-between">
                         <div>
                             <!-- Header: Person & Type Badge -->
                             <div class="flex items-start justify-between gap-3 mb-3">
@@ -916,8 +1238,724 @@
             confirmModal.classList.add('hidden');
         });
 
-        // Initial Load
+        // ─── Accounts Loader (for Wallets) ──────────────────────────────────
+        let userAccounts = [];
+        async function loadAccounts() {
+            try {
+                const res = await fetch('/api/accounts');
+                const data = await res.json().catch(() => ({}));
+                userAccounts = data.accounts || [];
+                
+                const splitWalletSelect = document.getElementById('split-wallet-select');
+                const settleWalletSelect = document.getElementById('settle-wallet-select');
+
+                if (splitWalletSelect && userAccounts.length > 0) {
+                    splitWalletSelect.innerHTML = userAccounts.map(a => 
+                        `<option value="${a.id}">${a.icon || '🏦'} ${escapeHtml(a.name)} (${fmtMoney(a.current_balance)})</option>`
+                    ).join('');
+                }
+                if (settleWalletSelect && userAccounts.length > 0) {
+                    settleWalletSelect.innerHTML = userAccounts.map(a => 
+                        `<option value="${a.id}">${a.icon || '🏦'} ${escapeHtml(a.name)} (${fmtMoney(a.current_balance)})</option>`
+                    ).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load accounts:', e);
+            }
+        }
+
+        // ─── Split Expenses Logic ─────────────────────────────────────────────
+        let allSplits = [];
+        let splitParticipants = [
+            { name: 'You', share: 0, isUser: true },
+            { name: '', share: 0, isUser: false }
+        ];
+        let currentSplitMode = 'equal';
+        let deleteSplitTargetId = null;
+
+        const btnSplitExpense = document.getElementById('btn-split-expense');
+        const btnSplitsNew = document.getElementById('btn-splits-new');
+        const splitModal = document.getElementById('split-modal');
+        const splitModalClose = document.getElementById('split-modal-close');
+        const splitModalCancel = document.getElementById('split-modal-cancel');
+        const splitForm = document.getElementById('split-form');
+
+        if (btnSplitExpense) btnSplitExpense.addEventListener('click', openSplitModal);
+        if (btnSplitsNew) btnSplitsNew.addEventListener('click', openSplitModal);
+        if (splitModalClose) splitModalClose.addEventListener('click', closeSplitModal);
+        if (splitModalCancel) splitModalCancel.addEventListener('click', closeSplitModal);
+
+        // Payer selector custom toggle
+        const splitPayerSelect = document.getElementById('split-payer-select');
+        const splitCustomPayerBox = document.getElementById('split-custom-payer-box');
+        if (splitPayerSelect && splitCustomPayerBox) {
+            splitPayerSelect.addEventListener('change', () => {
+                if (splitPayerSelect.value === 'other') {
+                    splitCustomPayerBox.classList.remove('hidden');
+                    document.getElementById('split-custom-payer').required = true;
+                } else {
+                    splitCustomPayerBox.classList.add('hidden');
+                    document.getElementById('split-custom-payer').required = false;
+                }
+            });
+        }
+
+        // Split Mode Selector
+        document.querySelectorAll('.split-mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.split-mode-btn').forEach(b => {
+                    b.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+                    b.classList.add('text-slate-500', 'dark:text-slate-400');
+                });
+                btn.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+                btn.classList.remove('text-slate-500', 'dark:text-slate-400');
+                currentSplitMode = btn.dataset.mode;
+                document.getElementById('split-mode-val').value = currentSplitMode;
+                renderParticipantsList();
+            });
+        });
+
+        // Add Participant
+        const btnAddParticipant = document.getElementById('btn-add-participant');
+        if (btnAddParticipant) {
+            btnAddParticipant.addEventListener('click', () => {
+                splitParticipants.push({ name: '', share: 0, isUser: false });
+                renderParticipantsList();
+            });
+        }
+
+        document.getElementById('split-total-amount').addEventListener('input', recalculateShares);
+
+        function openSplitModal() {
+            document.getElementById('split-modal-error').classList.add('hidden');
+            document.getElementById('split-title').value = '';
+            document.getElementById('split-total-amount').value = '';
+            document.getElementById('split-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('split-note').value = '';
+            splitPayerSelect.value = 'You';
+            splitCustomPayerBox.classList.add('hidden');
+
+            splitParticipants = [
+                { name: 'You', share: 0, isUser: true },
+                { name: '', share: 0, isUser: false }
+            ];
+            currentSplitMode = 'equal';
+            document.getElementById('split-mode-val').value = 'equal';
+            document.querySelectorAll('.split-mode-btn').forEach(b => {
+                if (b.dataset.mode === 'equal') {
+                    b.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+                    b.classList.remove('text-slate-500', 'dark:text-slate-400');
+                } else {
+                    b.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+                    b.classList.add('text-slate-500', 'dark:text-slate-400');
+                }
+            });
+
+            renderParticipantsList();
+            splitModal.classList.remove('hidden');
+        }
+
+        function closeSplitModal() {
+            splitModal.classList.add('hidden');
+        }
+
+        function renderParticipantsList() {
+            const listEl = document.getElementById('participants-list');
+            if (!listEl) return;
+
+            recalculateShares();
+
+            listEl.innerHTML = splitParticipants.map((p, idx) => {
+                const isUser = p.isUser;
+                const canRemove = splitParticipants.length > 2 && !isUser;
+
+                return `
+                <div class="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-slate-800/60 p-2 sm:p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 min-w-0">
+                    <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-xs font-bold shrink-0">
+                        ${isUser ? '👤' : (idx + 1)}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        ${isUser ? 
+                            `<span class="text-xs font-bold text-slate-800 dark:text-slate-100 px-1 sm:px-2 py-1 block truncate">You (Your Share)</span>` : 
+                            `<input type="text" placeholder="Friend's Name" value="${escapeHtml(p.name)}" oninput="updateParticipantName(${idx}, this.value)" required class="w-full px-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">`
+                        }
+                    </div>
+                    <div class="w-22 sm:w-28 shrink-0 relative">
+                        <input type="number" step="any" min="0" value="${p.share || 0}" 
+                            ${currentSplitMode === 'equal' ? 'readonly' : ''}
+                            oninput="updateParticipantShare(${idx}, this.value)"
+                            class="w-full pl-4 sm:pl-5 pr-1.5 sm:pr-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 text-right ${currentSplitMode === 'equal' ? 'opacity-80 bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : ''}">
+                        <span class="absolute left-1.5 top-1 text-[10px] text-slate-400 font-bold pointer-events-none">
+                            ${currentSplitMode === 'percent' ? '%' : currentCurrency}
+                        </span>
+                    </div>
+                    ${canRemove ? `
+                        <button type="button" onclick="removeParticipant(${idx})" class="p-1 text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer shrink-0" title="Remove">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    ` : `<div class="w-4 shrink-0"></div>`}
+                </div>
+                `;
+            }).join('');
+
+            updateBalancePill();
+        }
+
+        window.updateParticipantName = function(idx, val) {
+            splitParticipants[idx].name = val;
+        };
+
+        window.updateParticipantShare = function(idx, val) {
+            splitParticipants[idx].share = parseFloat(val) || 0;
+            updateBalancePill();
+        };
+
+        window.removeParticipant = function(idx) {
+            if (splitParticipants.length <= 2) return;
+            splitParticipants.splice(idx, 1);
+            renderParticipantsList();
+        };
+
+        function recalculateShares() {
+            const total = parseFloat(document.getElementById('split-total-amount').value) || 0;
+            const count = splitParticipants.length;
+
+            if (currentSplitMode === 'equal') {
+                if (total > 0 && count > 0) {
+                    const each = Math.floor((total / count) * 100) / 100;
+                    const remainder = Math.round((total - (each * count)) * 100) / 100;
+                    splitParticipants.forEach((p, i) => {
+                        // User absorbs the 1 or 2 cents rounding remainder
+                        p.share = i === 0 ? Number((each + remainder).toFixed(2)) : each;
+                    });
+                } else {
+                    splitParticipants.forEach(p => p.share = 0);
+                }
+            }
+        }
+
+        function updateBalancePill() {
+            const total = parseFloat(document.getElementById('split-total-amount').value) || 0;
+            const pillText = document.getElementById('split-balance-text');
+            const pillStatus = document.getElementById('split-balance-status');
+            const pill = document.getElementById('split-balance-pill');
+
+            if (total <= 0) {
+                pillText.textContent = 'Enter total amount to calculate shares';
+                pillStatus.textContent = '--';
+                pill.className = 'mt-2.5 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-xs flex items-center justify-between font-medium text-slate-500';
+                return;
+            }
+
+            if (currentSplitMode === 'equal') {
+                const count = splitParticipants.length;
+                pillText.textContent = `Split evenly: ${fmtMoney(splitParticipants[0].share)} / person`;
+                pillStatus.textContent = `(${count} people) ✓`;
+                pill.className = 'mt-2.5 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-between font-medium border border-emerald-200/80 dark:border-emerald-800/60';
+            } else if (currentSplitMode === 'exact') {
+                let allocated = 0;
+                splitParticipants.forEach(p => allocated += (Number(p.share) || 0));
+                allocated = Math.round(allocated * 100) / 100;
+                const diff = Math.round((total - allocated) * 100) / 100;
+
+                pillText.textContent = `Allocated: ${fmtMoney(allocated)} of ${fmtMoney(total)}`;
+                if (Math.abs(diff) < 0.05) {
+                    pillStatus.textContent = 'Balanced ✓';
+                    pill.className = 'mt-2.5 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-between font-medium border border-emerald-200/80 dark:border-emerald-800/60';
+                } else if (diff > 0) {
+                    pillStatus.textContent = `${fmtMoney(diff)} remaining`;
+                    pill.className = 'mt-2.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between font-medium border border-amber-200/80 dark:border-amber-800/60';
+                } else {
+                    pillStatus.textContent = `${fmtMoney(-diff)} over budget`;
+                    pill.className = 'mt-2.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between font-medium border border-rose-200/80 dark:border-rose-800/60';
+                }
+            } else if (currentSplitMode === 'percent') {
+                let totalPct = 0;
+                splitParticipants.forEach(p => totalPct += (Number(p.share) || 0));
+                totalPct = Math.round(totalPct * 10) / 10;
+                const diff = 100 - totalPct;
+
+                pillText.textContent = `Total Allocation: ${totalPct}%`;
+                if (Math.abs(diff) < 0.5) {
+                    pillStatus.textContent = '100% Balanced ✓';
+                    pill.className = 'mt-2.5 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-between font-medium border border-emerald-200/80 dark:border-emerald-800/60';
+                } else if (diff > 0) {
+                    pillStatus.textContent = `${diff}% remaining`;
+                    pill.className = 'mt-2.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between font-medium border border-amber-200/80 dark:border-amber-800/60';
+                } else {
+                    pillStatus.textContent = `${-diff}% over 100%`;
+                    pill.className = 'mt-2.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between font-medium border border-rose-200/80 dark:border-rose-800/60';
+                }
+            }
+        }
+
+        splitForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('split-modal-error');
+            errEl.classList.add('hidden');
+
+            const title = document.getElementById('split-title').value.trim();
+            const total = parseFloat(document.getElementById('split-total-amount').value) || 0;
+            const category = document.getElementById('split-category').value;
+            const date = document.getElementById('split-date').value;
+            const payerChoice = splitPayerSelect.value;
+            const customPayer = document.getElementById('split-custom-payer').value.trim();
+            const payerName = payerChoice === 'You' ? 'You' : customPayer;
+            const payerIsUser = payerChoice === 'You';
+            const walletId = parseInt(document.getElementById('split-wallet-select').value) || 0;
+            const note = document.getElementById('split-note').value.trim();
+            const logTx = document.getElementById('split-log-transaction').checked;
+
+            // Compute participant shares in currency
+            const payloadParticipants = splitParticipants.map(p => {
+                let shareAmount = p.share;
+                if (currentSplitMode === 'percent') {
+                    shareAmount = Math.round((total * (p.share / 100)) * 100) / 100;
+                }
+                return {
+                    name: p.isUser ? 'You' : p.name.trim(),
+                    share_amount: shareAmount,
+                    is_user: p.isUser
+                };
+            });
+
+            // Validate all names filled
+            for (const p of payloadParticipants) {
+                if (!p.name) {
+                    errEl.textContent = 'Please provide a name for all participants';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            const body = {
+                title,
+                total_amount: total,
+                payer_name: payerName,
+                payer_is_user: payerIsUser,
+                category,
+                date,
+                split_type: currentSplitMode,
+                note,
+                log_transaction: logTx,
+                account_id: walletId,
+                participants: payloadParticipants
+            };
+
+            try {
+                const res = await fetch('/api/splits', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errEl.textContent = data.error || 'Failed to create split expense';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+
+                closeSplitModal();
+                showToast(`Split "${title}" created and IOUs generated!`);
+                await loadSplits();
+                await loadDebts();
+            } catch (err) {
+                errEl.textContent = 'Network error. Please try again.';
+                errEl.classList.remove('hidden');
+            }
+        });
+
+        async function loadSplits() {
+            try {
+                const res = await fetch('/api/splits');
+                const data = await res.json().catch(() => ({}));
+                allSplits = data.splits || [];
+                
+                const countBadge = document.getElementById('tab-splits-count');
+                if (countBadge) {
+                    countBadge.textContent = allSplits.length;
+                    if (allSplits.length > 0) countBadge.classList.remove('hidden');
+                    else countBadge.classList.add('hidden');
+                }
+
+                renderSplits();
+            } catch (e) {
+                console.error('Failed to load splits:', e);
+            }
+        }
+
+        function renderSplits() {
+            const listEl = document.getElementById('splits-list');
+            const emptyEl = document.getElementById('splits-empty');
+            if (!listEl || !emptyEl) return;
+
+            if (allSplits.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = allSplits.map(s => {
+                const participants = s.participants || [];
+                const settledPct = s.total_count > 0 ? Math.round((s.settled_count / s.total_count) * 100) : 0;
+
+                return `
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3 mb-3">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-1">
+                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                        ${escapeHtml(s.category)}
+                                    </span>
+                                    <span class="text-[11px] text-slate-400 font-medium">${s.date_fmt}</span>
+                                    ${s.is_settled ? 
+                                        `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">All Settled ✓</span>` : 
+                                        `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">${s.settled_count}/${s.total_count} Settled</span>`
+                                    }
+                                </div>
+                                <h3 class="font-heading font-bold text-base sm:text-lg text-slate-900 dark:text-white leading-snug break-words">
+                                    ${escapeHtml(s.title)}
+                                </h3>
+                            </div>
+                            <div class="flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-start gap-1 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80">
+                                <span class="text-xs text-slate-400 font-medium sm:hidden">Total Bill:</span>
+                                <div class="text-right">
+                                    <span class="font-heading text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white block">
+                                        ${fmtMoney(s.total_amount)}
+                                    </span>
+                                    <span class="text-[11px] font-semibold text-slate-400 block">
+                                        ${s.payer_is_user ? 'Paid by You' : `Paid by ${escapeHtml(s.payer_name)}`}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${s.note ? `<p class="text-xs text-slate-500 dark:text-slate-400 mb-3 bg-slate-50 dark:bg-slate-800/40 p-2 rounded-xl">${escapeHtml(s.note)}</p>` : ''}
+
+                        <!-- Progress Bar -->
+                        <div class="mb-3">
+                            <div class="flex items-center justify-between text-[11px] text-slate-400 font-semibold mb-1">
+                                <span>Settlement Progress</span>
+                                <span>${settledPct}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: ${settledPct}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Participants Chips -->
+                        <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Participants Breakdown</span>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                ${participants.map(p => `
+                                    <div class="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs min-w-0">
+                                        <div class="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                                            <span class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                ${p.is_user ? '👤' : escapeHtml(p.name.charAt(0).toUpperCase())}
+                                            </span>
+                                            <span class="font-semibold text-slate-700 dark:text-slate-300 truncate">${escapeHtml(p.name)}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <span class="font-bold text-slate-900 dark:text-white">${fmtMoney(p.share_amount)}</span>
+                                            ${p.status === 'settled' ? 
+                                                `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300">Settled</span>` : 
+                                                `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300">Pending</span>`
+                                            }
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Controls -->
+                    <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-[11px] text-slate-400">
+                            Your portion: <strong class="text-slate-700 dark:text-slate-300">${fmtMoney(s.user_share)}</strong>
+                        </span>
+                        <button type="button" onclick="deleteSplitExpense(${s.id})" class="text-rose-500 hover:text-rose-600 text-xs font-semibold flex items-center gap-1 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <span>Delete Split</span>
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        window.deleteSplitExpense = async function(id) {
+            if (!confirm('Are you sure you want to delete this split expense? Any linked IOUs will also be removed.')) return;
+            try {
+                const res = await fetch(`/api/splits/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Split expense removed');
+                    await loadSplits();
+                    await loadDebts();
+                } else {
+                    showToast('Failed to delete split', '✕');
+                }
+            } catch (e) {
+                showToast('Network error', '✕');
+            }
+        };
+
+        // ─── Settlement Calculator & Mutual Netting Logic ──────────────────────
+        let allSettlements = null;
+        const settleModal = document.getElementById('settle-modal');
+        const settleModalClose = document.getElementById('settle-modal-close');
+        const settleModalCancel = document.getElementById('settle-modal-cancel');
+        const settleForm = document.getElementById('settle-form');
+
+        if (settleModalClose) settleModalClose.addEventListener('click', closeSettleModal);
+        if (settleModalCancel) settleModalCancel.addEventListener('click', closeSettleModal);
+
+        async function loadSettlements() {
+            try {
+                const res = await fetch('/api/settlements');
+                const data = await res.json().catch(() => ({}));
+                allSettlements = data;
+
+                // Update Overview Banner
+                document.getElementById('settle-kpi-receivable').textContent = fmtMoney(data.total_receivable_net || 0);
+                document.getElementById('settle-kpi-payable').textContent = fmtMoney(data.total_payable_net || 0);
+
+                const net = data.overall_net || 0;
+                const netEl = document.getElementById('settle-kpi-overall');
+                netEl.textContent = (net >= 0 ? '+' : '') + fmtMoney(net);
+                if (net > 0) {
+                    netEl.className = 'font-heading text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1';
+                    document.getElementById('settle-kpi-desc').textContent = 'Overall: Friends owe you net';
+                } else if (net < 0) {
+                    netEl.className = 'font-heading text-xl sm:text-2xl font-extrabold text-rose-500 dark:text-rose-400 mt-1';
+                    document.getElementById('settle-kpi-desc').textContent = 'Overall: You owe friends net';
+                } else {
+                    netEl.className = 'font-heading text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1';
+                    document.getElementById('settle-kpi-desc').textContent = 'Overall: Perfectly squared up';
+                }
+
+                const badge = document.getElementById('tab-settlements-badge');
+                if (badge) {
+                    const count = data.contacts_count || 0;
+                    badge.textContent = count;
+                    if (count > 0) badge.classList.remove('hidden');
+                    else badge.classList.add('hidden');
+                }
+
+                renderSettlements();
+            } catch (e) {
+                console.error('Failed to load settlements:', e);
+            }
+        }
+
+        function renderSettlements() {
+            const listEl = document.getElementById('settlements-list');
+            const emptyEl = document.getElementById('settlements-empty');
+            if (!listEl || !emptyEl || !allSettlements) return;
+
+            const contacts = allSettlements.contacts || [];
+            if (contacts.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = contacts.map(c => {
+                const hasMutual = c.they_owe_you > 0 && c.you_owe_them > 0;
+                const offsetAmt = Math.min(c.they_owe_you, c.you_owe_them);
+                const net = c.net_amount;
+
+                let netBadge = '';
+                if (net > 0.005) {
+                    netBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                        <span>Owes you ${fmtMoney(net)}</span>
+                    </span>`;
+                } else if (net < -0.005) {
+                    netBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
+                        <span>You owe ${fmtMoney(-net)}</span>
+                    </span>`;
+                } else {
+                    netBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                        Squared Up (${fmtMoney(0)})
+                    </span>`;
+                }
+
+                return `
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between">
+                    <div>
+                        <!-- Contact Header -->
+                        <div class="flex items-center gap-3 mb-3 sm:mb-4">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-heading font-extrabold text-sm sm:text-base flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900/60">
+                                ${escapeHtml(c.contact_name.charAt(0).toUpperCase())}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">
+                                    ${escapeHtml(c.contact_name)}
+                                </h3>
+                                <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate block">
+                                    ${c.active_debts ? c.active_debts.length : 0} open debts / split items
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Mutual Debt Breakdown -->
+                        <div class="grid grid-cols-2 gap-2 mb-3 sm:mb-3.5">
+                            <div class="p-2 sm:p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 min-w-0">
+                                <span class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block mb-0.5 truncate">They Owe You</span>
+                                <span class="font-heading text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block truncate">
+                                    ${fmtMoney(c.they_owe_you)}
+                                </span>
+                            </div>
+                            <div class="p-2 sm:p-2.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 min-w-0">
+                                <span class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400 block mb-0.5 truncate">You Owe Them</span>
+                                <span class="font-heading text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 block truncate">
+                                    ${fmtMoney(c.you_owe_them)}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Net Badge -->
+                        <div class="mb-3 sm:mb-4 flex items-center justify-between gap-2 flex-wrap">
+                            <span class="text-xs text-slate-400 font-semibold">Net Balance:</span>
+                            ${netBadge}
+                        </div>
+                    </div>
+
+                    <!-- Action Controls -->
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                        ${hasMutual ? `
+                            <button type="button" onclick="simplifyOffset('${escapeHtml(c.contact_name)}')" class="w-full py-2.5 px-3 text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5-5"/></svg>
+                                <span>Simplify & Offset (${fmtMoney(offsetAmt)})</span>
+                            </button>
+                        ` : ''}
+
+                        <button type="button" onclick="openSettleModal('${escapeHtml(c.contact_name)}', ${net}, ${hasMutual})" class="w-full py-2.5 px-3 text-xs font-semibold bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white rounded-xl transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Settle Up (${fmtMoney(Math.abs(net))})</span>
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        window.simplifyOffset = async function(contactName) {
+            if (!confirm(`Offset and simplify mutual debts with ${contactName}? This eliminates overlapping debt without exchanging cash.`)) return;
+            try {
+                const res = await fetch('/api/settlements/settle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contact_name: contactName,
+                        mode: 'offset_only',
+                        log_transaction: false
+                    })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showToast(data.error || 'Failed to simplify debts', '✕');
+                    return;
+                }
+                showToast(data.message || `Debts with ${contactName} simplified!`);
+                await loadSettlements();
+                await loadDebts();
+            } catch (e) {
+                showToast('Network error', '✕');
+            }
+        };
+
+        function openSettleModal(contactName, netAmount, hasMutual) {
+            document.getElementById('settle-modal-error').classList.add('hidden');
+            document.getElementById('settle-contact-name').value = contactName;
+            document.getElementById('settle-modal-name').textContent = contactName;
+            document.getElementById('settle-net-amount').textContent = fmtMoney(Math.abs(netAmount));
+
+            const statusEl = document.getElementById('settle-net-status');
+            const logDescEl = document.getElementById('settle-log-desc');
+            const offsetOption = document.getElementById('settle-mode-offset-label');
+
+            if (hasMutual) {
+                offsetOption.classList.remove('hidden');
+            } else {
+                offsetOption.classList.add('hidden');
+            }
+
+            if (netAmount > 0.005) {
+                statusEl.textContent = `${contactName} pays you ${fmtMoney(netAmount)}`;
+                statusEl.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400 inline-block mt-1';
+                logDescEl.textContent = `Record ${fmtMoney(netAmount)} as Income into selected wallet`;
+            } else if (netAmount < -0.005) {
+                statusEl.textContent = `You pay ${contactName} ${fmtMoney(-netAmount)}`;
+                statusEl.className = 'text-xs font-semibold text-rose-600 dark:text-rose-400 inline-block mt-1';
+                logDescEl.textContent = `Record ${fmtMoney(-netAmount)} as Expense from selected wallet`;
+            } else {
+                statusEl.textContent = `Mutual debts already offset to ${fmtMoney(0)}`;
+                statusEl.className = 'text-xs font-semibold text-slate-500 inline-block mt-1';
+                logDescEl.textContent = `No transaction needed (zero net balance)`;
+            }
+
+            settleModal.classList.remove('hidden');
+        }
+
+        function closeSettleModal() {
+            settleModal.classList.add('hidden');
+        }
+
+        settleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('settle-modal-error');
+            errEl.classList.add('hidden');
+
+            const contactName = document.getElementById('settle-contact-name').value;
+            const mode = document.querySelector('input[name="settle-mode"]:checked')?.value || 'full';
+            const walletId = parseInt(document.getElementById('settle-wallet-select').value) || 0;
+            const logTx = document.getElementById('settle-log-transaction').checked;
+
+            try {
+                const res = await fetch('/api/settlements/settle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contact_name: contactName,
+                        mode,
+                        account_id: walletId,
+                        log_transaction: logTx
+                    })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errEl.textContent = data.error || 'Failed to settle debts';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+
+                closeSettleModal();
+                showToast(data.message || `Account with ${contactName} settled!`);
+                await loadSettlements();
+                await loadDebts();
+                await loadSplits();
+            } catch (err) {
+                errEl.textContent = 'Network error. Please try again.';
+                errEl.classList.remove('hidden');
+            }
+        });
+
+        // ─── Initial Load & Query Param Router ────────────────────────────────
+        loadAccounts();
         loadDebts();
+        loadSplits();
+        loadSettlements();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam && ['all', 'owing_me', 'i_owe', 'splits', 'settlements'].includes(tabParam)) {
+            switchTab(tabParam);
+        }
     </script>
 </body>
 </html>

@@ -86,6 +86,14 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/debts", app.HandleDebtsAPI)
 	app.Mux.HandleFunc("/api/debts/", app.HandleDebtByID)
 
+	// Split Expenses & Shared IOUs APIs
+	app.Mux.HandleFunc("/api/splits", app.HandleSplitsAPI)
+	app.Mux.HandleFunc("/api/splits/", app.HandleSplitByID)
+
+	// Settlement Calculator & Mutual Netting APIs
+	app.Mux.HandleFunc("/api/settlements", app.HandleSettlementOverviewAPI)
+	app.Mux.HandleFunc("/api/settlements/settle", app.HandleSettleContactDebtsAPI)
+
 	// Subscriptions & Recurring Bills APIs
 	app.Mux.HandleFunc("/api/subscriptions", app.HandleSubscriptionsAPI)
 	app.Mux.HandleFunc("/api/subscriptions/", app.HandleSubscriptionByID)
@@ -2049,6 +2057,209 @@ func (app *App) HandleAccountTransfersListAPI(w http.ResponseWriter, r *http.Req
 	jsonOK(w, map[string]any{"transfers": transfers})
 }
 
+// ─── Split Expenses & Shared IOUs Handlers ─────────────────────────────────
 
+func (app *App) HandleSplitsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
 
+	switch r.Method {
+	case http.MethodGet:
+		splits, err := app.DB.GetSplits(username)
+		if err != nil {
+			jsonError(w, "failed to get split expenses", http.StatusInternalServerError)
+			return
+		}
+		if splits == nil {
+			splits = []SplitExpense{}
+		}
+		jsonOK(w, map[string]any{"splits": splits})
+
+	case http.MethodPost:
+		type SplitReq struct {
+			Title          string                  `json:"title"`
+			TotalAmount    float64                 `json:"total_amount"`
+			PayerName      string                  `json:"payer_name"`
+			PayerIsUser    bool                    `json:"payer_is_user"`
+			Category       string                  `json:"category"`
+			Date           string                  `json:"date"`
+			SplitType      string                  `json:"split_type"`
+			Note           string                  `json:"note"`
+			LogTransaction bool                    `json:"log_transaction"`
+			AccountID      int                     `json:"account_id"`
+			Participants   []SplitParticipantInput `json:"participants"`
+		}
+
+		var req SplitReq
+		contentType := r.Header.Get("Content-Type")
+		if strings.Contains(contentType, "application/json") {
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, "invalid JSON payload: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+		} else {
+			_ = r.ParseMultipartForm(1 << 20)
+			req.Title = r.FormValue("title")
+			req.TotalAmount, _ = strconv.ParseFloat(r.FormValue("total_amount"), 64)
+			req.PayerName = r.FormValue("payer_name")
+			req.PayerIsUser = (r.FormValue("payer_is_user") == "1" || r.FormValue("payer_is_user") == "true")
+			req.Category = r.FormValue("category")
+			req.Date = r.FormValue("date")
+			req.SplitType = r.FormValue("split_type")
+			req.Note = r.FormValue("note")
+			req.LogTransaction = (r.FormValue("log_transaction") == "1" || r.FormValue("log_transaction") == "true")
+			req.AccountID, _ = strconv.Atoi(r.FormValue("account_id"))
+			partsJSON := r.FormValue("participants")
+			if partsJSON != "" {
+				_ = json.Unmarshal([]byte(partsJSON), &req.Participants)
+			}
+		}
+
+		if req.Title == "" || req.TotalAmount <= 0 {
+			jsonError(w, "title and total amount must be specified", http.StatusBadRequest)
+			return
+		}
+		if len(req.Participants) < 2 {
+			jsonError(w, "at least 2 participants are required to split an expense", http.StatusBadRequest)
+			return
+		}
+
+		var dt time.Time
+		if req.Date != "" {
+			if parsed, err := time.Parse("2006-01-02", req.Date); err == nil {
+				dt = parsed
+			}
+		}
+		if dt.IsZero() {
+			dt = time.Now()
+		}
+
+		split, err := app.DB.CreateSplitExpense(
+			username, req.Title, req.Category, req.Note,
+			req.TotalAmount, dt, req.PayerName, req.PayerIsUser,
+			req.SplitType, req.Participants, req.LogTransaction, req.AccountID,
+		)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		jsonOK(w, split)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleSplitByID(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/splits/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		jsonError(w, "invalid split ID", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		split, err := app.DB.GetSplitByID(id, username)
+		if err != nil {
+			jsonError(w, "split expense not found", http.StatusNotFound)
+			return
+		}
+		jsonOK(w, split)
+
+	case http.MethodDelete:
+		deleted, err := app.DB.DeleteSplit(id, username)
+		if err != nil || !deleted {
+			jsonError(w, "failed to delete split expense", http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, map[string]any{"deleted": true, "id": id})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleSettlementOverviewAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	overview, err := app.DB.GetSettlementOverview(username)
+	if err != nil {
+		jsonError(w, "failed to calculate settlements: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, overview)
+}
+
+func (app *App) HandleSettleContactDebtsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	type SettleReq struct {
+		ContactName    string `json:"contact_name"`
+		Mode           string `json:"mode"`
+		AccountID      int    `json:"account_id"`
+		LogTransaction bool   `json:"log_transaction"`
+	}
+
+	var req SettleReq
+	contentType := r.Header.Get("Content-Type")
+	if strings.Contains(contentType, "application/json") {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, "invalid JSON payload", http.StatusBadRequest)
+			return
+		}
+	} else {
+		_ = r.ParseMultipartForm(1 << 20)
+		req.ContactName = r.FormValue("contact_name")
+		req.Mode = r.FormValue("mode")
+		req.AccountID, _ = strconv.Atoi(r.FormValue("account_id"))
+		req.LogTransaction = (r.FormValue("log_transaction") == "1" || r.FormValue("log_transaction") == "true")
+	}
+
+	if req.ContactName == "" {
+		jsonError(w, "contact name is required", http.StatusBadRequest)
+		return
+	}
+	if req.Mode == "" {
+		req.Mode = "full"
+	}
+
+	res, err := app.DB.SettleContactDebts(username, req.ContactName, req.Mode, req.AccountID, req.LogTransaction)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	jsonOK(w, res)
+}
 
