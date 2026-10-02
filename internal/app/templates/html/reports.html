@@ -208,14 +208,13 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 
                 <!-- Timeframe Quick Pills (Horizontal Touch Carousel) -->
-                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0" id="timeframe-pills">
-                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:bg-emerald-600 shadow-xs" data-tf="this_month">This Month</button>
-                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="last_month">Last Month</button>
-                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="3m">3 Months</button>
-                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="6m">6 Months</button>
-                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="ytd">YTD</button>
-                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="all">All Time</button>
-                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="custom">Custom...</button>
+                <div class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0" id="timeframe-pills">
+                    <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:bg-emerald-600 shadow-xs" data-tf="this_month">This Month</button>
+                    <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="3m">3 Months</button>
+                    <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="6m">6 Months</button>
+                    <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="ytd">YTD</button>
+                    <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="all">All Time</button>
+                    <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="custom">Custom...</button>
                 </div>
 
                 <!-- Secondary Filters: Account & Category -->
@@ -589,9 +588,9 @@
             activeTimeframe = tf;
 
             document.querySelectorAll('.timeframe-btn').forEach(b => {
-                b.className = 'timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300';
+                b.className = 'timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300';
             });
-            btn.className = 'timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:bg-emerald-600 shadow-xs';
+            btn.className = 'timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:bg-emerald-600 shadow-xs';
 
             const customContainer = document.getElementById('custom-date-container');
             if (tf === 'custom') {
