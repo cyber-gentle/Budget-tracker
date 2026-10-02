@@ -1750,10 +1750,13 @@ type Category struct {
 	ID        int       `json:"id"`
 	Username  string    `json:"username"`
 	Name      string    `json:"name"`
+	Label     string    `json:"label"`
 	Slug      string    `json:"slug"`
+	Key       string    `json:"key"`
 	Type      string    `json:"type"` // "expense" or "income"
 	Color     string    `json:"color"`
 	Emoji     string    `json:"emoji"`
+	Icon      string    `json:"icon"`
 	IsDefault bool      `json:"is_default"`
 	TxCount   int       `json:"tx_count"`
 	CreatedAt time.Time `json:"created_at"`
@@ -1842,6 +1845,9 @@ func (s *DBStore) GetCategories(username string) ([]Category, error) {
 		if err := rows.Scan(&cat.ID, &cat.Username, &cat.Name, &cat.Slug, &cat.Type, &cat.Color, &cat.Emoji, &cat.IsDefault, &cat.CreatedAt); err != nil {
 			continue
 		}
+		cat.Label = cat.Name
+		cat.Key = cat.Slug
+		cat.Icon = cat.Emoji
 		cat.TxCount = txCounts[strings.ToLower(cat.Slug)]
 		if cat.TxCount == 0 {
 			cat.TxCount = txCounts[strings.ToLower(cat.Name)]
@@ -1899,10 +1905,13 @@ func (s *DBStore) CreateCategory(username, name, catType, emoji, color string) (
 		ID:        int(id),
 		Username:  username,
 		Name:      name,
+		Label:     name,
 		Slug:      slug,
+		Key:       slug,
 		Type:      catType,
 		Color:     color,
 		Emoji:     emoji,
+		Icon:      emoji,
 		IsDefault: false,
 		TxCount:   0,
 		CreatedAt: now,
@@ -1937,7 +1946,10 @@ func (s *DBStore) UpdateCategory(id int, username, name, emoji, color string) (*
 	}
 
 	cat.Name = name
+	cat.Label = name
+	cat.Key = cat.Slug
 	cat.Emoji = emoji
+	cat.Icon = emoji
 	cat.Color = color
 	return &cat, nil
 }
