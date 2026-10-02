@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -153,15 +154,28 @@ func (s *DBStore) migrate() error {
 		created_at DATETIME
 	);
 	CREATE INDEX IF NOT EXISTS idx_contributions_goal ON goal_contributions(goal_id);
+	CREATE TABLE IF NOT EXISTS categories (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		name TEXT NOT NULL,
+		slug TEXT NOT NULL,
+		type TEXT NOT NULL,
+		color TEXT DEFAULT '#10B981',
+		emoji TEXT DEFAULT '🏷️',
+		is_default BOOLEAN DEFAULT 0,
+		created_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_categories_user ON categories(username);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
 	}
 
-	// Migrate existing users table if columns don't exist
+	// Migrate existing tables if columns don't exist
 	_, _ = s.db.Exec("ALTER TABLE users ADD COLUMN email TEXT")
 	_, _ = s.db.Exec("ALTER TABLE users ADD COLUMN full_name TEXT DEFAULT ''")
 	_, _ = s.db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+	_, _ = s.db.Exec("ALTER TABLE transactions ADD COLUMN tags TEXT DEFAULT ''")
 
 	return nil
 }
@@ -417,7 +431,29 @@ func (s *DBStore) UpdateProfile(username, fullName, email, currency, currentPass
 
 // ─── Transaction Methods ───────────────────────────────────────────────────
 
-func (s *DBStore) AddTransaction(username string, amount float64, category, note, txnType string, optDate ...time.Time) error {
+func parseTags(tags string) (string, []string) {
+	tags = strings.TrimSpace(tags)
+	if tags == "" {
+		return "", []string{}
+	}
+	parts := strings.FieldsFunc(tags, func(r rune) bool {
+		return r == ',' || r == ';'
+	})
+	var cleaned []string
+	seen := make(map[string]bool)
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		p = strings.TrimPrefix(p, "#")
+		p = strings.ToLower(p)
+		if p != "" && !seen[p] {
+			seen[p] = true
+			cleaned = append(cleaned, p)
+		}
+	}
+	return strings.Join(cleaned, ","), cleaned
+}
+
+func (s *DBStore) AddTransactionWithTags(username string, amount float64, category, note, txnType, tags string, optDate ...time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -426,29 +462,37 @@ func (s *DBStore) AddTransaction(username string, amount float64, category, note
 		txDate = optDate[0]
 	}
 
+	cleanTags, _ := parseTags(tags)
+
 	_, err := s.db.Exec(
-		"INSERT INTO transactions (username, amount, category, note, date, type) VALUES (?, ?, ?, ?, ?, ?)",
-		username, amount, category, note, txDate, txnType,
+		"INSERT INTO transactions (username, amount, category, note, date, type, tags) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		username, amount, category, note, txDate, txnType, cleanTags,
 	)
 	return err
 }
 
-func (s *DBStore) UpdateTransaction(id int, username string, amount float64, category, note, txnType string, optDate ...time.Time) (bool, error) {
+func (s *DBStore) AddTransaction(username string, amount float64, category, note, txnType string, optDate ...time.Time) error {
+	return s.AddTransactionWithTags(username, amount, category, note, txnType, "", optDate...)
+}
+
+func (s *DBStore) UpdateTransactionWithTags(id int, username string, amount float64, category, note, txnType, tags string, optDate ...time.Time) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	cleanTags, _ := parseTags(tags)
 
 	var res sql.Result
 	var err error
 
 	if len(optDate) > 0 && !optDate[0].IsZero() {
 		res, err = s.db.Exec(
-			"UPDATE transactions SET amount = ?, category = ?, note = ?, type = ?, date = ? WHERE id = ? AND username = ?",
-			amount, category, note, txnType, optDate[0], id, username,
+			"UPDATE transactions SET amount = ?, category = ?, note = ?, type = ?, tags = ?, date = ? WHERE id = ? AND username = ?",
+			amount, category, note, txnType, cleanTags, optDate[0], id, username,
 		)
 	} else {
 		res, err = s.db.Exec(
-			"UPDATE transactions SET amount = ?, category = ?, note = ?, type = ? WHERE id = ? AND username = ?",
-			amount, category, note, txnType, id, username,
+			"UPDATE transactions SET amount = ?, category = ?, note = ?, type = ?, tags = ? WHERE id = ? AND username = ?",
+			amount, category, note, txnType, cleanTags, id, username,
 		)
 	}
 
@@ -457,6 +501,10 @@ func (s *DBStore) UpdateTransaction(id int, username string, amount float64, cat
 	}
 	affected, _ := res.RowsAffected()
 	return affected > 0, nil
+}
+
+func (s *DBStore) UpdateTransaction(id int, username string, amount float64, category, note, txnType string, optDate ...time.Time) (bool, error) {
+	return s.UpdateTransactionWithTags(id, username, amount, category, note, txnType, "", optDate...)
 }
 
 func (s *DBStore) DeleteTransaction(id int, username string) (bool, error) {
@@ -476,7 +524,7 @@ func (s *DBStore) GetTransactions(username string) ([]Transaction, error) {
 	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
-		"SELECT id, amount, category, note, date, type FROM transactions WHERE username = ? ORDER BY date DESC, id DESC",
+		"SELECT id, amount, category, note, date, type, COALESCE(tags, '') FROM transactions WHERE username = ? ORDER BY date DESC, id DESC",
 		username,
 	)
 	if err != nil {
@@ -487,13 +535,66 @@ func (s *DBStore) GetTransactions(username string) ([]Transaction, error) {
 	var txs []Transaction
 	for rows.Next() {
 		var t Transaction
-		if err := rows.Scan(&t.ID, &t.Amount, &t.Category, &t.Note, &t.Date, &t.Type); err != nil {
+		var rawTags string
+		if err := rows.Scan(&t.ID, &t.Amount, &t.Category, &t.Note, &t.Date, &t.Type, &rawTags); err != nil {
 			log.Printf("scan error: %v", err)
 			continue
 		}
+		t.Tags = rawTags
+		if rawTags != "" {
+			_, t.TagList = parseTags(rawTags)
+		} else {
+			t.TagList = []string{}
+		}
 		txs = append(txs, t)
 	}
+	if txs == nil {
+		txs = []Transaction{}
+	}
 	return txs, nil
+}
+
+func (s *DBStore) GetPopularTags(username string) ([]string, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query("SELECT tags FROM transactions WHERE username = ? AND tags != ''", username)
+	if err != nil {
+		return []string{}, err
+	}
+	defer rows.Close()
+
+	counts := make(map[string]int)
+	for rows.Next() {
+		var raw string
+		if err := rows.Scan(&raw); err == nil {
+			_, list := parseTags(raw)
+			for _, tag := range list {
+				counts[tag]++
+			}
+		}
+	}
+
+	type tagCount struct {
+		tag   string
+		count int
+	}
+	var sorted []tagCount
+	for k, v := range counts {
+		sorted = append(sorted, tagCount{k, v})
+	}
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].count > sorted[j].count
+	})
+
+	var result []string
+	for _, tc := range sorted {
+		result = append(result, tc.tag)
+	}
+	if result == nil {
+		result = []string{}
+	}
+	return result, nil
 }
 
 // ─── Budget Methods ────────────────────────────────────────────────────────
@@ -1642,3 +1743,227 @@ func (s *DBStore) WithdrawFromGoal(id int, username string, amount float64, note
 
 	return &g, nil
 }
+
+// ─── Custom Categories & Tags ───────────────────────────────────────────────
+
+type Category struct {
+	ID        int       `json:"id"`
+	Username  string    `json:"username"`
+	Name      string    `json:"name"`
+	Slug      string    `json:"slug"`
+	Type      string    `json:"type"` // "expense" or "income"
+	Color     string    `json:"color"`
+	Emoji     string    `json:"emoji"`
+	IsDefault bool      `json:"is_default"`
+	TxCount   int       `json:"tx_count"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+var defaultCategoryPresets = []struct {
+	Name  string
+	Slug  string
+	Type  string
+	Color string
+	Emoji string
+}{
+	// Expense
+	{"Food & Dining", "food", "expense", "#F59E0B", "🍔"},
+	{"Transportation", "transport", "expense", "#3B82F6", "🚗"},
+	{"Housing & Utilities", "housing", "expense", "#8B5CF6", "🏠"},
+	{"Entertainment", "entertainment", "expense", "#EC4899", "🎬"},
+	{"Shopping & Retail", "shopping", "expense", "#10B981", "🛍️"},
+	{"Healthcare & Medical", "healthcare", "expense", "#EF4444", "💊"},
+	{"Education & Courses", "education", "expense", "#6366F1", "📚"},
+	{"Bills & Subscriptions", "bills", "expense", "#06B6D4", "💡"},
+	{"Personal Care", "personal", "expense", "#F43F5E", "✨"},
+	{"Savings & Vaults", "savings", "expense", "#14B8A6", "💰"},
+	{"General Expense", "other", "expense", "#64748B", "📦"},
+
+	// Income
+	{"Salary & Wages", "salary", "income", "#10B981", "💼"},
+	{"Freelance & Side Hustle", "freelance", "income", "#3B82F6", "💻"},
+	{"Investments & Dividends", "investments", "income", "#8B5CF6", "📈"},
+	{"Business & Sales", "business", "income", "#F59E0B", "🏢"},
+	{"Rental Income", "rental", "income", "#06B6D4", "🏠"},
+	{"Gifts & Grants", "gifts", "income", "#EC4899", "🎁"},
+	{"Refunds & Cashback", "refunds", "income", "#14B8A6", "🔄"},
+	{"Other Income", "other_income", "income", "#64748B", "💵"},
+}
+
+func (s *DBStore) EnsureDefaultCategories(username string) error {
+	var count int
+	err := s.db.QueryRow("SELECT COUNT(1) FROM categories WHERE username = ?", username).Scan(&count)
+	if err == nil && count > 0 {
+		return nil
+	}
+
+	for _, d := range defaultCategoryPresets {
+		_, _ = s.db.Exec(
+			"INSERT INTO categories (username, name, slug, type, color, emoji, is_default, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?)",
+			username, d.Name, d.Slug, d.Type, d.Color, d.Emoji, time.Now(),
+		)
+	}
+	return nil
+}
+
+func (s *DBStore) GetCategories(username string) ([]Category, error) {
+	s.mu.Lock()
+	_ = s.EnsureDefaultCategories(username)
+	s.mu.Unlock()
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	txCounts := make(map[string]int)
+	countRows, err := s.db.Query("SELECT category, COUNT(1) FROM transactions WHERE username = ? GROUP BY category", username)
+	if err == nil {
+		defer countRows.Close()
+		for countRows.Next() {
+			var cat string
+			var c int
+			if err := countRows.Scan(&cat, &c); err == nil {
+				txCounts[strings.ToLower(cat)] = c
+			}
+		}
+	}
+
+	rows, err := s.db.Query(
+		"SELECT id, username, name, slug, type, color, emoji, is_default, created_at FROM categories WHERE username = ? ORDER BY type DESC, is_default DESC, name ASC",
+		username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var categories []Category
+	for rows.Next() {
+		var cat Category
+		if err := rows.Scan(&cat.ID, &cat.Username, &cat.Name, &cat.Slug, &cat.Type, &cat.Color, &cat.Emoji, &cat.IsDefault, &cat.CreatedAt); err != nil {
+			continue
+		}
+		cat.TxCount = txCounts[strings.ToLower(cat.Slug)]
+		if cat.TxCount == 0 {
+			cat.TxCount = txCounts[strings.ToLower(cat.Name)]
+		}
+		categories = append(categories, cat)
+	}
+	if categories == nil {
+		categories = []Category{}
+	}
+	return categories, nil
+}
+
+func (s *DBStore) CreateCategory(username, name, catType, emoji, color string) (*Category, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("category name is required")
+	}
+	catType = strings.ToLower(strings.TrimSpace(catType))
+	if catType != "income" {
+		catType = "expense"
+	}
+	emoji = strings.TrimSpace(emoji)
+	if emoji == "" {
+		emoji = "🏷️"
+	}
+	color = strings.TrimSpace(color)
+	if color == "" {
+		color = "#10B981"
+	}
+
+	slug := strings.ToLower(name)
+	slug = strings.ReplaceAll(slug, " ", "_")
+	slug = strings.ReplaceAll(slug, "&", "and")
+
+	var count int
+	_ = s.db.QueryRow("SELECT COUNT(1) FROM categories WHERE username = ? AND (LOWER(name) = LOWER(?) OR slug = ?)", username, name, slug).Scan(&count)
+	if count > 0 {
+		return nil, fmt.Errorf("a category with this name already exists")
+	}
+
+	now := time.Now()
+	res, err := s.db.Exec(
+		"INSERT INTO categories (username, name, slug, type, color, emoji, is_default, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)",
+		username, name, slug, catType, color, emoji, now,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := res.LastInsertId()
+	return &Category{
+		ID:        int(id),
+		Username:  username,
+		Name:      name,
+		Slug:      slug,
+		Type:      catType,
+		Color:     color,
+		Emoji:     emoji,
+		IsDefault: false,
+		TxCount:   0,
+		CreatedAt: now,
+	}, nil
+}
+
+func (s *DBStore) UpdateCategory(id int, username, name, emoji, color string) (*Category, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("category name is required")
+	}
+	if emoji == "" {
+		emoji = "🏷️"
+	}
+	if color == "" {
+		color = "#10B981"
+	}
+
+	var cat Category
+	err := s.db.QueryRow("SELECT id, username, name, slug, type, is_default, created_at FROM categories WHERE id = ? AND username = ?", id, username).
+		Scan(&cat.ID, &cat.Username, &cat.Name, &cat.Slug, &cat.Type, &cat.IsDefault, &cat.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("category not found")
+	}
+
+	_, err = s.db.Exec("UPDATE categories SET name = ?, emoji = ?, color = ? WHERE id = ? AND username = ?", name, emoji, color, id, username)
+	if err != nil {
+		return nil, err
+	}
+
+	cat.Name = name
+	cat.Emoji = emoji
+	cat.Color = color
+	return &cat, nil
+}
+
+func (s *DBStore) DeleteCategory(id int, username string, reassignTo ...string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var cat Category
+	err := s.db.QueryRow("SELECT id, slug, is_default FROM categories WHERE id = ? AND username = ?", id, username).Scan(&cat.ID, &cat.Slug, &cat.IsDefault)
+	if err != nil {
+		return false, fmt.Errorf("category not found")
+	}
+
+	newCat := "other"
+	if len(reassignTo) > 0 && strings.TrimSpace(reassignTo[0]) != "" {
+		newCat = strings.TrimSpace(reassignTo[0])
+	}
+
+	_, _ = s.db.Exec("UPDATE transactions SET category = ? WHERE username = ? AND (category = ? OR category = ?)", newCat, username, cat.Slug, cat.Name)
+
+	res, err := s.db.Exec("DELETE FROM categories WHERE id = ? AND username = ?", id, username)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected > 0, nil
+}
+

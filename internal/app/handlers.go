@@ -93,6 +93,11 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/goals", app.HandleGoalsAPI)
 	app.Mux.HandleFunc("/api/goals/", app.HandleGoalByID)
 
+	// Custom Categories & Tags APIs
+	app.Mux.HandleFunc("/api/categories", app.HandleCategoriesAPI)
+	app.Mux.HandleFunc("/api/categories/", app.HandleCategoryByID)
+	app.Mux.HandleFunc("/api/tags", app.HandleTagsAPI)
+
 	// Budgets, Analytics, Export, Currency APIs
 	app.Mux.HandleFunc("/api/budgets", app.HandleBudgets)
 	app.Mux.HandleFunc("/api/analytics", app.HandleAnalytics)
@@ -325,7 +330,8 @@ func (app *App) HandleTransactions(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		if err := app.DB.AddTransaction(username, amount, category, note, txnType, txDate); err != nil {
+		tags := strings.TrimSpace(r.FormValue("tags"))
+		if err := app.DB.AddTransactionWithTags(username, amount, category, note, txnType, tags, txDate); err != nil {
 			jsonError(w, "failed to save transaction", http.StatusInternalServerError)
 			return
 		}
@@ -378,7 +384,8 @@ func (app *App) HandleTransactionByID(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		updated, err := app.DB.UpdateTransaction(id, username, amount, category, note, txnType, optDate...)
+		tags := strings.TrimSpace(r.FormValue("tags"))
+		updated, err := app.DB.UpdateTransactionWithTags(id, username, amount, category, note, txnType, tags, optDate...)
 		if err != nil || !updated {
 			jsonError(w, "transaction not found or update failed", http.StatusNotFound)
 			return
@@ -1353,5 +1360,123 @@ func (app *App) HandleGoalByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
+
+// ─── Custom Categories & Tags Handlers ──────────────────────────────────────
+
+func (app *App) HandleCategoriesAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		cats, err := app.DB.GetCategories(username)
+		if err != nil {
+			jsonError(w, "failed to fetch categories", http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, map[string]any{"categories": cats})
+
+	case http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		name := strings.TrimSpace(r.FormValue("name"))
+		catType := strings.TrimSpace(r.FormValue("type"))
+		emoji := strings.TrimSpace(r.FormValue("emoji"))
+		color := strings.TrimSpace(r.FormValue("color"))
+
+		if name == "" {
+			jsonError(w, "category name is required", http.StatusBadRequest)
+			return
+		}
+
+		cat, err := app.DB.CreateCategory(username, name, catType, emoji, color)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		jsonOK(w, cat)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleCategoryByID(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/api/categories/")
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[0])
+	if err != nil || id <= 0 {
+		jsonError(w, "invalid category id", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPut, http.MethodPost:
+		_ = r.ParseMultipartForm(1 << 20)
+		name := strings.TrimSpace(r.FormValue("name"))
+		emoji := strings.TrimSpace(r.FormValue("emoji"))
+		color := strings.TrimSpace(r.FormValue("color"))
+
+		if name == "" {
+			jsonError(w, "category name is required", http.StatusBadRequest)
+			return
+		}
+
+		cat, err := app.DB.UpdateCategory(id, username, name, emoji, color)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		jsonOK(w, cat)
+
+	case http.MethodDelete:
+		_ = r.ParseMultipartForm(1 << 20)
+		reassignTo := strings.TrimSpace(r.FormValue("reassign_to"))
+		if reassignTo == "" {
+			reassignTo = strings.TrimSpace(r.URL.Query().Get("reassign_to"))
+		}
+
+		deleted, err := app.DB.DeleteCategory(id, username, reassignTo)
+		if err != nil || !deleted {
+			jsonError(w, "category not found or cannot be deleted", http.StatusNotFound)
+			return
+		}
+		jsonOK(w, map[string]string{"status": "deleted"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleTagsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tags, err := app.DB.GetPopularTags(username)
+	if err != nil {
+		jsonError(w, "failed to fetch tags", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, map[string]any{"tags": tags})
+}
+
 
 

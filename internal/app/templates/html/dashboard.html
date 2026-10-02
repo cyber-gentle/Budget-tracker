@@ -147,6 +147,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                                 <span>Savings Goals</span>
                             </a>
+                            <button type="button" id="btn-open-category-modal-menu" class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <span>Categories & Tags</span>
+                            </button>
                             <button type="button" id="btn-toggle-theme-dropdown" class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-between transition-colors cursor-pointer">
                                 <span class="flex items-center gap-2.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
@@ -188,6 +192,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                 <span>Savings Goals</span>
             </a>
+            <button type="button" id="btn-mobile-categories" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span>Categories</span>
+            </button>
         </div>
     </header>
  
@@ -425,7 +433,13 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <!-- Category -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Category</label>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">Category</label>
+                                    <button type="button" id="btn-quick-manage-cat" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 cursor-pointer transition-colors" title="Manage custom categories">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <span>Manage</span>
+                                    </button>
+                                </div>
                                 <select name="category" id="add-category" required class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all cursor-pointer">
                                     <option value="food">🍔 Food & Groceries</option>
                                     <option value="transport">🚗 Transportation</option>
@@ -458,6 +472,19 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Note / Merchant</label>
                                 <input type="text" name="note" placeholder="e.g. Lunch with team, Supermarket" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Tags Field & Popular Suggestions -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">Tags <span class="font-normal text-[11px] text-slate-400">(optional, comma-separated or #tag)</span></label>
+                                <span class="text-[10px] text-slate-400 hidden sm:inline">e.g. food, team-lunch, tax</span>
+                            </div>
+                            <input type="text" id="add-tags" name="tags" placeholder="e.g. lunch, groceries, tax" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all">
+                            <div id="quick-add-tag-suggestions" class="flex flex-wrap items-center gap-1.5 mt-2 hidden">
+                                <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500">Popular tags:</span>
+                                <div id="quick-add-tags-list" class="flex flex-wrap gap-1"></div>
                             </div>
                         </div>
 
@@ -756,6 +783,11 @@
                     <input type="text" id="edit-note" name="note" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
                 </div>
 
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Tags <span class="font-normal text-[11px] text-slate-400">(optional, comma-separated)</span></label>
+                    <input type="text" id="edit-tags" name="tags" placeholder="e.g. food, team-lunch, personal" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+
                 <p class="text-xs text-rose-500 font-medium hidden" id="edit-error"></p>
 
                 <div class="flex gap-2.5 pt-2">
@@ -801,38 +833,202 @@
             <div class="flex gap-2.5">
                 <button type="button" id="confirm-cancel-btn" class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
                 <button type="button" id="confirm-delete-btn" class="flex-1 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer">Delete</button>
+    <!-- ─── Category & Tag Manager Modal ────────────────────────────────────── -->
+    <div id="category-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden p-3 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl transition-colors overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">Categories & Tags</h3>
+                        <p class="text-[11px] text-slate-400">Customise categories and manage transaction tags</p>
+                    </div>
+                </div>
+                <button type="button" id="category-modal-close" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Tabs: Expense / Income / Tags -->
+            <div class="px-4 sm:px-5 pt-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <button type="button" id="tab-cat-expense" class="cat-tab-btn pb-2.5 text-xs font-bold border-b-2 border-slate-900 dark:border-emerald-500 text-slate-900 dark:text-emerald-400 transition-colors cursor-pointer">
+                    Expense Categories
+                </button>
+                <button type="button" id="tab-cat-income" class="cat-tab-btn pb-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer">
+                    Income Categories
+                </button>
+                <button type="button" id="tab-cat-tags" class="cat-tab-btn pb-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer">
+                    Tags Cloud
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
+                <!-- Category View Section -->
+                <div id="cat-categories-view" class="space-y-4">
+                    <!-- Add Category Card -->
+                    <div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-3.5 sm:p-4">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200" id="add-cat-heading">Add Custom Expense Category</span>
+                        </div>
+                        <form id="create-category-form" class="space-y-3">
+                            <div class="flex gap-2">
+                                <div class="relative">
+                                    <button type="button" id="btn-active-emoji-preview" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xl flex items-center justify-center shadow-xs cursor-pointer" title="Pick an emoji">
+                                        ✨
+                                    </button>
+                                    <input type="hidden" id="new-cat-emoji" value="✨">
+                                </div>
+                                <div class="flex-1">
+                                    <input type="text" id="new-cat-label" required placeholder="Category name (e.g. Gym & Fitness, Hobbies)" class="w-full h-10 px-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium transition-all">
+                                </div>
+                            </div>
+
+                            <!-- Emoji Presets Strip -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Pick Icon</label>
+                                <div class="flex flex-wrap gap-1.5 p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl max-h-20 overflow-y-auto no-scrollbar" id="cat-emoji-presets">
+                                    <!-- Emojis populated by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Color Presets Strip -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Pick Color</label>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex flex-wrap gap-1.5 flex-1" id="cat-color-presets">
+                                        <!-- Colors populated by JS -->
+                                    </div>
+                                    <input type="color" id="new-cat-color" value="#10B981" class="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer p-0 bg-transparent shrink-0" title="Custom color">
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-rose-500 font-medium hidden" id="cat-error"></p>
+
+                            <button type="submit" id="btn-submit-cat" class="w-full bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white text-xs font-semibold py-2 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                <span>Create Category</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Categories List -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                            <span>Active Categories</span>
+                            <span id="cat-count-badge" class="text-[11px] font-semibold text-slate-400">0 categories</span>
+                        </div>
+                        <div id="cat-list-items" class="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tags View Section -->
+                <div id="cat-tags-view" class="space-y-4 hidden">
+                    <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-xl space-y-1">
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">How Tagging Works</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Organise transactions across categories using tags like <span class="font-semibold text-emerald-600 dark:text-emerald-400">#work</span>, <span class="font-semibold text-emerald-600 dark:text-emerald-400">#travel</span>, or <span class="font-semibold text-emerald-600 dark:text-emerald-400">#tax-deductible</span>. Add tags when recording a transaction or click any tag in the list to filter.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                            <span>Popular Tags Cloud</span>
+                            <span id="tags-count-badge" class="text-[11px] font-semibold text-slate-400">0 tags</span>
+                        </div>
+                        <div id="tags-cloud-container" class="flex flex-wrap gap-2 pt-1">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex justify-end">
+                <button type="button" id="category-modal-done" class="px-4 py-1.5 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Edit Category Modal ────────────────────────────────────── -->
+    <div id="cat-edit-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 w-full max-w-sm shadow-2xl">
+            <h4 class="font-heading font-bold text-sm text-slate-900 dark:text-white mb-3">Edit Category</h4>
+            <form id="edit-category-form" class="space-y-3">
+                <input type="hidden" id="edit-cat-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Name</label>
+                    <input type="text" id="edit-cat-label" required class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Emoji Icon</label>
+                        <input type="text" id="edit-cat-icon" required class="w-full px-3 py-2 text-center text-base bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Theme Color</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="edit-cat-color" class="w-full h-8 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer bg-transparent">
+                        </div>
+                    </div>
+                </div>
+                <p class="text-xs text-rose-500 font-medium hidden" id="edit-cat-error"></p>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" id="edit-cat-cancel" class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                    <button type="submit" class="flex-1 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── Delete Category Confirmation Modal ────────────────────────────────────── -->
+    <div id="cat-delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
+            <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+            </div>
+            <h4 class="font-heading font-bold text-slate-900 dark:text-white text-sm mb-1" id="cat-delete-title">Delete Category?</h4>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mb-4">Any transactions in this category will be automatically reassigned to <span class="font-bold text-slate-700 dark:text-slate-300">Other</span>.</p>
+            <div class="flex gap-2.5">
+                <button type="button" id="cat-delete-cancel" class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                <button type="button" id="cat-delete-confirm" class="flex-1 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer">Delete</button>
             </div>
         </div>
     </div>
 
     <!-- ─── Application JavaScript Logic ────────────────────────────────────── -->
     <script>
-        // Category Definitions by Type
-        const EXPENSE_CATEGORIES = [
-            { key: 'food', label: 'Food & Groceries', icon: '🍔', color: '#10B981' },
-            { key: 'transport', label: 'Transportation', icon: '🚗', color: '#3B82F6' },
-            { key: 'housing', label: 'Housing & Utilities', icon: '🏠', color: '#F59E0B' },
-            { key: 'entertainment', label: 'Entertainment', icon: '🎬', color: '#8B5CF6' },
-            { key: 'shopping', label: 'Shopping', icon: '🛍️', color: '#EC4899' },
-            { key: 'healthcare', label: 'Healthcare', icon: '💊', color: '#EF4444' },
-            { key: 'education', label: 'Education & Learning', icon: '📚', color: '#6366F1' },
-            { key: 'bills', label: 'Bills & Subscriptions', icon: '💡', color: '#EAB308' },
-            { key: 'personal', label: 'Personal Care', icon: '✨', color: '#14B8A6' },
-            { key: 'other', label: 'Other Expense', icon: '📦', color: '#64748B' },
+        // Category Definitions by Type (Dynamic)
+        let EXPENSE_CATEGORIES = [
+            { key: 'food', label: 'Food & Groceries', icon: '🍔', color: '#10B981', is_default: true },
+            { key: 'transport', label: 'Transportation', icon: '🚗', color: '#3B82F6', is_default: true },
+            { key: 'housing', label: 'Housing & Utilities', icon: '🏠', color: '#F59E0B', is_default: true },
+            { key: 'entertainment', label: 'Entertainment', icon: '🎬', color: '#8B5CF6', is_default: true },
+            { key: 'shopping', label: 'Shopping', icon: '🛍️', color: '#EC4899', is_default: true },
+            { key: 'healthcare', label: 'Healthcare', icon: '💊', color: '#EF4444', is_default: true },
+            { key: 'education', label: 'Education & Learning', icon: '📚', color: '#6366F1', is_default: true },
+            { key: 'bills', label: 'Bills & Subscriptions', icon: '💡', color: '#EAB308', is_default: true },
+            { key: 'personal', label: 'Personal Care', icon: '✨', color: '#14B8A6', is_default: true },
+            { key: 'other', label: 'Other Expense', icon: '📦', color: '#64748B', is_default: true },
         ];
 
-        const INCOME_CATEGORIES = [
-            { key: 'salary', label: 'Salary & Wages', icon: '💼', color: '#059669' },
-            { key: 'freelance', label: 'Freelance & Side Hustles', icon: '💻', color: '#0D9488' },
-            { key: 'investments', label: 'Investments & Dividends', icon: '📈', color: '#06B6D4' },
-            { key: 'business', label: 'Business & Sales', icon: '🏢', color: '#3B82F6' },
-            { key: 'rental', label: 'Rental Income', icon: '🏠', color: '#F59E0B' },
-            { key: 'gifts', label: 'Grants & Gifts', icon: '🎁', color: '#EC4899' },
-            { key: 'refunds', label: 'Refunds & Reimbursements', icon: '🔄', color: '#8B5CF6' },
-            { key: 'other', label: 'Other Income', icon: '💵', color: '#64748B' },
+        let INCOME_CATEGORIES = [
+            { key: 'salary', label: 'Salary & Wages', icon: '💼', color: '#059669', is_default: true },
+            { key: 'freelance', label: 'Freelance & Side Hustles', icon: '💻', color: '#0D9488', is_default: true },
+            { key: 'investments', label: 'Investments & Dividends', icon: '📈', color: '#06B6D4', is_default: true },
+            { key: 'business', label: 'Business & Sales', icon: '🏢', color: '#3B82F6', is_default: true },
+            { key: 'rental', label: 'Rental Income', icon: '🏠', color: '#F59E0B', is_default: true },
+            { key: 'gifts', label: 'Grants & Gifts', icon: '🎁', color: '#EC4899', is_default: true },
+            { key: 'refunds', label: 'Refunds & Reimbursements', icon: '🔄', color: '#8B5CF6', is_default: true },
+            { key: 'other', label: 'Other Income', icon: '💵', color: '#64748B', is_default: true },
         ];
 
-        const CATEGORIES = {
+        let CATEGORIES = {
             food: { label: 'Food & Groceries', icon: '🍔', color: '#10B981', type: 'expense' },
             transport: { label: 'Transportation', icon: '🚗', color: '#3B82F6', type: 'expense' },
             housing: { label: 'Housing & Utilities', icon: '🏠', color: '#F59E0B', type: 'expense' },
@@ -851,6 +1047,169 @@
             refunds: { label: 'Refunds & Reimbursements', icon: '🔄', color: '#8B5CF6', type: 'income' },
             other: { label: 'Other', icon: '📦', color: '#64748B' },
         };
+
+        let userCategories = [];
+        let popularTags = [];
+        let activeCategoryTab = 'expense';
+        let pendingDeleteCatId = null;
+
+        const CATEGORY_EMOJI_PRESETS = [
+            '🍔', '🍕', '☕', '🛒', '🛍️', '🚗', '⛽', '🏠', '💡', '📱',
+            '🎬', '🎮', '✈️', '🏥', '💊', '📚', '🏋️', '🐾', '💼', '💻',
+            '📈', '🏢', '🎁', '💰', '💵', '🔄', '✨', '📦'
+        ];
+
+        const CATEGORY_COLOR_PRESETS = [
+            '#10B981', '#059669', '#3B82F6', '#06B6D4', '#6366F1', '#8B5CF6',
+            '#EC4899', '#EF4444', '#F59E0B', '#EAB308', '#14B8A6', '#64748B'
+        ];
+
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/categories');
+                if (!res.ok) return;
+                const cats = await res.json();
+                if (Array.isArray(cats) && cats.length > 0) {
+                    userCategories = cats;
+                    EXPENSE_CATEGORIES = cats.filter(c => c.type === 'expense').map(c => ({
+                        id: c.id,
+                        key: c.key,
+                        label: c.label,
+                        icon: c.icon,
+                        color: c.color,
+                        type: c.type,
+                        is_default: c.is_default
+                    }));
+                    INCOME_CATEGORIES = cats.filter(c => c.type === 'income').map(c => ({
+                        id: c.id,
+                        key: c.key,
+                        label: c.label,
+                        icon: c.icon,
+                        color: c.color,
+                        type: c.type,
+                        is_default: c.is_default
+                    }));
+                    CATEGORIES = {};
+                    for (const c of cats) {
+                        CATEGORIES[c.key] = {
+                            id: c.id,
+                            label: c.label,
+                            icon: c.icon,
+                            color: c.color,
+                            type: c.type,
+                            is_default: c.is_default
+                        };
+                    }
+                    if (!CATEGORIES.other) {
+                        CATEGORIES.other = { label: 'Other', icon: '📦', color: '#64748B', is_default: true };
+                    }
+                }
+                const activeType = (document.getElementById('add-tx-type') ? document.getElementById('add-tx-type').value : 'expense');
+                populateCategorySelect(document.getElementById('add-category'), activeType, document.getElementById('add-category') ? document.getElementById('add-category').value : '');
+                updateFilterCategoryOptions(document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'all');
+                renderCategoryManagerList();
+            } catch (err) {
+                console.error('Error loading categories:', err);
+            }
+        }
+
+        async function loadTags() {
+            try {
+                const res = await fetch('/api/tags');
+                if (!res.ok) return;
+                popularTags = await res.json();
+                renderPopularTagSuggestions();
+                renderTagsTab();
+            } catch (err) {
+                console.error('Error loading tags:', err);
+            }
+        }
+
+        function renderPopularTagSuggestions() {
+            const container = document.getElementById('quick-add-tag-suggestions');
+            const list = document.getElementById('quick-add-tags-list');
+            if (!container || !list) return;
+
+            if (!popularTags || popularTags.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            list.innerHTML = popularTags.slice(0, 8).map(t => `
+                <button type="button" class="quick-tag-chip px-2 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/40 text-slate-600 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer" data-tag="${esc(t.tag)}">
+                    #${esc(t.tag)}
+                </button>
+            `).join('');
+        }
+
+        function renderTagsTab() {
+            const cloudContainer = document.getElementById('tags-cloud-container');
+            const countBadge = document.getElementById('tags-count-badge');
+            if (!cloudContainer) return;
+
+            if (countBadge) {
+                countBadge.textContent = `${popularTags.length} tag${popularTags.length === 1 ? '' : 's'}`;
+            }
+
+            if (!popularTags || popularTags.length === 0) {
+                cloudContainer.innerHTML = `<p class="text-xs text-slate-400 py-3 text-center w-full">No tags created yet. Add tags using #tag in your notes or tag inputs!</p>`;
+                return;
+            }
+
+            cloudContainer.innerHTML = popularTags.map(t => `
+                <button type="button" class="tag-cloud-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 dark:bg-slate-800/80 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-700 text-slate-700 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400 transition-all cursor-pointer group" data-tag="${esc(t.tag)}">
+                    <span class="text-xs font-bold">#${esc(t.tag)}</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">${t.count}</span>
+                </button>
+            `).join('');
+        }
+
+        function renderCategoryManagerList() {
+            const listContainer = document.getElementById('cat-list-items');
+            const countBadge = document.getElementById('cat-count-badge');
+            const heading = document.getElementById('add-cat-heading');
+            if (!listContainer) return;
+
+            const list = activeCategoryTab === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+            if (heading) {
+                heading.textContent = activeCategoryTab === 'income' ? 'Add Custom Income Category' : 'Add Custom Expense Category';
+            }
+            if (countBadge) {
+                countBadge.textContent = `${list.length} categor${list.length === 1 ? 'y' : 'ies'}`;
+            }
+
+            if (!list.length) {
+                listContainer.innerHTML = '<p class="text-xs text-slate-400 py-2">No categories found.</p>';
+                return;
+            }
+
+            listContainer.innerHTML = list.map(c => `
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 transition-colors">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 font-bold" style="background-color: ${c.color}20; color: ${c.color}; border: 1.5px solid ${c.color}40;">
+                            ${c.icon}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">${esc(c.label)}</p>
+                            <p class="text-[10px] text-slate-400 truncate">${esc(c.key)}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        ${c.is_default ? `
+                            <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">Default</span>
+                        ` : `
+                            <button type="button" class="btn-edit-cat p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer" data-id="${c.id}" data-label="${esc(c.label)}" data-icon="${esc(c.icon)}" data-color="${esc(c.color)}" title="Edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <button type="button" class="btn-del-cat p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer" data-id="${c.id}" data-label="${esc(c.label)}" title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
 
         function getCategoryMeta(catKey, type) {
             if (catKey === 'other') {
@@ -1126,28 +1485,40 @@
                 const isExpense = t.type === 'expense';
                 const sign = isExpense ? '-' : '+';
                 const colorClass = isExpense ? 'text-rose-500' : 'text-emerald-600';
-                const bgAvatar = isExpense ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600';
+                const bgAvatar = isExpense ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400';
+
+                let tagHtml = '';
+                if (t.tag_list && t.tag_list.length > 0) {
+                    tagHtml = `
+                        <div class="flex flex-wrap items-center gap-1 mt-1">
+                            ${t.tag_list.map(tg => `
+                                <button type="button" class="tag-filter-btn px-1.5 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/40 text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 border border-slate-200/60 dark:border-slate-700/60 transition-colors cursor-pointer" data-tag="${esc(tg)}" title="Filter by #${esc(tg)}">#${esc(tg)}</button>
+                            `).join('')}
+                        </div>
+                    `;
+                }
 
                 const row = document.createElement('div');
-                row.className = 'px-4 sm:px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/70 transition-colors group';
+                row.className = 'px-4 sm:px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors group';
                 row.innerHTML = `
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 rounded-xl ${bgAvatar} flex items-center justify-center text-base shrink-0">
+                        <div class="w-9 h-9 rounded-xl ${bgAvatar} flex items-center justify-center text-base shrink-0" style="border: 1.5px solid ${cat.color}30;">
                             ${cat.icon}
                         </div>
                         <div class="min-w-0">
-                            <p class="text-xs sm:text-sm font-semibold text-slate-900 truncate">${esc(t.note || cat.label)}</p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">${esc(fmtDate(t.date))} · <span class="font-medium text-slate-500">${esc(cat.label)}</span></p>
+                            <p class="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">${esc(t.note || cat.label)}</p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">${esc(fmtDate(t.date))} · <span class="font-medium text-slate-600 dark:text-slate-400">${esc(cat.label)}</span></p>
+                            ${tagHtml}
                         </div>
                     </div>
                     <div class="flex items-center gap-2 sm:gap-3 shrink-0 ml-3">
                         <p class="text-xs sm:text-sm font-bold ${colorClass}">${sign}${fmtMoney(t.amount)}</p>
-                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button class="edit-tx p-1 text-slate-400 hover:text-slate-800 transition-colors rounded-md hover:bg-slate-100" 
-                                data-id="${t.id}" data-amount="${t.amount}" data-category="${esc(t.category)}" data-note="${esc(t.note)}" data-type="${t.type}" data-date="${t.date ? t.date.split('T')[0] : ''}" title="Edit">
+                        <div class="flex items-center gap-1 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <button class="edit-tx p-1 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors rounded-md hover:bg-slate-100 dark:hover:bg-slate-800" 
+                                data-id="${t.id}" data-amount="${t.amount}" data-category="${esc(t.category)}" data-note="${esc(t.note)}" data-type="${t.type}" data-date="${t.date ? t.date.split('T')[0] : ''}" data-tags="${esc(t.tags || '')}" title="Edit">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             </button>
-                            <button class="delete-tx p-1 text-slate-400 hover:text-rose-600 transition-colors rounded-md hover:bg-rose-50" 
+                            <button class="delete-tx p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40" 
                                 data-id="${t.id}" title="Delete">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                             </button>
@@ -1355,10 +1726,13 @@
                 if (filterType !== 'all' && t.type !== filterType) return false;
                 if (filterCategory !== 'all' && t.category !== filterCategory) return false;
                 if (query) {
+                    const rawTagQuery = query.startsWith('#') ? query.slice(1).trim() : query;
                     const note = (t.note || '').toLowerCase();
                     const cat = getCategoryMeta(t.category, t.type);
                     const catLabel = (cat.label || t.category || '').toLowerCase();
-                    if (!note.includes(query) && !catLabel.includes(query)) return false;
+                    const tags = (t.tags || '').toLowerCase();
+                    const tagListMatch = t.tag_list && t.tag_list.some(tg => tg.toLowerCase().includes(rawTagQuery));
+                    if (!note.includes(query) && !catLabel.includes(query) && !tags.includes(rawTagQuery) && !tagListMatch) return false;
                 }
                 return true;
             });
@@ -1461,6 +1835,7 @@
                     return;
                 }
                 this.reset();
+                if (document.getElementById('add-tags')) document.getElementById('add-tags').value = '';
                 document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
                 typeExpenseBtn.click();
                 showToast('Transaction added!');
@@ -1493,13 +1868,32 @@
             await loadAll();
         });
 
-        // Edit Modal Controls
+        // Edit Modal Controls & Tag Filter Delegation
         document.getElementById('tx-list').addEventListener('click', e => {
+            // Tag click filtering
+            const tagBtn = e.target.closest('.tag-filter-btn');
+            if (tagBtn) {
+                const tag = tagBtn.dataset.tag;
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    if (searchInput.value === '#' + tag) {
+                        searchInput.value = '';
+                    } else {
+                        searchInput.value = '#' + tag;
+                    }
+                    applyFilters();
+                }
+                return;
+            }
+
             const btn = e.target.closest('.edit-tx');
             if (!btn) return;
             document.getElementById('edit-id').value = btn.dataset.id;
             document.getElementById('edit-amount').value = Number(btn.dataset.amount).toLocaleString('en-US');
             document.getElementById('edit-note').value = btn.dataset.note;
+            if (document.getElementById('edit-tags')) {
+                document.getElementById('edit-tags').value = btn.dataset.tags || '';
+            }
             const editType = btn.dataset.type || 'expense';
             const editCategory = btn.dataset.category || 'other';
             document.getElementById('edit-type').value = editType;
@@ -1539,6 +1933,242 @@
                 await loadAll();
             } else {
                 showToast('Delete failed', 'error');
+            }
+        });
+
+        // ─── Category & Tag Manager Controls ──────────────────────────────────────
+        const emojiPresetsContainer = document.getElementById('cat-emoji-presets');
+        if (emojiPresetsContainer) {
+            emojiPresetsContainer.innerHTML = CATEGORY_EMOJI_PRESETS.map(em => `
+                <button type="button" class="preset-emoji-btn w-7 h-7 rounded-lg text-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-transform hover:scale-110 cursor-pointer" data-emoji="${em}">${em}</button>
+            `).join('');
+            emojiPresetsContainer.addEventListener('click', e => {
+                const btn = e.target.closest('.preset-emoji-btn');
+                if (!btn) return;
+                const em = btn.dataset.emoji;
+                document.getElementById('new-cat-emoji').value = em;
+                document.getElementById('btn-active-emoji-preview').textContent = em;
+            });
+        }
+
+        const colorPresetsContainer = document.getElementById('cat-color-presets');
+        if (colorPresetsContainer) {
+            colorPresetsContainer.innerHTML = CATEGORY_COLOR_PRESETS.map(col => `
+                <button type="button" class="preset-color-btn w-6 h-6 rounded-full border border-black/10 dark:border-white/10 transition-transform hover:scale-110 cursor-pointer" style="background-color: ${col};" data-color="${col}"></button>
+            `).join('');
+            colorPresetsContainer.addEventListener('click', e => {
+                const btn = e.target.closest('.preset-color-btn');
+                if (!btn) return;
+                const col = btn.dataset.color;
+                document.getElementById('new-cat-color').value = col;
+            });
+        }
+
+        const quickAddTagsList = document.getElementById('quick-add-tags-list');
+        if (quickAddTagsList) {
+            quickAddTagsList.addEventListener('click', e => {
+                const chip = e.target.closest('.quick-tag-chip');
+                if (!chip) return;
+                const tag = chip.dataset.tag;
+                const tagsInput = document.getElementById('add-tags');
+                if (!tagsInput) return;
+                let current = tagsInput.value.split(',').map(s => s.trim().replace(/^#/, '')).filter(Boolean);
+                if (!current.includes(tag)) {
+                    current.push(tag);
+                    tagsInput.value = current.join(', ');
+                }
+            });
+        }
+
+        const tagsCloudContainer = document.getElementById('tags-cloud-container');
+        if (tagsCloudContainer) {
+            tagsCloudContainer.addEventListener('click', e => {
+                const chip = e.target.closest('.tag-cloud-chip');
+                if (!chip) return;
+                const tag = chip.dataset.tag;
+                document.getElementById('category-modal').classList.add('hidden');
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = '#' + tag;
+                    applyFilters();
+                }
+            });
+        }
+
+        function switchCategoryTab(tab) {
+            activeCategoryTab = tab;
+            const tabExpense = document.getElementById('tab-cat-expense');
+            const tabIncome = document.getElementById('tab-cat-income');
+            const tabTags = document.getElementById('tab-cat-tags');
+            const catView = document.getElementById('cat-categories-view');
+            const tagsView = document.getElementById('cat-tags-view');
+
+            [tabExpense, tabIncome, tabTags].forEach(b => {
+                if (!b) return;
+                b.className = 'cat-tab-btn pb-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer';
+            });
+
+            if (tab === 'expense') {
+                tabExpense.className = 'cat-tab-btn pb-2.5 text-xs font-bold border-b-2 border-slate-900 dark:border-emerald-500 text-slate-900 dark:text-emerald-400 transition-colors cursor-pointer';
+                catView.classList.remove('hidden');
+                tagsView.classList.add('hidden');
+                renderCategoryManagerList();
+            } else if (tab === 'income') {
+                tabIncome.className = 'cat-tab-btn pb-2.5 text-xs font-bold border-b-2 border-slate-900 dark:border-emerald-500 text-slate-900 dark:text-emerald-400 transition-colors cursor-pointer';
+                catView.classList.remove('hidden');
+                tagsView.classList.add('hidden');
+                renderCategoryManagerList();
+            } else if (tab === 'tags') {
+                tabTags.className = 'cat-tab-btn pb-2.5 text-xs font-bold border-b-2 border-slate-900 dark:border-emerald-500 text-slate-900 dark:text-emerald-400 transition-colors cursor-pointer';
+                catView.classList.add('hidden');
+                tagsView.classList.remove('hidden');
+                renderTagsTab();
+            }
+        }
+
+        document.getElementById('tab-cat-expense').addEventListener('click', () => switchCategoryTab('expense'));
+        document.getElementById('tab-cat-income').addEventListener('click', () => switchCategoryTab('income'));
+        document.getElementById('tab-cat-tags').addEventListener('click', () => switchCategoryTab('tags'));
+
+        function openCategoryModal(tab = 'expense') {
+            switchCategoryTab(tab);
+            document.getElementById('category-modal').classList.remove('hidden');
+        }
+        function closeCategoryModal() {
+            document.getElementById('category-modal').classList.add('hidden');
+        }
+
+        const btnQuickManageCat = document.getElementById('btn-quick-manage-cat');
+        if (btnQuickManageCat) {
+            btnQuickManageCat.addEventListener('click', () => {
+                const currentType = document.getElementById('add-tx-type').value || 'expense';
+                openCategoryModal(currentType);
+            });
+        }
+        const btnOpenCategoryMenu = document.getElementById('btn-open-category-modal-menu');
+        if (btnOpenCategoryMenu) {
+            btnOpenCategoryMenu.addEventListener('click', () => {
+                document.getElementById('user-dropdown-menu').classList.add('hidden');
+                openCategoryModal('expense');
+            });
+        }
+        const btnMobileCategories = document.getElementById('btn-mobile-categories');
+        if (btnMobileCategories) {
+            btnMobileCategories.addEventListener('click', () => openCategoryModal('expense'));
+        }
+        document.getElementById('category-modal-close').addEventListener('click', closeCategoryModal);
+        document.getElementById('category-modal-done').addEventListener('click', closeCategoryModal);
+
+        // Create Category Submit
+        document.getElementById('create-category-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const errEl = document.getElementById('cat-error');
+            errEl.classList.add('hidden');
+            const submitBtn = document.getElementById('btn-submit-cat');
+            submitBtn.disabled = true;
+
+            const label = document.getElementById('new-cat-label').value.trim();
+            const icon = document.getElementById('new-cat-emoji').value.trim() || '✨';
+            const color = document.getElementById('new-cat-color').value.trim() || '#10B981';
+            const type = activeCategoryTab === 'income' ? 'income' : 'expense';
+
+            try {
+                const fd = new FormData();
+                fd.set('label', label);
+                fd.set('icon', icon);
+                fd.set('color', color);
+                fd.set('type', type);
+
+                const res = await fetch('/api/categories', { method: 'POST', body: fd });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errEl.textContent = data.error || 'Failed to create category.';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+                document.getElementById('new-cat-label').value = '';
+                showToast(`Category "${label}" created!`);
+                await loadCategories();
+            } catch (err) {
+                errEl.textContent = 'Network error occurred.';
+                errEl.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Edit and Delete Category Item Delegation
+        document.getElementById('cat-list-items').addEventListener('click', e => {
+            const editBtn = e.target.closest('.btn-edit-cat');
+            if (editBtn) {
+                document.getElementById('edit-cat-id').value = editBtn.dataset.id;
+                document.getElementById('edit-cat-label').value = editBtn.dataset.label;
+                document.getElementById('edit-cat-icon').value = editBtn.dataset.icon;
+                document.getElementById('edit-cat-color').value = editBtn.dataset.color;
+                document.getElementById('edit-cat-error').classList.add('hidden');
+                document.getElementById('cat-edit-modal').classList.remove('hidden');
+                return;
+            }
+            const delBtn = e.target.closest('.btn-del-cat');
+            if (delBtn) {
+                pendingDeleteCatId = delBtn.dataset.id;
+                document.getElementById('cat-delete-title').textContent = `Delete "${delBtn.dataset.label}"?`;
+                document.getElementById('cat-delete-modal').classList.remove('hidden');
+                return;
+            }
+        });
+
+        document.getElementById('edit-cat-cancel').addEventListener('click', () => {
+            document.getElementById('cat-edit-modal').classList.add('hidden');
+        });
+
+        document.getElementById('edit-category-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const errEl = document.getElementById('edit-cat-error');
+            errEl.classList.add('hidden');
+            const id = document.getElementById('edit-cat-id').value;
+            const label = document.getElementById('edit-cat-label').value.trim();
+            const icon = document.getElementById('edit-cat-icon').value.trim();
+            const color = document.getElementById('edit-cat-color').value.trim();
+
+            const fd = new FormData();
+            fd.set('label', label);
+            fd.set('icon', icon);
+            fd.set('color', color);
+
+            const res = await fetch('/api/categories/' + id, { method: 'PUT', body: fd });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                errEl.textContent = data.error || 'Failed to update category.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('cat-edit-modal').classList.add('hidden');
+            showToast('Category updated!');
+            await loadCategories();
+            await loadAll();
+        });
+
+        document.getElementById('cat-delete-cancel').addEventListener('click', () => {
+            pendingDeleteCatId = null;
+            document.getElementById('cat-delete-modal').classList.add('hidden');
+        });
+
+        document.getElementById('cat-delete-confirm').addEventListener('click', async () => {
+            if (!pendingDeleteCatId) return;
+            const id = pendingDeleteCatId;
+            pendingDeleteCatId = null;
+            document.getElementById('cat-delete-modal').classList.add('hidden');
+
+            const res = await fetch('/api/categories/' + id, { method: 'DELETE' });
+            if (res.ok) {
+                showToast('Category deleted and transactions reassigned');
+                await loadCategories();
+                await loadAll();
+            } else {
+                const data = await res.json().catch(() => ({}));
+                showToast(data.error || 'Failed to delete category', 'error');
             }
         });
 
@@ -2282,6 +2912,7 @@
         // Master Load
         async function loadAll() {
             try {
+                await Promise.all([loadCategories(), loadTags()]);
                 const res = await fetch('/api/transactions');
                 allTransactions = await res.json().catch(() => []);
                 updateMonthFilterOptions();

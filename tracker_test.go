@@ -616,5 +616,109 @@ func TestGoalsFlow(t *testing.T) {
 	}
 }
 
+func TestCategoriesAndTagsFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "test_categories.db")
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to create db store: %v", err)
+	}
+
+	username := "cat_user"
+	err = store.Signup(username, "cat@spendly.app", "pass123")
+	if err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	// 1. Initial categories fetch should auto-seed default categories
+	cats, err := store.GetCategories(username)
+	if err != nil || len(cats) == 0 {
+		t.Fatalf("expected default categories to be seeded, got %d (err: %v)", len(cats), err)
+	}
+	defaultCount := len(cats)
+
+	// 2. Create custom category
+	customCat, err := store.CreateCategory(username, "Cryptocurrency & Web3", "income", "🪙", "#F59E0B")
+	if err != nil {
+		t.Fatalf("failed to create category: %v", err)
+	}
+	if customCat.Slug != "cryptocurrency_and_web3" || customCat.Type != "income" {
+		t.Fatalf("unexpected custom category: %+v", customCat)
+	}
+
+	// 3. Add transactions with tags
+	err = store.AddTransactionWithTags(username, 45000, customCat.Slug, "Ethereum staking reward", "income", "#crypto, #passive, #tax-2026")
+	if err != nil {
+		t.Fatalf("failed to add transaction with tags: %v", err)
+	}
+
+	err = store.AddTransactionWithTags(username, 12000, "food", "Dinner with team", "expense", "team, dining, #work")
+	if err != nil {
+		t.Fatalf("failed to add second transaction: %v", err)
+	}
+
+	// 4. Verify transaction tags parsing
+	txs, err := store.GetTransactions(username)
+	if err != nil || len(txs) != 2 {
+		t.Fatalf("expected 2 transactions, got %d", len(txs))
+	}
+	if len(txs[0].TagList) == 0 && len(txs[1].TagList) == 0 {
+		t.Fatalf("expected tags to be parsed into TagList: %+v", txs)
+	}
+
+	// 5. Verify popular tags
+	popularTags, err := store.GetPopularTags(username)
+	if err != nil || len(popularTags) == 0 {
+		t.Fatalf("expected popular tags, got %v", popularTags)
+	}
+	hasCrypto := false
+	for _, pt := range popularTags {
+		if pt == "crypto" {
+			hasCrypto = true
+			break
+		}
+	}
+	if !hasCrypto {
+		t.Fatalf("expected 'crypto' in popular tags, got %v", popularTags)
+	}
+
+	// 6. Verify category transaction counts
+	catsAfter, _ := store.GetCategories(username)
+	if len(catsAfter) != defaultCount+1 {
+		t.Fatalf("expected %d categories, got %d", defaultCount+1, len(catsAfter))
+	}
+	var foundCustom *app.Category
+	for i := range catsAfter {
+		if catsAfter[i].ID == customCat.ID {
+			foundCustom = &catsAfter[i]
+			break
+		}
+	}
+	if foundCustom == nil || foundCustom.TxCount != 1 {
+		t.Fatalf("expected custom category to have tx_count=1, got %+v", foundCustom)
+	}
+
+	// 7. Update category
+	updatedCat, err := store.UpdateCategory(customCat.ID, username, "Crypto & DeFi Staking", "💎", "#8B5CF6")
+	if err != nil || updatedCat.Name != "Crypto & DeFi Staking" || updatedCat.Emoji != "💎" {
+		t.Fatalf("failed to update category: %v", err)
+	}
+
+	// 8. Delete category with transaction reassignment
+	deleted, err := store.DeleteCategory(customCat.ID, username, "investments")
+	if err != nil || !deleted {
+		t.Fatalf("failed to delete category: %v", err)
+	}
+
+	// Verify transaction was reassigned to 'investments'
+	txsReassigned, _ := store.GetTransactions(username)
+	for _, tItem := range txsReassigned {
+		if tItem.Amount == 45000 && tItem.Category != "investments" {
+			t.Fatalf("expected transaction category to be reassigned to 'investments', got '%s'", tItem.Category)
+		}
+	}
+}
+
+
 
 
