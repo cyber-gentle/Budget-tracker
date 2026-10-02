@@ -2,13 +2,17 @@ package app
 
 import (
 	"embed"
+	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -51,6 +55,10 @@ func (app *App) routes() {
 	}
 	app.Mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
+	// Uploaded receipts & documents storage
+	_ = os.MkdirAll("uploads/receipts", 0755)
+	app.Mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
+
 	// Favicon
 	app.Mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		data, err := embeddedFS.ReadFile("templates/assets/imgs/favicon.svg")
@@ -73,6 +81,7 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/goals", app.HandleGoalsPage)
 	app.Mux.HandleFunc("/reports", app.HandleReportsPage)
 	app.Mux.HandleFunc("/net-worth", app.HandleNetWorthPage)
+	app.Mux.HandleFunc("/receipts", app.HandleReceiptsPage)
 
 	// Auth APIs
 	app.Mux.HandleFunc("/api/signup", app.HandleSignupAPI)
@@ -128,6 +137,12 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/net-worth", app.HandleNetWorthAPI)
 	app.Mux.HandleFunc("/api/net-worth/items", app.HandleCustomAssetLiabilityAPI)
 	app.Mux.HandleFunc("/api/net-worth/items/", app.HandleCustomAssetLiabilityByIDAPI)
+
+	// Receipts & Document OCR Scanner APIs
+	app.Mux.HandleFunc("/api/receipts", app.HandleReceiptsAPI)
+	app.Mux.HandleFunc("/api/receipts/scan", app.HandleReceiptScanAPI)
+	app.Mux.HandleFunc("/api/receipts/parse-text", app.HandleParseReceiptTextAPI)
+	app.Mux.HandleFunc("/api/receipts/", app.HandleReceiptByIDAPI)
 
 	// Health check
 	app.Mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -2450,4 +2465,383 @@ func (app *App) HandleCustomAssetLiabilityByIDAPI(w http.ResponseWriter, r *http
 		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
+
+// ─── Receipt & Document OCR Scanner Handlers ────────────────────────────────
+
+func (app *App) HandleReceiptsPage(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+	prof, _ := app.DB.GetProfile(username)
+	fullName := ""
+	email := ""
+	if prof != nil {
+		fullName = prof.FullName
+		email = prof.Email
+	}
+
+	receipts, summary, err := app.DB.GetReceipts(username)
+	if err != nil {
+		receipts = []Receipt{}
+	}
+
+	accounts, _ := app.DB.GetAccounts(username)
+	cats, _ := app.DB.GetCategories(username)
+
+	data := map[string]any{
+		"Username":   username,
+		"FullName":   fullName,
+		"Email":      email,
+		"Currency":   curr,
+		"Receipts":   receipts,
+		"Summary":    summary,
+		"Accounts":   accounts,
+		"Categories": cats,
+	}
+
+	app.renderTemplate(w, "receipts.html", data)
+}
+
+func (app *App) HandleReceiptsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		receipts, summary, err := app.DB.GetReceipts(username)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, map[string]any{
+			"receipts": receipts,
+			"summary":  summary,
+		})
+	default:
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var originalFilename string
+	var savedFilePath string
+	var rawOCRText string
+	var manualMerchant string
+	var manualAmount float64
+	var manualCategory string
+
+	contentType := r.Header.Get("Content-Type")
+
+	if strings.Contains(contentType, "multipart/form-data") {
+		// Limit to 10MB
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
+			jsonError(w, "file too large or invalid multipart", http.StatusBadRequest)
+			return
+		}
+
+		rawOCRText = r.FormValue("raw_ocr_text")
+		manualMerchant = r.FormValue("merchant")
+		manualCategory = r.FormValue("category")
+		if amtStr := r.FormValue("amount"); amtStr != "" {
+			manualAmount, _ = strconv.ParseFloat(amtStr, 64)
+		}
+
+		file, header, err := r.FormFile("file")
+		if err == nil && file != nil {
+			defer file.Close()
+			originalFilename = header.Filename
+			ext := strings.ToLower(filepath.Ext(originalFilename))
+			if ext == "" {
+				ext = ".jpg"
+			}
+			safeName := fmt.Sprintf("receipt_%s_%d%s", username, time.Now().UnixNano(), ext)
+			diskPath := filepath.Join("uploads", "receipts", safeName)
+
+			out, err := os.Create(diskPath)
+			if err != nil {
+				jsonError(w, "failed to save receipt file", http.StatusInternalServerError)
+				return
+			}
+			defer out.Close()
+			if _, err := io.Copy(out, file); err != nil {
+				jsonError(w, "failed to write receipt file", http.StatusInternalServerError)
+				return
+			}
+			savedFilePath = "/uploads/receipts/" + safeName
+		}
+	} else {
+		// JSON payload
+		var req struct {
+			ImageBase64 string  `json:"image_base64"`
+			Filename    string  `json:"filename"`
+			RawOCRText  string  `json:"raw_ocr_text"`
+			Merchant    string  `json:"merchant"`
+			Amount      float64 `json:"amount"`
+			Category    string  `json:"category"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, "invalid JSON payload", http.StatusBadRequest)
+			return
+		}
+
+		rawOCRText = req.RawOCRText
+		manualMerchant = req.Merchant
+		manualAmount = req.Amount
+		manualCategory = req.Category
+		originalFilename = req.Filename
+		if originalFilename == "" {
+			originalFilename = "scanned_receipt.jpg"
+		}
+
+		if req.ImageBase64 != "" {
+			b64Data := req.ImageBase64
+			ext := ".jpg"
+			if idx := strings.Index(b64Data, ","); idx != -1 {
+				header := b64Data[:idx]
+				b64Data = b64Data[idx+1:]
+				if strings.Contains(header, "png") {
+					ext = ".png"
+				} else if strings.Contains(header, "webp") {
+					ext = ".webp"
+				}
+			}
+
+			decoded, err := base64.StdEncoding.DecodeString(b64Data)
+			if err == nil && len(decoded) > 0 {
+				safeName := fmt.Sprintf("receipt_%s_%d%s", username, time.Now().UnixNano(), ext)
+				diskPath := filepath.Join("uploads", "receipts", safeName)
+				if err := os.WriteFile(diskPath, decoded, 0644); err == nil {
+					savedFilePath = "/uploads/receipts/" + safeName
+				}
+			}
+		}
+	}
+
+	if savedFilePath == "" {
+		savedFilePath = "/static/assets/imgs/sample_receipt.png"
+		if originalFilename == "" {
+			originalFilename = "receipt.jpg"
+		}
+	}
+
+	// Parse OCR text
+	parsed := ParseReceiptText(rawOCRText)
+
+	// Apply manual overrides if present
+	merchant := parsed.Merchant
+	if manualMerchant != "" {
+		merchant = manualMerchant
+	}
+	totalAmount := parsed.TotalAmount
+	if manualAmount > 0 {
+		totalAmount = manualAmount
+	}
+	category := parsed.SuggestedCategory
+	if manualCategory != "" {
+		category = manualCategory
+	}
+
+	// Save to DB
+	receipt, err := app.DB.CreateReceipt(
+		username,
+		savedFilePath,
+		originalFilename,
+		merchant,
+		totalAmount,
+		parsed.TaxAmount,
+		parsed.TipAmount,
+		parsed.ReceiptDate,
+		category,
+		rawOCRText,
+	)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"success": true,
+		"receipt": receipt,
+		"parsed":  parsed,
+	})
+}
+
+func (app *App) HandleParseReceiptTextAPI(w http.ResponseWriter, r *http.Request) {
+	_, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Text string `json:"text"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+
+	parsed := ParseReceiptText(req.Text)
+	jsonOK(w, map[string]any{
+		"success": true,
+		"parsed":  parsed,
+	})
+}
+
+func (app *App) HandleReceiptByIDAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Path: /api/receipts/{id} or /api/receipts/{id}/convert
+	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(pathParts) < 3 {
+		jsonError(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(pathParts[2])
+	if err != nil || id <= 0 {
+		jsonError(w, "invalid receipt ID", http.StatusBadRequest)
+		return
+	}
+
+	isConvert := len(pathParts) >= 4 && pathParts[3] == "convert"
+
+	if isConvert && r.Method == http.MethodPost {
+		var req struct {
+			Amount    float64 `json:"amount"`
+			Category  string  `json:"category"`
+			Note      string  `json:"note"`
+			TxnType   string  `json:"txn_type"`
+			AccountID int     `json:"account_id"`
+			Tags      string  `json:"tags"`
+			Date      string  `json:"date"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&req)
+
+		receipt, err := app.DB.GetReceiptByID(id, username)
+		if err != nil {
+			jsonError(w, "receipt not found", http.StatusNotFound)
+			return
+		}
+
+		amount := req.Amount
+		if amount <= 0 {
+			amount = receipt.TotalAmount
+		}
+		if amount <= 0 {
+			jsonError(w, "amount must be greater than zero", http.StatusBadRequest)
+			return
+		}
+
+		category := req.Category
+		if category == "" {
+			category = receipt.SuggestedCategory
+		}
+		if category == "" {
+			category = "food"
+		}
+
+		note := req.Note
+		if note == "" {
+			note = receipt.Merchant
+		}
+
+		txnType := req.TxnType
+		if txnType != "income" && txnType != "expense" {
+			txnType = "expense"
+		}
+
+		tags := req.Tags
+		if tags == "" {
+			tags = "#receipt"
+		} else if !strings.Contains(tags, "#receipt") {
+			tags += ", #receipt"
+		}
+
+		var txDate time.Time
+		if req.Date != "" {
+			if parsed, err := time.Parse("2006-01-02", req.Date); err == nil {
+				txDate = parsed
+			}
+		}
+		if txDate.IsZero() && receipt.ReceiptDate != nil {
+			txDate = *receipt.ReceiptDate
+		}
+		if txDate.IsZero() {
+			txDate = time.Now()
+		}
+
+		txID, err := app.DB.AddTransactionWithReceipt(
+			username,
+			amount,
+			category,
+			note,
+			txnType,
+			tags,
+			req.AccountID,
+			receipt.FilePath,
+			txDate,
+		)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		_ = app.DB.LinkReceiptToTransaction(id, txID, username)
+
+		jsonOK(w, map[string]any{
+			"success":        true,
+			"transaction_id": txID,
+			"receipt_id":     id,
+		})
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		receipt, err := app.DB.GetReceiptByID(id, username)
+		if err != nil {
+			jsonError(w, "receipt not found", http.StatusNotFound)
+			return
+		}
+		jsonOK(w, receipt)
+
+	case http.MethodDelete:
+		if err := app.DB.DeleteReceipt(id, username); err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, map[string]any{"success": true})
+
+	default:
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
 

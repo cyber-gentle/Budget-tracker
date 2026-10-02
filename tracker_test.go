@@ -1670,3 +1670,200 @@ func TestNetWorthAndWealthFlow(t *testing.T) {
 	}
 }
 
+func TestReceiptOCRAndDocumentScannerFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "receipt_test.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	username := "scanneruser"
+	err = store.Signup(username, "scanner@spendly.app", "pass1234", "Receipt Scanner User")
+	if err != nil {
+		t.Fatalf("signup failed: %v", err)
+	}
+
+	sessionID, err := store.Login(username, "pass1234")
+	if err != nil {
+		t.Fatalf("login failed: %v", err)
+	}
+
+	application := app.NewApp(store)
+
+	// 1. Test ParseReceiptText Engine
+	sampleStarbucks := `STARBUCKS STORE #14920
+104 BROADWAY ST
+DATE: 10/02/2026 08:42 AM
+1 ICED CARAMEL MACCHIATO $6.45
+1 BACON GOUDA SANDWICH $5.95
+SUBTOTAL $12.40
+TAX $1.02
+TIP $1.43
+TOTAL $14.85
+THANK YOU FOR VISITING!`
+
+	parsed1 := app.ParseReceiptText(sampleStarbucks)
+	if parsed1.Merchant != "Starbucks" {
+		t.Fatalf("expected merchant 'Starbucks', got %q", parsed1.Merchant)
+	}
+	if parsed1.TotalAmount != 14.85 {
+		t.Fatalf("expected total amount 14.85, got %.2f", parsed1.TotalAmount)
+	}
+	if parsed1.TaxAmount != 1.02 {
+		t.Fatalf("expected tax 1.02, got %.2f", parsed1.TaxAmount)
+	}
+	if parsed1.TipAmount != 1.43 {
+		t.Fatalf("expected tip 1.43, got %.2f", parsed1.TipAmount)
+	}
+	if parsed1.SuggestedCategory != "food" {
+		t.Fatalf("expected category 'food', got %q", parsed1.SuggestedCategory)
+	}
+
+	// Test Supermarket Receipt
+	sampleGrocery := `WHOLE FOODS MARKET #1029
+ORGANIC BANANAS $2.49
+ALMOND MILK $4.99
+WILD SOCKEYE SALMON $24.50
+SUBTOTAL $31.98
+TOTAL DUE: $31.98
+DATE: 2026-10-01`
+	parsed2 := app.ParseReceiptText(sampleGrocery)
+	if parsed2.Merchant != "Whole Foods" {
+		t.Fatalf("expected merchant 'Whole Foods', got %q", parsed2.Merchant)
+	}
+	if parsed2.TotalAmount != 31.98 {
+		t.Fatalf("expected total amount 31.98, got %.2f", parsed2.TotalAmount)
+	}
+	if parsed2.SuggestedCategory != "groceries" {
+		t.Fatalf("expected category 'groceries', got %q", parsed2.SuggestedCategory)
+	}
+
+	// 2. Test DB CreateReceipt and GetReceipts
+	recDate := time.Date(2026, 10, 2, 8, 42, 0, 0, time.UTC)
+	receipt, err := store.CreateReceipt(
+		username,
+		"/uploads/receipts/sample_starbucks.jpg",
+		"sample_starbucks.jpg",
+		"Starbucks Coffee",
+		14.85,
+		1.02,
+		1.43,
+		&recDate,
+		"food",
+		sampleStarbucks,
+	)
+	if err != nil || receipt.ID == 0 {
+		t.Fatalf("failed to create receipt: %v", err)
+	}
+
+	receiptsList, summary, err := store.GetReceipts(username)
+	if err != nil {
+		t.Fatalf("failed to get receipts: %v", err)
+	}
+	if summary.TotalCount != 1 || summary.TotalAmount != 14.85 || summary.UnlinkedCount != 1 {
+		t.Fatalf("unexpected receipt summary: %+v", summary)
+	}
+	if len(receiptsList) != 1 || receiptsList[0].Merchant != "Starbucks Coffee" {
+		t.Fatalf("unexpected receipts list: %+v", receiptsList)
+	}
+
+	// 3. Test HTTP Page GET /receipts
+	reqPage := httptest.NewRequest(http.MethodGet, "/receipts", nil)
+	reqPage.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recPage := httptest.NewRecorder()
+	application.ServeHTTP(recPage, reqPage)
+	if recPage.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from GET /receipts, got %d", recPage.Code)
+	}
+	if !strings.Contains(recPage.Body.String(), "Receipt & Document OCR Scanner") {
+		t.Fatalf("page body missing expected heading")
+	}
+
+	// 4. Test HTTP API GET /api/receipts
+	reqAPI := httptest.NewRequest(http.MethodGet, "/api/receipts", nil)
+	reqAPI.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recAPI := httptest.NewRecorder()
+	application.ServeHTTP(recAPI, reqAPI)
+	if recAPI.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from GET /api/receipts, got %d", recAPI.Code)
+	}
+
+	// 5. Test HTTP API POST /api/receipts/parse-text
+	reqParse := httptest.NewRequest(http.MethodPost, "/api/receipts/parse-text", strings.NewReader(`{"text":"SHELL OIL\nPUMP 04 $45.00\nTOTAL: $45.00"}`))
+	reqParse.Header.Set("Content-Type", "application/json")
+	reqParse.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recParse := httptest.NewRecorder()
+	application.ServeHTTP(recParse, reqParse)
+	if recParse.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from POST /api/receipts/parse-text, got %d", recParse.Code)
+	}
+
+	// 6. Test HTTP API POST /api/receipts/scan (Upload/Scan JSON payload)
+	scanJSON := `{
+		"image_base64": "data:image/svg+xml;utf8,<svg></svg>",
+		"filename": "test_gas.svg",
+		"raw_ocr_text": "SHELL OIL #48102\nPUMP 04 REGULAR\nTOTAL PAID $45.00\nDATE: 2026-09-29",
+		"merchant": "Shell Oil Station",
+		"amount": 45.00,
+		"category": "transport"
+	}`
+	reqScan := httptest.NewRequest(http.MethodPost, "/api/receipts/scan", strings.NewReader(scanJSON))
+	reqScan.Header.Set("Content-Type", "application/json")
+	reqScan.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recScan := httptest.NewRecorder()
+	application.ServeHTTP(recScan, reqScan)
+	if recScan.Code != http.StatusCreated {
+		t.Fatalf("expected 201 Created from POST /api/receipts/scan, got %d: %s", recScan.Code, recScan.Body.String())
+	}
+	var scanRes struct {
+		Success bool        `json:"success"`
+		Receipt app.Receipt `json:"receipt"`
+	}
+	if err := json.Unmarshal(recScan.Body.Bytes(), &scanRes); err != nil {
+		t.Fatalf("failed to decode scan response: %v", err)
+	}
+	if scanRes.Receipt.ID == 0 || scanRes.Receipt.TotalAmount != 45.00 {
+		t.Fatalf("unexpected scanned receipt: %+v", scanRes.Receipt)
+	}
+
+	// 7. Test HTTP API POST /api/receipts/{id}/convert (Convert receipt to transaction)
+	convertJSON := `{
+		"amount": 45.00,
+		"category": "transport",
+		"note": "Shell Oil Station - Fuel",
+		"txn_type": "expense",
+		"account_id": 0,
+		"tags": "#fuel, #receipt",
+		"date": "2026-09-29"
+	}`
+	reqConvert := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/receipts/%d/convert", scanRes.Receipt.ID), strings.NewReader(convertJSON))
+	reqConvert.Header.Set("Content-Type", "application/json")
+	reqConvert.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recConvert := httptest.NewRecorder()
+	application.ServeHTTP(recConvert, reqConvert)
+	if recConvert.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from POST /api/receipts/{id}/convert, got %d: %s", recConvert.Code, recConvert.Body.String())
+	}
+
+	// Verify transaction was created and has receipt_url
+	txs, err := store.GetTransactions(username)
+	if err != nil || len(txs) == 0 {
+		t.Fatalf("expected transaction created from receipt, got: %v (len: %d)", err, len(txs))
+	}
+	if txs[0].Amount != 45.00 || txs[0].ReceiptURL == "" {
+		t.Fatalf("expected transaction amount 45.00 and non-empty ReceiptURL, got: %+v", txs[0])
+	}
+
+	// 8. Test DELETE /api/receipts/{id}
+	reqDel := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/receipts/%d", receipt.ID), nil)
+	reqDel.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recDel := httptest.NewRecorder()
+	application.ServeHTTP(recDel, reqDel)
+	if recDel.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from DELETE /api/receipts/%d, got %d", receipt.ID, recDel.Code)
+	}
+}
+
+

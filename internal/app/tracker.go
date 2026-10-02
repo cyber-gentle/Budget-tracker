@@ -25,6 +25,7 @@ type Transaction struct {
 	AccountID   int       `json:"account_id,omitempty"`
 	AccountName string    `json:"account_name,omitempty"`
 	AccountIcon string    `json:"account_icon,omitempty"`
+	ReceiptURL  string    `json:"receipt_url,omitempty"`
 }
 
 // FinancialRecord defines common behavior for financial entities.

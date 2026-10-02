@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt & Document OCR Scanner — Spendly</title>
+    
+    <link rel="icon" type="image/svg+xml" href="/static/assets/imgs/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/globals.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        offwhite: '#F8FAFC',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Anti-flash theme script
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('spendly-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <!-- Tesseract.js OCR library -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+        }
+        .dropzone-border {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='20' ry='20' stroke='%2310B98188' stroke-width='2' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+    </style>
+</head>
+<body class="bg-offwhite dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Main Navigation Header -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Brand Logo & Title -->
+            <div class="flex items-center gap-3">
+                <a href="/dashboard" class="flex items-center gap-2.5 group">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <span class="font-heading font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">Spendly</span>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center gap-1 ml-6 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    <a href="/dashboard" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Dashboard</a>
+                    <a href="/debts" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Debts & IOUs</a>
+                    <a href="/subscriptions" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Subscriptions</a>
+                    <a href="/goals" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Savings Goals</a>
+                    <a href="/reports" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Reports & Analytics</a>
+                    <a href="/net-worth" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Net Worth</a>
+                    <a href="/receipts" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">Receipts</a>
+                </nav>
+            </div>
+
+            <!-- Right Toolbar & Profile Dropdown -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                
+                <!-- Quick Snap / Scan Button -->
+                <button type="button" id="btn-header-scan" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl transition-all shadow-sm cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    <span>Scan Receipt</span>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button type="button" id="theme-toggle-btn" class="p-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer" title="Toggle theme">
+                    <svg id="theme-icon-sun" class="hidden text-amber-400" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg id="theme-icon-moon" class="block text-slate-600 dark:text-slate-300" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+
+                <!-- Currency Selector -->
+                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <select id="currency-select" class="bg-transparent focus:outline-none cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <option value="₦" {{if eq .Currency "₦"}}selected{{end}} class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">₦ (NGN)</option>
+                        <option value="$" {{if eq .Currency "$"}}selected{{end}} class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">$ (USD)</option>
+                        <option value="€" {{if eq .Currency "€"}}selected{{end}} class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">€ (EUR)</option>
+                        <option value="£" {{if eq .Currency "£"}}selected{{end}} class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">£ (GBP)</option>
+                    </select>
+                </div>
+
+                <!-- User Profile Dropdown Button -->
+                <div class="relative">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Account settings">
+                        <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-heading font-bold text-xs flex items-center justify-center uppercase shadow-sm">
+                            {{if .FullName}}{{printf "%.1s" .FullName}}{{else}}{{printf "%.1s" .Username}}{{end}}
+                        </span>
+                        <div class="hidden md:flex flex-col text-left">
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[100px] truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">@{{.Username}}</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <!-- Dropdown Menu Content -->
+                    <div id="user-dropdown-menu" class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 hidden z-50">
+                        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                            <p class="text-xs font-bold text-slate-800 dark:text-white truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">{{if .Email}}{{.Email}}{{else}}@{{.Username}}{{end}}</p>
+                        </div>
+                        <div class="py-1">
+                            <a href="/dashboard" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="/debts" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <span>Debts & IOUs</span>
+                            </a>
+                            <a href="/subscriptions" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                                <span>Subscriptions</span>
+                            </a>
+                            <a href="/goals" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                                <span>Savings Goals</span>
+                            </a>
+                            <a href="/reports" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                                <span>Reports & Analytics</span>
+                            </a>
+                            <a href="/net-worth" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                <span>Net Worth & Wealth</span>
+                            </a>
+                            <a href="/receipts" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg>
+                                <span>Receipts & Documents</span>
+                            </a>
+                        </div>
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-1">
+                            <form action="/api/logout" method="POST">
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                    <span>Log out</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Horizontal Tab Bar -->
+        <div class="md:hidden flex items-center gap-1 px-4 py-2 border-t border-slate-100 dark:border-slate-800 overflow-x-auto no-scrollbar">
+            <a href="/dashboard" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/debts" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>Debts</span>
+            </a>
+            <a href="/subscriptions" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/></svg>
+                <span>Subscriptions</span>
+            </a>
+            <a href="/goals" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/></svg>
+                <span>Goals</span>
+            </a>
+            <a href="/reports" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                <span>Reports</span>
+            </a>
+            <a href="/net-worth" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <span>Net Worth</span>
+            </a>
+            <a href="/receipts" class="shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg>
+                <span>Receipts</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+
+        <!-- Hero Section -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800">
+            <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div class="space-y-2 max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/></svg>
+                        <span>AI-Powered OCR Document Scanner</span>
+                    </div>
+                    <h1 class="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight">Turn Paper Receipts into Organized Expenses</h1>
+                    <p class="text-xs sm:text-sm text-slate-300">
+                        Drop receipt images, snap live camera photos, or upload PDF invoices. Spendly automatically extracts merchant names, total amounts, dates, and categories into tracked transactions.
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <button type="button" id="btn-snap-camera" class="flex-1 md:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-lg shadow-emerald-600/30 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                        <span>Snap Photo</span>
+                    </button>
+                    <label for="receipt-file-input" class="flex-1 md:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-900 bg-white hover:bg-slate-100 rounded-xl transition-all shadow-md cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                        <span>Upload File</span>
+                    </label>
+                    <input type="file" id="receipt-file-input" accept="image/*,application/pdf" class="hidden">
+                </div>
+            </div>
+
+            <!-- Background subtle glow -->
+            <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        </div>
+
+        <!-- 4-Card Summary Metrics -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Scanned</span>
+                <p id="stat-total-count" class="font-heading text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{.Summary.TotalCount}}</p>
+                <span class="text-[10px] text-slate-400 mt-0.5 block">Receipts digitized</span>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Processed Value</span>
+                <p id="stat-total-amount" class="font-heading text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{{.Currency}}{{printf "%.2f" .Summary.TotalAmount}}</p>
+                <span class="text-[10px] text-slate-400 mt-0.5 block">Parsed expenditure</span>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Linked to Ledger</span>
+                <p id="stat-linked-count" class="font-heading text-xl sm:text-2xl font-extrabold text-teal-600 dark:text-teal-400 mt-1">{{.Summary.LinkedCount}}</p>
+                <span class="text-[10px] text-slate-400 mt-0.5 block">Transactions recorded</span>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Recent Vendor</span>
+                <p id="stat-recent-vendor" class="font-heading text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200 truncate mt-1">
+                    {{if .Summary.RecentMerchant}}{{.Summary.RecentMerchant}}{{else}}No receipts yet{{end}}
+                </p>
+                <span class="text-[10px] text-slate-400 mt-0.5 block">Latest extracted merchant</span>
+            </div>
+        </div>
+
+        <!-- Scanner Dropzone & Review Drawer Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- LEFT: Drag & Drop Dropzone + Live Camera (5 cols on lg) -->
+            <div class="lg:col-span-5 space-y-4">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between h-full">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="font-heading text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-500"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/></svg>
+                                <span>Upload & Scan</span>
+                            </h2>
+                            <span class="text-[11px] font-semibold text-slate-400">Supports PNG, JPG, PDF</span>
+                        </div>
+
+                        <!-- Interactive Dropzone -->
+                        <div id="dropzone" class="border-2 border-dashed border-emerald-500/40 dark:border-emerald-500/30 hover:border-emerald-500 rounded-2xl p-6 sm:p-8 text-center transition-all bg-emerald-500/5 hover:bg-emerald-500/10 cursor-pointer flex flex-col items-center justify-center group">
+                            <div class="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-md group-hover:scale-110 transition-transform mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                            </div>
+                            <p class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">Drop receipt here, or <span class="text-emerald-600 dark:text-emerald-400 underline underline-offset-2">browse</span></p>
+                            <p class="text-[11px] text-slate-400 mt-1">Automatic high-contrast OCR enhancement</p>
+                        </div>
+
+                        <!-- Try Sample Receipts Pills -->
+                        <div class="mt-5 space-y-2">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                                <span>Try with Sample Receipts (1-Click Test)</span>
+                            </span>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" class="btn-sample-receipt px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-slate-700 transition-colors border border-slate-200/80 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer" data-sample="starbucks">
+                                    <span>☕</span>
+                                    <span>Starbucks Coffee ($14.85)</span>
+                                </button>
+                                <button type="button" class="btn-sample-receipt px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-slate-700 transition-colors border border-slate-200/80 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer" data-sample="supermarket">
+                                    <span>🛒</span>
+                                    <span>Whole Foods ($87.42)</span>
+                                </button>
+                                <button type="button" class="btn-sample-receipt px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-slate-700 transition-colors border border-slate-200/80 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer" data-sample="gas">
+                                    <span>⛽</span>
+                                    <span>Shell Gas ($45.00)</span>
+                                </button>
+                                <button type="button" class="btn-sample-receipt px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-slate-700 transition-colors border border-slate-200/80 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer" data-sample="tech">
+                                    <span>💻</span>
+                                    <span>Best Buy Tech ($249.99)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OCR Progress Indicator -->
+                    <div id="ocr-progress-card" class="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hidden">
+                        <div class="flex items-center justify-between text-xs font-bold mb-1.5">
+                            <span id="ocr-status-text" class="text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                                <svg class="animate-spin h-3.5 w-3.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span>Scanning receipt text...</span>
+                            </span>
+                            <span id="ocr-percent-text" class="text-slate-500">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                            <div id="ocr-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-300 w-0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Extracted Data Review & Convert Card (7 cols on lg) -->
+            <div class="lg:col-span-7">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
+                    
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                                🧾
+                            </div>
+                            <div>
+                                <h3 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Extracted Receipt Details</h3>
+                                <p class="text-[11px] text-slate-400">Review, adjust, and convert to an expense in 1 click</p>
+                            </div>
+                        </div>
+                        <span id="extracted-badge" class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                            Waiting for scan
+                        </span>
+                    </div>
+
+                    <!-- Side-by-side or stacked preview -->
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-5">
+                        
+                        <!-- Thumbnail Preview -->
+                        <div class="sm:col-span-4 flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 min-h-[180px]">
+                            <img id="review-preview-img" src="" alt="Receipt Preview" class="max-h-44 object-contain rounded-lg hidden shadow-sm">
+                            <div id="review-empty-state" class="text-center p-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-slate-300 dark:text-slate-600 mx-auto mb-2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg>
+                                <p class="text-xs font-semibold text-slate-400">Upload or choose a sample to inspect</p>
+                            </div>
+                        </div>
+
+                        <!-- Editable Fields Form -->
+                        <div class="sm:col-span-8 space-y-3.5">
+                            <input type="hidden" id="review-receipt-id" value="">
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Merchant / Vendor</label>
+                                    <input type="text" id="review-merchant" placeholder="e.g. Starbucks Coffee" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Total Amount</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-xs font-bold text-slate-400">{{.Currency}}</span>
+                                        <input type="number" step="0.01" id="review-amount" placeholder="0.00" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl pl-7 pr-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Category</label>
+                                    <select id="review-category" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        <option value="food">🍔 Food & Dining</option>
+                                        <option value="groceries">🛒 Groceries</option>
+                                        <option value="transport">⛽ Transport & Fuel</option>
+                                        <option value="shopping">🛍️ Shopping</option>
+                                        <option value="utilities">💡 Utilities</option>
+                                        <option value="health">💊 Health & Medical</option>
+                                        <option value="housing">🏠 Housing & Home</option>
+                                        <option value="entertainment">🎬 Entertainment</option>
+                                        <option value="other">📦 Other Expense</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Deduct from Wallet</label>
+                                    <select id="review-account" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        {{range .Accounts}}
+                                        <option value="{{.ID}}">{{.Icon}} {{.Name}} ({{$.Currency}}{{printf "%.2f" .CurrentBalance}})</option>
+                                        {{else}}
+                                        <option value="0">Default Wallet</option>
+                                        {{end}}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Receipt Date</label>
+                                    <input type="date" id="review-date" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Tags</label>
+                                    <input type="text" id="review-tags" placeholder="#receipt, #tax" value="#receipt" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+
+                            <!-- Line items notes -->
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Line Items / Extracted Notes</label>
+                                <textarea id="review-notes" rows="2" placeholder="Extracted line items will appear here..." class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Convert / Save Action Toolbar -->
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <div class="text-[11px] text-slate-400 flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-500"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Receipt document will be permanently attached to the transaction</span>
+                        </div>
+                        <button type="button" id="btn-convert-tx" disabled class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-slate-300 dark:bg-slate-800 cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                            <span>Create Expense Transaction</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipts Gallery & History Card -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-heading text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Receipts Archive</span>
+                        <span id="gallery-count-badge" class="px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">{{len .Receipts}}</span>
+                    </h2>
+                    <p class="text-xs text-slate-400">Search and manage all uploaded and scanned receipts</p>
+                </div>
+
+                <!-- Filters & Search Toolbar -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-2.5 text-slate-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="search-receipts" placeholder="Search merchant..." class="pl-8 pr-3 py-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-200 w-40 sm:w-52">
+                    </div>
+                    <div class="flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold">
+                        <button type="button" class="filter-tab px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer" data-filter="all">All</button>
+                        <button type="button" class="filter-tab px-3 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer" data-filter="linked">Linked</button>
+                        <button type="button" class="filter-tab px-3 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer" data-filter="unlinked">Unlinked</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receipts Grid -->
+            <div id="receipts-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {{range .Receipts}}
+                <div class="receipt-card group bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500/50 rounded-2xl p-4 transition-all duration-200 hover:shadow-md flex flex-col justify-between"
+                     data-id="{{.ID}}"
+                     data-merchant="{{.Merchant}}"
+                     data-amount="{{.TotalAmount}}"
+                     data-status="{{.Status}}"
+                     data-category="{{.SuggestedCategory}}"
+                     data-filepath="{{.FilePath}}"
+                     data-date="{{.ReceiptDateStr}}"
+                     data-notes="{{.RawOCRText}}">
+                    
+                    <div>
+                        <!-- Thumbnail Header -->
+                        <div class="relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 h-36 flex items-center justify-center mb-3 cursor-pointer btn-view-receipt">
+                            <img src="{{.FilePath}}" alt="{{.Merchant}}" class="h-full w-full object-cover group-hover:scale-105 transition-transform" onerror="this.onerror=null; this.src='/static/assets/imgs/sample_receipt.png';">
+                            <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-2 font-bold text-xs backdrop-blur-xs">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+                                <span>Inspect</span>
+                            </div>
+                            
+                            <!-- Status badge overlay -->
+                            <div class="absolute top-2 right-2">
+                                {{if or (gt .TransactionID 0) (eq .Status "linked")}}
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-500/90 text-white shadow-sm flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Linked
+                                </span>
+                                {{else}}
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-500/90 text-white shadow-sm">
+                                    Pending
+                                </span>
+                                {{end}}
+                            </div>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <h4 class="font-heading text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{{.Merchant}}</h4>
+                                <span class="font-heading text-sm font-extrabold text-slate-900 dark:text-white shrink-0">{{$.Currency}}{{printf "%.2f" .TotalAmount}}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px] text-slate-400">
+                                <span>{{.ReceiptDateStr}}</span>
+                                <span class="capitalize px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-semibold text-[10px]">{{.SuggestedCategory}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2 mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60">
+                        {{if or (gt .TransactionID 0) (eq .Status "linked")}}
+                        <button type="button" class="btn-load-review flex-1 py-1.5 text-xs font-bold rounded-xl text-slate-700 dark:text-slate-300 bg-slate-200/60 dark:bg-slate-700/60 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-center cursor-pointer">
+                            View Data
+                        </button>
+                        {{else}}
+                        <button type="button" class="btn-load-review flex-1 py-1.5 text-xs font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 transition-colors text-center cursor-pointer shadow-xs">
+                            Convert
+                        </button>
+                        {{end}}
+                        <button type="button" class="btn-delete-receipt p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete receipt">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </button>
+                    </div>
+
+                </div>
+                {{else}}
+                <div id="receipts-none-msg" class="col-span-full py-12 text-center space-y-3">
+                    <div class="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto text-2xl shadow-inner">
+                        🧾
+                    </div>
+                    <h3 class="font-heading text-base font-bold text-slate-800 dark:text-slate-200">No Receipts Scanned Yet</h3>
+                    <p class="text-xs text-slate-400 max-w-sm mx-auto">Drop a receipt in the upload zone above or click any sample receipt to try the OCR scanner instantly.</p>
+                </div>
+                {{end}}
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Camera Viewfinder Modal -->
+    <div id="camera-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl space-y-4 p-5 text-white">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                    <h3 class="font-heading text-sm font-bold">Snap Receipt Photo</h3>
+                </div>
+                <button type="button" id="btn-close-camera" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Viewfinder Video -->
+            <div class="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] flex items-center justify-center">
+                <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
+                <canvas id="camera-canvas" class="hidden"></canvas>
+                <!-- Framing box overlay -->
+                <div class="absolute inset-6 border-2 border-emerald-400/70 rounded-2xl pointer-events-none flex flex-col justify-between p-3">
+                    <span class="text-[10px] font-bold text-emerald-400 bg-black/40 px-2 py-0.5 rounded self-start">Align receipt edges</span>
+                    <span class="text-[10px] text-slate-300 bg-black/40 px-2 py-0.5 rounded self-end">Hold steady</span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center justify-center gap-4 pt-2">
+                <button type="button" id="btn-switch-camera" class="p-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer" title="Flip camera">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m20 16-4 4 4 4"/><path d="M4 8v2a6 6 0 0 0 10.75 3.75"/><path d="M4 8l4-4-4-4"/><path d="M20 16v-2a6 6 0 0 0-10.75-3.75"/></svg>
+                </button>
+                <button type="button" id="btn-capture-photo" class="w-16 h-16 rounded-full border-4 border-white bg-emerald-500 hover:bg-emerald-400 flex items-center justify-center shadow-lg cursor-pointer">
+                    <div class="w-12 h-12 rounded-full bg-white"></div>
+                </button>
+                <div class="w-12"></div> <!-- Spacer for symmetry -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Inspection Modal -->
+    <div id="lightbox-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="relative max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between p-4 border-b border-slate-800 text-white">
+                <h3 id="lightbox-title" class="font-heading text-sm font-bold truncate">Receipt Document</h3>
+                <button type="button" id="btn-close-lightbox" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto p-4 flex items-center justify-center bg-black/50">
+                <img id="lightbox-img" src="" alt="Receipt Large Preview" class="max-h-[60vh] max-w-full object-contain rounded-xl shadow-lg">
+            </div>
+            <div class="p-4 bg-slate-950 border-t border-slate-800 text-white space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                    <span id="lightbox-amount" class="font-extrabold text-emerald-400 text-base"></span>
+                    <span id="lightbox-date" class="text-slate-400"></span>
+                </div>
+                <div id="lightbox-ocr-snippet" class="text-[11px] text-slate-400 font-mono bg-slate-900 p-2.5 rounded-xl max-h-24 overflow-y-auto whitespace-pre-wrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-xs font-bold border border-slate-800 dark:border-slate-200">
+            <span id="toast-icon">✨</span>
+            <span id="toast-message">Success</span>
+        </div>
+    </div>
+
+    <!-- Client-side Logic Script -->
+    <script>
+        const currencySymbol = '{{.Currency}}' || '$';
+
+        // Predefined Sample Receipts for instant test runs
+        const sampleReceipts = {
+            starbucks: {
+                merchant: "Starbucks Coffee",
+                amount: 14.85,
+                category: "food",
+                date: "2026-10-02",
+                notes: "1 Iced Caramel Macchiato $6.45\n1 Bacon Gouda Sandwich $5.95\nSales Tax (8.25%) $1.02\nTip $1.43\nTotal: $14.85",
+                rawText: "STARBUCKS STORE #14920\n104 BROADWAY ST\nNEW YORK NY\nDATE: 10/02/2026 08:42 AM\n1 ICED CARAMEL MACCHIATO $6.45\n1 BACON GOUDA SANDWICH $5.95\nSUBTOTAL $12.40\nTAX $1.02\nTIP $1.43\nTOTAL $14.85\nTHANK YOU FOR VISITING!",
+                img: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'><rect width='100%25' height='100%25' fill='%23fefefe'/><text x='150' y='40' font-family='monospace' font-size='16' font-weight='bold' text-anchor='middle' fill='%23111'>STARBUCKS COFFEE</text><text x='150' y='60' font-family='monospace' font-size='11' text-anchor='middle' fill='%23666'>Store %2314920 - New York NY</text><line x1='30' y1='80' x2='270' y2='80' stroke='%23ddd' stroke-dasharray='4'/><text x='30' y='110' font-family='monospace' font-size='12' fill='%23333'>1 Iced Macchiato</text><text x='270' y='110' font-family='monospace' font-size='12' text-anchor='end' fill='%23333'>$6.45</text><text x='30' y='135' font-family='monospace' font-size='12' fill='%23333'>1 Bacon Gouda</text><text x='270' y='135' font-family='monospace' font-size='12' text-anchor='end' fill='%23333'>$5.95</text><line x1='30' y1='160' x2='270' y2='160' stroke='%23ddd' stroke-dasharray='4'/><text x='30' y='185' font-family='monospace' font-size='11' fill='%23666'>Subtotal</text><text x='270' y='185' font-family='monospace' font-size='11' text-anchor='end' fill='%23666'>$12.40</text><text x='30' y='205' font-family='monospace' font-size='11' fill='%23666'>Tax</text><text x='270' y='205' font-family='monospace' font-size='11' text-anchor='end' fill='%23666'>$1.02</text><text x='30' y='225' font-family='monospace' font-size='11' fill='%23666'>Tip</text><text x='270' y='225' font-family='monospace' font-size='11' text-anchor='end' fill='%23666'>$1.43</text><line x1='30' y1='245' x2='270' y2='245' stroke='%23111' stroke-width='1.5'/><text x='30' y='270' font-family='monospace' font-size='16' font-weight='bold' fill='%23111'>TOTAL</text><text x='270' y='270' font-family='monospace' font-size='16' font-weight='bold' text-anchor='end' fill='%23059669'>$14.85</text><text x='150' y='330' font-family='monospace' font-size='11' text-anchor='middle' fill='%23999'>DATE: 10/02/2026</text><text x='150' y='360' font-family='monospace' font-size='12' text-anchor='middle' fill='%23111'>THANK YOU!</text></svg>"
+            },
+            supermarket: {
+                merchant: "Whole Foods Market",
+                amount: 87.42,
+                category: "groceries",
+                date: "2026-10-01",
+                notes: "Organic Bananas $2.49\nAlmond Milk 64oz $4.99\nWild Sockeye Salmon $24.50\nOrganic Sourdough Bread $5.99\nAvocados 4pk $6.49\nOlive Oil Extra Virgin $18.99\nProduce & Pantry $24.97\nTax $0.00\nTotal: $87.42",
+                rawText: "WHOLE FOODS MARKET #1029\nORGANIC BANANAS $2.49\nALMOND MILK $4.99\nWILD SOCKEYE SALMON $24.50\nORGANIC SOURDOUGH $5.99\nAVOCADOS 4PK $6.49\nOLIVE OIL EV $18.99\nPANTRY ITEMS $24.97\nSUBTOTAL $87.42\nTAX $0.00\nBALANCE DUE: $87.42\nCARD AUTH: 994821\nDATE: 2026-10-01",
+                img: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'><rect width='100%25' height='100%25' fill='%23fafafa'/><text x='150' y='40' font-family='monospace' font-size='16' font-weight='bold' text-anchor='middle' fill='%23047857'>WHOLE FOODS MARKET</text><line x1='30' y1='65' x2='270' y2='65' stroke='%23ccc'/><text x='30' y='95' font-family='monospace' font-size='11' fill='%23333'>Organic Bananas</text><text x='270' y='95' font-family='monospace' font-size='11' text-anchor='end' fill='%23333'>$2.49</text><text x='30' y='120' font-family='monospace' font-size='11' fill='%23333'>Wild Salmon</text><text x='270' y='120' font-family='monospace' font-size='11' text-anchor='end' fill='%23333'>$24.50</text><text x='30' y='145' font-family='monospace' font-size='11' fill='%23333'>Olive Oil EV</text><text x='270' y='145' font-family='monospace' font-size='11' text-anchor='end' fill='%23333'>$18.99</text><text x='30' y='170' font-family='monospace' font-size='11' fill='%23333'>Produce & Pantry</text><text x='270' y='170' font-family='monospace' font-size='11' text-anchor='end' fill='%23333'>$41.44</text><line x1='30' y1='205' x2='270' y2='205' stroke='%23333' stroke-width='1.5'/><text x='30' y='235' font-family='monospace' font-size='15' font-weight='bold' fill='%23111'>TOTAL DUE</text><text x='270' y='235' font-family='monospace' font-size='15' font-weight='bold' text-anchor='end' fill='%23047857'>$87.42</text><text x='150' y='290' font-family='monospace' font-size='11' text-anchor='middle' fill='%23666'>DATE: 10/01/2026</text></svg>"
+            },
+            gas: {
+                merchant: "Shell Oil Station",
+                amount: 45.00,
+                category: "transport",
+                date: "2026-09-29",
+                notes: "Pump #04 Regular Unleaded\n12.500 Gal @ $3.600/Gal\nFuel Total: $45.00",
+                rawText: "SHELL OIL #48102\nPUMP 04\nREGULAR UNLEADED\n12.500 GAL @ $3.600/GAL\nFUEL TOTAL: $45.00\nPAYMENT CREDIT VISA\nDATE: 09/29/2026",
+                img: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'><rect width='100%25' height='100%25' fill='%23fff'/><text x='150' y='45' font-family='monospace' font-size='16' font-weight='bold' text-anchor='middle' fill='%23d97706'>SHELL OIL</text><text x='150' y='70' font-family='monospace' font-size='11' text-anchor='middle' fill='%23555'>Station %2348102</text><line x1='30' y1='95' x2='270' y2='95' stroke='%23eee'/><text x='30' y='130' font-family='monospace' font-size='11' fill='%23333'>Pump 04 Regular</text><text x='270' y='130' font-family='monospace' font-size='11' text-anchor='end' fill='%23333'>$45.00</text><text x='30' y='155' font-family='monospace' font-size='10' fill='%23888'>12.500 GAL @ 3.60</text><line x1='30' y1='180' x2='270' y2='180' stroke='%23333'/><text x='30' y='210' font-family='monospace' font-size='15' font-weight='bold' fill='%23111'>TOTAL PAID</text><text x='270' y='210' font-family='monospace' font-size='15' font-weight='bold' text-anchor='end' fill='%23d97706'>$45.00</text></svg>"
+            },
+            tech: {
+                merchant: "Best Buy",
+                amount: 249.99,
+                category: "shopping",
+                date: "2026-09-25",
+                notes: "Noise-Cancelling Headphones $229.99\nElectronics Tax $20.00\nTotal: $249.99",
+                rawText: "BEST BUY STORE #0412\nNOISE CANCEL HEADPHONES $229.99\nTAX: $20.00\nFINAL TOTAL: $249.99\nDATE: 2026-09-25",
+                img: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'><rect width='100%25' height='100%25' fill='%23fff'/><text x='150' y='45' font-family='monospace' font-size='16' font-weight='bold' text-anchor='middle' fill='%232563eb'>BEST BUY</text><line x1='30' y1='95' x2='270' y2='95' stroke='%23eee'/><text x='30' y='130' font-family='monospace' font-size='11' fill='%23333'>NC Headphones</text><text x='270' y='130' font-family='monospace' font-size='11' text-anchor='end' fill='%23333'>$229.99</text><text x='30' y='155' font-family='monospace' font-size='11' fill='%23666'>Sales Tax</text><text x='270' y='155' font-family='monospace' font-size='11' text-anchor='end' fill='%23666'>$20.00</text><line x1='30' y1='180' x2='270' y2='180' stroke='%23333'/><text x='30' y='210' font-family='monospace' font-size='15' font-weight='bold' fill='%23111'>TOTAL</text><text x='270' y='210' font-family='monospace' font-size='15' font-weight='bold' text-anchor='end' fill='%232563eb'>$249.99</text></svg>"
+            }
+        };
+
+        // DOM elements
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('receipt-file-input');
+        const ocrProgressCard = document.getElementById('ocr-progress-card');
+        const ocrProgressBar = document.getElementById('ocr-progress-bar');
+        const ocrStatusText = document.getElementById('ocr-status-text');
+        const ocrPercentText = document.getElementById('ocr-percent-text');
+
+        const reviewReceiptId = document.getElementById('review-receipt-id');
+        const reviewMerchant = document.getElementById('review-merchant');
+        const reviewAmount = document.getElementById('review-amount');
+        const reviewCategory = document.getElementById('review-category');
+        const reviewAccount = document.getElementById('review-account');
+        const reviewDate = document.getElementById('review-date');
+        const reviewTags = document.getElementById('review-tags');
+        const reviewNotes = document.getElementById('review-notes');
+        const reviewPreviewImg = document.getElementById('review-preview-img');
+        const reviewEmptyState = document.getElementById('review-empty-state');
+        const btnConvertTx = document.getElementById('btn-convert-tx');
+        const extractedBadge = document.getElementById('extracted-badge');
+
+        // Camera elements
+        const cameraModal = document.getElementById('camera-modal');
+        const cameraVideo = document.getElementById('camera-video');
+        const cameraCanvas = document.getElementById('camera-canvas');
+        const btnSnapCamera = document.getElementById('btn-snap-camera');
+        const btnHeaderScan = document.getElementById('btn-header-scan');
+        const btnCloseCamera = document.getElementById('btn-close-camera');
+        const btnCapturePhoto = document.getElementById('btn-capture-photo');
+        const btnSwitchCamera = document.getElementById('btn-switch-camera');
+        let cameraStream = null;
+        let useFacingMode = 'environment';
+
+        // Lightbox elements
+        const lightboxModal = document.getElementById('lightbox-modal');
+        const lightboxTitle = document.getElementById('lightbox-title');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxAmount = document.getElementById('lightbox-amount');
+        const lightboxDate = document.getElementById('lightbox-date');
+        const lightboxOcrSnippet = document.getElementById('lightbox-ocr-snippet');
+        const btnCloseLightbox = document.getElementById('btn-close-lightbox');
+
+        // User dropdown menu toggle
+        const btnUserMenu = document.getElementById('btn-user-menu');
+        const userDropdownMenu = document.getElementById('user-dropdown-menu');
+        if (btnUserMenu && userDropdownMenu) {
+            btnUserMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdownMenu.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                if (!userDropdownMenu.contains(e.target) && !btnUserMenu.contains(e.target)) {
+                    userDropdownMenu.classList.add('hidden');
+                }
+            });
+        }
+
+        // Theme toggle logic
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const iconSun = document.getElementById('theme-icon-sun');
+        const iconMoon = document.getElementById('theme-icon-moon');
+        function syncThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                iconSun?.classList.remove('hidden');
+                iconMoon?.classList.add('hidden');
+            } else {
+                iconSun?.classList.add('hidden');
+                iconMoon?.classList.remove('hidden');
+            }
+        }
+        syncThemeIcons();
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('spendly-theme', isDark ? 'dark' : 'light');
+                syncThemeIcons();
+            });
+        }
+
+        // Currency change
+        const currencySelect = document.getElementById('currency-select');
+        if (currencySelect) {
+            currencySelect.addEventListener('change', async (e) => {
+                const newCurr = e.target.value;
+                try {
+                    await fetch('/api/currency', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ currency: newCurr })
+                    });
+                    location.reload();
+                } catch (err) {}
+            });
+        }
+
+        // Toast Helper
+        function showToast(message, icon = '✨') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+            if (!toast) return;
+            msgEl.textContent = message;
+            iconEl.textContent = icon;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Drag & Drop handlers
+        if (dropzone) {
+            dropzone.addEventListener('click', () => fileInput.click());
+            ['dragenter', 'dragover'].forEach(name => {
+                dropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.add('bg-emerald-500/20');
+                });
+            });
+            ['dragleave', 'drop'].forEach(name => {
+                dropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('bg-emerald-500/20');
+                });
+            });
+            dropzone.addEventListener('drop', (e) => {
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    processFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    processFile(e.target.files[0]);
+                }
+            });
+        }
+
+        // Sample Receipt Click Handlers
+        document.querySelectorAll('.btn-sample-receipt').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const sampleKey = btn.getAttribute('data-sample');
+                const sample = sampleReceipts[sampleKey];
+                if (!sample) return;
+                
+                showProgress(true, "Processing sample receipt with OCR engine...", 35);
+                
+                // Simulate OCR pipeline with realistic progress steps
+                setTimeout(() => setProgress("Extracting merchant & prices...", 70), 300);
+                setTimeout(async () => {
+                    setProgress("Saving receipt metadata...", 90);
+                    
+                    try {
+                        const res = await fetch('/api/receipts/scan', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                image_base64: sample.img,
+                                filename: sampleKey + '_receipt.svg',
+                                raw_ocr_text: sample.rawText,
+                                merchant: sample.merchant,
+                                amount: sample.amount,
+                                category: sample.category
+                            })
+                        });
+                        const data = await res.json();
+                        showProgress(false);
+                        
+                        if (data.success && data.receipt) {
+                            populateReviewForm(data.receipt, sample.img, sample.notes);
+                            showToast(`Extracted ${sample.merchant} receipt ($${sample.amount})!`, '🧾');
+                            prependGalleryCard(data.receipt);
+                        }
+                    } catch (err) {
+                        showProgress(false);
+                        showToast('Failed to process sample receipt', '⚠️');
+                    }
+                }, 600);
+            });
+        });
+
+        // OCR Progress Bar Helpers
+        function showProgress(show, text = '', pct = 0) {
+            if (!ocrProgressCard) return;
+            if (show) {
+                ocrProgressCard.classList.remove('hidden');
+                setProgress(text, pct);
+            } else {
+                ocrProgressCard.classList.add('hidden');
+                setProgress('', 0);
+            }
+        }
+        function setProgress(text, pct) {
+            if (ocrStatusText) ocrStatusText.querySelector('span:last-child').textContent = text;
+            if (ocrPercentText) ocrPercentText.textContent = `${pct}%`;
+            if (ocrProgressBar) ocrProgressBar.style.width = `${pct}%`;
+        }
+
+        // Process File (Upload & OCR)
+        async function processFile(file) {
+            showProgress(true, "Uploading receipt document...", 20);
+
+            // Read preview
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const dataUrl = e.target.result;
+                setProgress("Analyzing image resolution...", 40);
+
+                let ocrText = "";
+                // If Tesseract is loaded and file is an image, run client-side OCR
+                if (typeof Tesseract !== 'undefined' && file.type.startsWith('image/')) {
+                    try {
+                        setProgress("Running Optical Character Recognition...", 60);
+                        const result = await Tesseract.recognize(dataUrl, 'eng', {
+                            logger: m => {
+                                if (m.status === 'recognizing text' && m.progress) {
+                                    const progressVal = Math.round(50 + (m.progress * 35));
+                                    setProgress(`Detecting characters (${Math.round(m.progress * 100)}%)...`, progressVal);
+                                }
+                            }
+                        });
+                        ocrText = result.data.text;
+                    } catch (ocrErr) {
+                        console.warn("Client OCR fallback:", ocrErr);
+                    }
+                }
+
+                setProgress("Sending to server parser...", 90);
+
+                // Send to backend /api/receipts/scan
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('raw_ocr_text', ocrText);
+
+                    const res = await fetch('/api/receipts/scan', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const json = await res.json();
+                    showProgress(false);
+
+                    if (json.success && json.receipt) {
+                        const lineItemsText = (json.parsed && json.parsed.line_items) ? json.parsed.line_items.join('\n') : ocrText;
+                        populateReviewForm(json.receipt, dataUrl, lineItemsText);
+                        prependGalleryCard(json.receipt);
+                        showToast(`Extracted ${json.receipt.merchant || 'Receipt'} (${currencySymbol}${json.receipt.total_amount.toFixed(2)})!`, '🧾');
+                    } else {
+                        showToast(json.error || 'Failed to parse receipt', '⚠️');
+                    }
+                } catch (err) {
+                    showProgress(false);
+                    showToast('Network error processing receipt', '⚠️');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Populate Review Form
+        function populateReviewForm(receipt, imgUrl, notesText) {
+            reviewReceiptId.value = receipt.id || '';
+            reviewMerchant.value = receipt.merchant || '';
+            reviewAmount.value = receipt.total_amount > 0 ? receipt.total_amount : '';
+            reviewCategory.value = receipt.suggested_category || 'food';
+            reviewDate.value = receipt.receipt_date_str || new Date().toISOString().split('T')[0];
+            reviewNotes.value = notesText || receipt.raw_ocr_text || '';
+
+            if (imgUrl) {
+                reviewPreviewImg.src = imgUrl;
+                reviewPreviewImg.classList.remove('hidden');
+                reviewEmptyState.classList.add('hidden');
+            }
+
+            extractedBadge.textContent = 'Ready to Convert';
+            extractedBadge.className = 'px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400';
+
+            btnConvertTx.disabled = false;
+            btnConvertTx.className = 'w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-emerald-600 dark:hover:bg-emerald-500 cursor-pointer shadow-md transition-all flex items-center justify-center gap-2';
+        }
+
+        // Convert / Save Transaction
+        btnConvertTx.addEventListener('click', async () => {
+            const receiptId = reviewReceiptId.value;
+            const amount = parseFloat(reviewAmount.value);
+            const merchant = reviewMerchant.value.trim();
+            const category = reviewCategory.value;
+            const accountId = parseInt(reviewAccount.value) || 0;
+            const date = reviewDate.value;
+            const tags = reviewTags.value;
+
+            if (!amount || amount <= 0) {
+                showToast('Please specify a valid amount', '⚠️');
+                return;
+            }
+
+            btnConvertTx.disabled = true;
+            btnConvertTx.innerHTML = `
+                <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>Recording Expense...</span>
+            `;
+
+            try {
+                const res = await fetch(`/api/receipts/${receiptId}/convert`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: amount,
+                        category: category,
+                        note: merchant,
+                        txn_type: 'expense',
+                        account_id: accountId,
+                        tags: tags,
+                        date: date
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(`Transaction #${data.transaction_id} recorded & receipt linked!`, '🎉');
+                    extractedBadge.textContent = 'Linked to Transaction';
+                    extractedBadge.className = 'px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-teal-500/20 text-teal-600 dark:text-teal-400';
+                    btnConvertTx.innerHTML = `<span>✓ Recorded</span>`;
+                    
+                    // Update card in gallery if exists
+                    const card = document.querySelector(`.receipt-card[data-id="${receiptId}"]`);
+                    if (card) {
+                        card.setAttribute('data-status', 'linked');
+                        const statusBadge = card.querySelector('.absolute.top-2.right-2');
+                        if (statusBadge) {
+                            statusBadge.innerHTML = `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-500/90 text-white shadow-sm flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Linked</span>`;
+                        }
+                    }
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    showToast(data.error || 'Failed to record transaction', '⚠️');
+                    btnConvertTx.disabled = false;
+                    btnConvertTx.textContent = 'Create Expense Transaction';
+                }
+            } catch (err) {
+                showToast('Network error converting transaction', '⚠️');
+                btnConvertTx.disabled = false;
+                btnConvertTx.textContent = 'Create Expense Transaction';
+            }
+        });
+
+        // Prepend new receipt to gallery
+        function prependGalleryCard(receipt) {
+            const noneMsg = document.getElementById('receipts-none-msg');
+            if (noneMsg) noneMsg.remove();
+            
+            const grid = document.getElementById('receipts-grid');
+            if (!grid) return;
+
+            const card = document.createElement('div');
+            card.className = "receipt-card group bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500/50 rounded-2xl p-4 transition-all duration-200 hover:shadow-md flex flex-col justify-between";
+            card.setAttribute('data-id', receipt.id);
+            card.setAttribute('data-merchant', receipt.merchant);
+            card.setAttribute('data-amount', receipt.total_amount);
+            card.setAttribute('data-status', receipt.status);
+            card.setAttribute('data-category', receipt.suggested_category);
+            card.setAttribute('data-filepath', receipt.file_path);
+            card.setAttribute('data-date', receipt.receipt_date_str);
+            card.setAttribute('data-notes', receipt.raw_ocr_text);
+
+            card.innerHTML = `
+                <div>
+                    <div class="relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 h-36 flex items-center justify-center mb-3 cursor-pointer btn-view-receipt">
+                        <img src="${receipt.file_path}" alt="${receipt.merchant}" class="h-full w-full object-cover group-hover:scale-105 transition-transform" onerror="this.onerror=null; this.src='/static/assets/imgs/sample_receipt.png';">
+                        <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-2 font-bold text-xs backdrop-blur-xs">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+                            <span>Inspect</span>
+                        </div>
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-500/90 text-white shadow-sm">
+                                Pending
+                            </span>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="font-heading text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${receipt.merchant}</h4>
+                            <span class="font-heading text-sm font-extrabold text-slate-900 dark:text-white shrink-0">${currencySymbol}${receipt.total_amount.toFixed(2)}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-slate-400">
+                            <span>${receipt.receipt_date_str}</span>
+                            <span class="capitalize px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-semibold text-[10px]">${receipt.suggested_category}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60">
+                    <button type="button" class="btn-load-review flex-1 py-1.5 text-xs font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-500 transition-colors text-center cursor-pointer shadow-xs">
+                        Convert
+                    </button>
+                    <button type="button" class="btn-delete-receipt p-1.5 text-slate-400 hover:text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete receipt">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                    </button>
+                </div>
+            `;
+            grid.insertBefore(card, grid.firstChild);
+            attachCardEvents(card);
+        }
+
+        // Attach events to cards
+        function attachCardEvents(card) {
+            const loadBtn = card.querySelector('.btn-load-review');
+            if (loadBtn) {
+                loadBtn.addEventListener('click', () => {
+                    const id = card.getAttribute('data-id');
+                    const merchant = card.getAttribute('data-merchant');
+                    const amount = card.getAttribute('data-amount');
+                    const cat = card.getAttribute('data-category');
+                    const fp = card.getAttribute('data-filepath');
+                    const date = card.getAttribute('data-date');
+                    const notes = card.getAttribute('data-notes');
+                    populateReviewForm({
+                        id: id,
+                        merchant: merchant,
+                        total_amount: parseFloat(amount) || 0,
+                        suggested_category: cat,
+                        receipt_date_str: date,
+                        raw_ocr_text: notes
+                    }, fp, notes);
+                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                });
+            }
+
+            const viewBtn = card.querySelector('.btn-view-receipt');
+            if (viewBtn) {
+                viewBtn.addEventListener('click', () => {
+                    lightboxTitle.textContent = card.getAttribute('data-merchant') || 'Receipt';
+                    lightboxImg.src = card.getAttribute('data-filepath');
+                    lightboxAmount.textContent = `${currencySymbol}${parseFloat(card.getAttribute('data-amount') || 0).toFixed(2)}`;
+                    lightboxDate.textContent = card.getAttribute('data-date') || '';
+                    lightboxOcrSnippet.textContent = card.getAttribute('data-notes') || 'No parsed text available.';
+                    lightboxModal.classList.remove('hidden');
+                });
+            }
+
+            const delBtn = card.querySelector('.btn-delete-receipt');
+            if (delBtn) {
+                delBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = card.getAttribute('data-id');
+                    if (!confirm('Are you sure you want to delete this receipt?')) return;
+                    try {
+                        const res = await fetch(`/api/receipts/${id}`, { method: 'DELETE' });
+                        const data = await res.json();
+                        if (data.success) {
+                            card.remove();
+                            showToast('Receipt deleted', '🗑️');
+                        }
+                    } catch (err) {
+                        showToast('Failed to delete receipt', '⚠️');
+                    }
+                });
+            }
+        }
+
+        document.querySelectorAll('.receipt-card').forEach(attachCardEvents);
+
+        // Lightbox close
+        if (btnCloseLightbox) {
+            btnCloseLightbox.addEventListener('click', () => lightboxModal.classList.add('hidden'));
+            lightboxModal.addEventListener('click', (e) => {
+                if (e.target === lightboxModal) lightboxModal.classList.add('hidden');
+            });
+        }
+
+        // Live Camera Capture Logic (WebRTC)
+        async function startCamera() {
+            cameraModal.classList.remove('hidden');
+            try {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(t => t.stop());
+                }
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: useFacingMode }
+                });
+                cameraVideo.srcObject = cameraStream;
+            } catch (err) {
+                showToast('Camera access denied or unavailable', '⚠️');
+                cameraModal.classList.add('hidden');
+            }
+        }
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            cameraModal.classList.add('hidden');
+        }
+
+        if (btnSnapCamera) btnSnapCamera.addEventListener('click', startCamera);
+        if (btnHeaderScan) btnHeaderScan.addEventListener('click', startCamera);
+        if (btnCloseCamera) btnCloseCamera.addEventListener('click', stopCamera);
+        if (btnSwitchCamera) {
+            btnSwitchCamera.addEventListener('click', () => {
+                useFacingMode = useFacingMode === 'environment' ? 'user' : 'environment';
+                startCamera();
+            });
+        }
+        if (btnCapturePhoto) {
+            btnCapturePhoto.addEventListener('click', () => {
+                if (!cameraStream) return;
+                const context = cameraCanvas.getContext('2d');
+                cameraCanvas.width = cameraVideo.videoWidth || 640;
+                cameraCanvas.height = cameraVideo.videoHeight || 480;
+                context.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                
+                const dataUrl = cameraCanvas.toDataURL('image/jpeg', 0.9);
+                stopCamera();
+
+                // Convert dataUrl to blob and process
+                fetch(dataUrl)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        const file = new File([blob], "camera_receipt.jpg", { type: "image/jpeg" });
+                        processFile(file);
+                    });
+            });
+        }
+
+        // Search & Filter Gallery
+        const searchInput = document.getElementById('search-receipts');
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        let currentFilter = 'all';
+
+        function filterGallery() {
+            const query = (searchInput.value || '').toLowerCase().trim();
+            document.querySelectorAll('.receipt-card').forEach(card => {
+                const merchant = (card.getAttribute('data-merchant') || '').toLowerCase();
+                const notes = (card.getAttribute('data-notes') || '').toLowerCase();
+                const status = card.getAttribute('data-status');
+
+                const matchesQuery = !query || merchant.includes(query) || notes.includes(query);
+                let matchesStatus = true;
+                if (currentFilter === 'linked') {
+                    matchesStatus = (status === 'linked');
+                } else if (currentFilter === 'unlinked') {
+                    matchesStatus = (status !== 'linked');
+                }
+
+                if (matchesQuery && matchesStatus) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        if (searchInput) searchInput.addEventListener('input', filterGallery);
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                filterTabs.forEach(t => {
+                    t.className = "filter-tab px-3 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer";
+                });
+                tab.className = "filter-tab px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer";
+                currentFilter = tab.getAttribute('data-filter');
+                filterGallery();
+            });
+        });
+
+    </script>
+</body>
+</html>

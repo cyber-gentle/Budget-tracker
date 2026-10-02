@@ -7,7 +7,9 @@ import (
 	"math"
 	"net/url"
 	"os"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -245,6 +247,24 @@ func (s *DBStore) migrate() error {
 		created_at DATETIME
 	);
 	CREATE INDEX IF NOT EXISTS idx_snapshots_user ON net_worth_snapshots(username);
+
+	CREATE TABLE IF NOT EXISTS receipts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		file_path TEXT NOT NULL,
+		original_filename TEXT NOT NULL,
+		merchant TEXT DEFAULT '',
+		total_amount REAL DEFAULT 0,
+		tax_amount REAL DEFAULT 0,
+		tip_amount REAL DEFAULT 0,
+		receipt_date DATETIME,
+		suggested_category TEXT DEFAULT '',
+		raw_ocr_text TEXT DEFAULT '',
+		status TEXT DEFAULT 'scanned',
+		transaction_id INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	CREATE INDEX IF NOT EXISTS idx_receipts_username ON receipts(username);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
@@ -256,7 +276,9 @@ func (s *DBStore) migrate() error {
 	_, _ = s.db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
 	_, _ = s.db.Exec("ALTER TABLE transactions ADD COLUMN tags TEXT DEFAULT ''")
 	_, _ = s.db.Exec("ALTER TABLE transactions ADD COLUMN account_id INTEGER DEFAULT 0")
+	_, _ = s.db.Exec("ALTER TABLE transactions ADD COLUMN receipt_url TEXT DEFAULT ''")
 	_, _ = s.db.Exec("ALTER TABLE debts ADD COLUMN split_id INTEGER DEFAULT NULL")
+	_, _ = s.db.Exec("ALTER TABLE receipts ADD COLUMN transaction_id INTEGER DEFAULT 0")
 
 	return nil
 }
@@ -560,6 +582,36 @@ func (s *DBStore) AddTransaction(username string, amount float64, category, note
 	return s.AddTransactionFull(username, amount, category, note, txnType, "", 0, optDate...)
 }
 
+func (s *DBStore) AddTransactionWithReceipt(username string, amount float64, category, note, txnType, tags string, accountID int, receiptURL string, optDate ...time.Time) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	txDate := time.Now()
+	if len(optDate) > 0 && !optDate[0].IsZero() {
+		txDate = optDate[0]
+	}
+
+	cleanTags, _ := parseTags(tags)
+
+	res, err := s.db.Exec(
+		"INSERT INTO transactions (username, amount, category, note, date, type, tags, account_id, receipt_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		username, amount, category, note, txDate, txnType, cleanTags, accountID, receiptURL,
+	)
+	if err != nil {
+		return 0, err
+	}
+	id, err := res.LastInsertId()
+	return int(id), err
+}
+
+func (s *DBStore) AttachReceiptToTransaction(id int, username string, receiptURL string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, err := s.db.Exec("UPDATE transactions SET receipt_url = ? WHERE id = ? AND username = ?", receiptURL, id, username)
+	return err
+}
+
 func (s *DBStore) UpdateTransactionFull(id int, username string, amount float64, category, note, txnType, tags string, accountID int, optDate ...time.Time) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -614,7 +666,8 @@ func (s *DBStore) GetTransactions(username string) ([]Transaction, error) {
 
 	rows, err := s.db.Query(
 		`SELECT t.id, t.amount, t.category, t.note, t.date, t.type, COALESCE(t.tags, ''),
-                COALESCE(t.account_id, 0), COALESCE(a.name, ''), COALESCE(a.icon, '')
+                COALESCE(t.account_id, 0), COALESCE(a.name, ''), COALESCE(a.icon, ''),
+                COALESCE(t.receipt_url, '')
          FROM transactions t
          LEFT JOIN accounts a ON a.id = t.account_id AND a.username = t.username
          WHERE t.username = ?
@@ -630,7 +683,7 @@ func (s *DBStore) GetTransactions(username string) ([]Transaction, error) {
 	for rows.Next() {
 		var t Transaction
 		var rawTags string
-		if err := rows.Scan(&t.ID, &t.Amount, &t.Category, &t.Note, &t.Date, &t.Type, &rawTags, &t.AccountID, &t.AccountName, &t.AccountIcon); err != nil {
+		if err := rows.Scan(&t.ID, &t.Amount, &t.Category, &t.Note, &t.Date, &t.Type, &rawTags, &t.AccountID, &t.AccountName, &t.AccountIcon, &t.ReceiptURL); err != nil {
 			log.Printf("scan error: %v", err)
 			continue
 		}
@@ -4756,3 +4809,472 @@ func (s *DBStore) GetNetWorthOverview(username string) (*NetWorthOverview, error
 
 	return overview, nil
 }
+
+// ─── Receipt & Document OCR Models & Methods ────────────────────────────────
+
+// Receipt represents a scanned or uploaded receipt document.
+type Receipt struct {
+	ID                int        `json:"id"`
+	Username          string     `json:"username"`
+	FilePath          string     `json:"file_path"`
+	OriginalFilename  string     `json:"original_filename"`
+	Merchant          string     `json:"merchant"`
+	TotalAmount       float64    `json:"total_amount"`
+	TaxAmount         float64    `json:"tax_amount"`
+	TipAmount         float64    `json:"tip_amount"`
+	ReceiptDate       *time.Time `json:"receipt_date"`
+	ReceiptDateStr    string     `json:"receipt_date_str"`
+	SuggestedCategory string     `json:"suggested_category"`
+	RawOCRText        string     `json:"raw_ocr_text"`
+	Status            string     `json:"status"` // "scanned", "linked", "archived"
+	TransactionID     int        `json:"transaction_id"`
+	CreatedAt         time.Time  `json:"created_at"`
+	CreatedAtStr      string     `json:"created_at_str"`
+}
+
+type ReceiptSummary struct {
+	TotalCount     int     `json:"total_count"`
+	TotalAmount    float64 `json:"total_amount"`
+	LinkedCount    int     `json:"linked_count"`
+	UnlinkedCount  int     `json:"unlinked_count"`
+	RecentMerchant string  `json:"recent_merchant"`
+}
+
+type ParsedReceiptData struct {
+	Merchant          string     `json:"merchant"`
+	TotalAmount       float64    `json:"total_amount"`
+	TaxAmount         float64    `json:"tax_amount"`
+	TipAmount         float64    `json:"tip_amount"`
+	ReceiptDate       *time.Time `json:"receipt_date"`
+	ReceiptDateStr    string     `json:"receipt_date_str"`
+	SuggestedCategory string     `json:"suggested_category"`
+	LineItems         []string   `json:"line_items"`
+	RawText           string     `json:"raw_text"`
+	Confidence        float64    `json:"confidence"`
+}
+
+// ParseReceiptText uses pattern recognition and heuristic OCR analysis to parse receipt text.
+func ParseReceiptText(text string) ParsedReceiptData {
+	data := ParsedReceiptData{
+		RawText:           text,
+		SuggestedCategory: "",
+		Confidence:        0.75,
+	}
+
+	lines := strings.Split(text, "\n")
+	var cleanLines []string
+	for _, l := range lines {
+		trimmed := strings.TrimSpace(l)
+		if trimmed != "" {
+			cleanLines = append(cleanLines, trimmed)
+		}
+	}
+
+	lowerText := strings.ToLower(text)
+
+	// 1. Merchant Detection
+	knownMerchants := []struct {
+		Name     string
+		Category string
+		Keywords []string
+	}{
+		{"Starbucks", "food", []string{"starbucks", "starbucks coffee"}},
+		{"Walmart", "groceries", []string{"walmart", "wal-mart", "supercenter"}},
+		{"Target", "shopping", []string{"target"}},
+		{"Amazon", "shopping", []string{"amazon", "amzn", "prime"}},
+		{"McDonald's", "food", []string{"mcdonald", "mcdonald's", "golden arches"}},
+		{"Whole Foods", "groceries", []string{"whole foods", "wholefoods"}},
+		{"Trader Joe's", "groceries", []string{"trader joe", "trader joe's"}},
+		{"Costco", "groceries", []string{"costco", "costco wholesale"}},
+		{"Kroger", "groceries", []string{"kroger"}},
+		{"Safeway", "groceries", []string{"safeway"}},
+		{"Aldi", "groceries", []string{"aldi"}},
+		{"Shell", "transport", []string{"shell", "shell oil", "shell station"}},
+		{"Chevron", "transport", []string{"chevron"}},
+		{"ExxonMobil", "transport", []string{"exxon", "mobil"}},
+		{"BP", "transport", []string{"bp oil", "bp gas"}},
+		{"Uber", "transport", []string{"uber", "uber trip", "uber eats"}},
+		{"Lyft", "transport", []string{"lyft", "lyft ride"}},
+		{"Apple Store", "shopping", []string{"apple store", "apple.com", "apple retail"}},
+		{"Best Buy", "shopping", []string{"best buy"}},
+		{"CVS Pharmacy", "health", []string{"cvs", "cvs pharmacy"}},
+		{"Walgreens", "health", []string{"walgreens"}},
+		{"Home Depot", "housing", []string{"home depot"}},
+		{"Lowe's", "housing", []string{"lowes", "lowe's"}},
+		{"Subway", "food", []string{"subway"}},
+		{"Chipotle", "food", []string{"chipotle"}},
+		{"Taco Bell", "food", []string{"taco bell"}},
+		{"Domino's Pizza", "food", []string{"domino's", "dominos"}},
+		{"7-Eleven", "groceries", []string{"7-eleven", "7 eleven"}},
+		{"Dunkin'", "food", []string{"dunkin", "dunkin donuts"}},
+		{"Panera Bread", "food", []string{"panera", "panera bread"}},
+	}
+
+	for _, km := range knownMerchants {
+		for _, kw := range km.Keywords {
+			if strings.Contains(lowerText, kw) {
+				data.Merchant = km.Name
+				data.SuggestedCategory = km.Category
+				data.Confidence += 0.15
+				break
+			}
+		}
+		if data.Merchant != "" {
+			break
+		}
+	}
+
+	// Fallback merchant detection from top lines
+	if data.Merchant == "" {
+		for i, line := range cleanLines {
+			if i >= 6 {
+				break
+			}
+			upper := strings.ToUpper(line)
+			if strings.Contains(upper, "RECEIPT") || strings.Contains(upper, "INVOICE") ||
+				strings.Contains(upper, "WELCOME") || strings.Contains(upper, "TEL") ||
+				strings.Contains(upper, "PHONE") || strings.Contains(upper, "STORE #") ||
+				strings.Contains(upper, "ORDER #") || strings.Contains(upper, "DATE:") ||
+				strings.Contains(upper, "CASHIER") || strings.Contains(upper, "TERMINAL") {
+				continue
+			}
+			// Must have at least 3 letters
+			letters := 0
+			for _, r := range line {
+				if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
+					letters++
+				}
+			}
+			if letters >= 3 {
+				cleanMerchant := strings.Trim(line, "*#=-:_~ ")
+				if len(cleanMerchant) > 0 {
+					data.Merchant = strings.Title(strings.ToLower(cleanMerchant))
+					break
+				}
+			}
+		}
+	}
+
+	if data.Merchant == "" {
+		data.Merchant = "Receipt Purchase"
+	}
+
+	// 2. Amount Detection (Total, Subtotal, Tax, Tip)
+	amountRegex := regexp.MustCompile(`(?i)(?:total|amount|due|balance|paid|charged|sum)[^\d$€£₦]*[$€£₦]?\s*([0-9]+[.,][0-9]{2})`)
+	taxRegex := regexp.MustCompile(`(?i)(?:tax|vat|hst|gst)[^\d$€£₦]*[$€£₦]?\s*([0-9]+[.,][0-9]{2})`)
+	tipRegex := regexp.MustCompile(`(?i)(?:tip|gratuity)[^\d$€£₦]*[$€£₦]?\s*([0-9]+[.,][0-9]{2})`)
+	generalPriceRegex := regexp.MustCompile(`[$€£₦]?\s*([0-9]+[.,][0-9]{2})`)
+
+	// Scan bottom-up for total
+	for i := len(cleanLines) - 1; i >= 0; i-- {
+		line := cleanLines[i]
+		if match := amountRegex.FindStringSubmatch(line); len(match) > 1 {
+			valStr := strings.ReplaceAll(match[1], ",", ".")
+			if val, err := strconv.ParseFloat(valStr, 64); err == nil && val > 0 {
+				data.TotalAmount = val
+				break
+			}
+		}
+	}
+
+	// If no total keyword found, find the maximum price detected in the lines
+	if data.TotalAmount == 0 {
+		var maxPrice float64
+		for _, line := range cleanLines {
+			matches := generalPriceRegex.FindAllStringSubmatch(line, -1)
+			for _, m := range matches {
+				if len(m) > 1 {
+					valStr := strings.ReplaceAll(m[1], ",", ".")
+					if val, err := strconv.ParseFloat(valStr, 64); err == nil {
+						if val > maxPrice && val < 500000 { // sanity ceiling
+							maxPrice = val
+						}
+					}
+				}
+			}
+		}
+		data.TotalAmount = maxPrice
+	}
+
+	// Tax & Tip
+	for _, line := range cleanLines {
+		if data.TaxAmount == 0 {
+			if match := taxRegex.FindStringSubmatch(line); len(match) > 1 {
+				valStr := strings.ReplaceAll(match[1], ",", ".")
+				if val, err := strconv.ParseFloat(valStr, 64); err == nil {
+					data.TaxAmount = val
+				}
+			}
+		}
+		if data.TipAmount == 0 {
+			if match := tipRegex.FindStringSubmatch(line); len(match) > 1 {
+				valStr := strings.ReplaceAll(match[1], ",", ".")
+				if val, err := strconv.ParseFloat(valStr, 64); err == nil {
+					data.TipAmount = val
+				}
+			}
+		}
+	}
+
+	// 3. Date Detection
+	dateRegex1 := regexp.MustCompile(`\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b`)       // 2026-09-15
+	dateRegex2 := regexp.MustCompile(`\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})\b`)       // 09/15/2026
+	dateRegex3 := regexp.MustCompile(`(?i)\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})\b`)
+
+	now := time.Now()
+	var parsedDate *time.Time
+
+	for _, line := range cleanLines {
+		if match := dateRegex1.FindStringSubmatch(line); len(match) == 4 {
+			y, _ := strconv.Atoi(match[1])
+			m, _ := strconv.Atoi(match[2])
+			d, _ := strconv.Atoi(match[3])
+			if y > 2000 && y < 2035 && m >= 1 && m <= 12 && d >= 1 && d <= 31 {
+				t := time.Date(y, time.Month(m), d, 12, 0, 0, 0, time.UTC)
+				parsedDate = &t
+				break
+			}
+		}
+		if match := dateRegex2.FindStringSubmatch(line); len(match) == 4 {
+			m, _ := strconv.Atoi(match[1])
+			d, _ := strconv.Atoi(match[2])
+			y, _ := strconv.Atoi(match[3])
+			if y < 100 {
+				y += 2000
+			}
+			if y > 2000 && y < 2035 && m >= 1 && m <= 12 && d >= 1 && d <= 31 {
+				t := time.Date(y, time.Month(m), d, 12, 0, 0, 0, time.UTC)
+				parsedDate = &t
+				break
+			}
+		}
+		if match := dateRegex3.FindStringSubmatch(line); len(match) == 4 {
+			monthStr := strings.ToLower(match[1])
+			d, _ := strconv.Atoi(match[2])
+			y, _ := strconv.Atoi(match[3])
+			monthsMap := map[string]time.Month{
+				"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+				"jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
+			}
+			if mo, ok := monthsMap[monthStr[:3]]; ok && y > 2000 && y < 2035 && d >= 1 && d <= 31 {
+				t := time.Date(y, mo, d, 12, 0, 0, 0, time.UTC)
+				parsedDate = &t
+				break
+			}
+		}
+	}
+
+	if parsedDate == nil {
+		parsedDate = &now
+	}
+	data.ReceiptDate = parsedDate
+	data.ReceiptDateStr = parsedDate.Format("2006-01-02")
+
+	// 4. Category Classification if not already determined by known merchant
+	if data.SuggestedCategory == "" {
+		categoryKeywords := map[string][]string{
+			"food":          {"coffee", "latte", "espresso", "sandwich", "burger", "pizza", "diner", "cafe", "restaurant", "grill", "bakery", "mcdonald", "starbucks"},
+			"groceries":     {"grocery", "market", "supermarket", "produce", "milk", "bread", "fruit", "vegetable", "cheese", "snack", "eggs", "meat", "deli"},
+			"transport":     {"fuel", "gas", "gasoline", "diesel", "unleaded", "regular", "pump", "gallon", "liters", "parking", "toll", "transit", "uber", "lyft", "taxi"},
+			"shopping":      {"apparel", "clothing", "shoes", "electronics", "gadget", "mall", "fashion", "retail", "hardware", "tool"},
+			"utilities":     {"electric", "water", "internet", "wifi", "cable", "phone", "telecom", "utility", "sewer", "power"},
+			"health":        {"pharmacy", "medicine", "pill", "prescription", "rx", "doctor", "clinic", "dental", "optical", "health", "vitamin"},
+			"housing":       {"rent", "furniture", "appliance", "plumbing", "paint", "garden", "home improvement"},
+			"entertainment": {"cinema", "movie", "ticket", "game", "theater", "concert", "museum", "show", "event"},
+		}
+
+		for cat, kws := range categoryKeywords {
+			for _, kw := range kws {
+				if strings.Contains(lowerText, kw) {
+					data.SuggestedCategory = cat
+					break
+				}
+			}
+			if data.SuggestedCategory != "" {
+				break
+			}
+		}
+	}
+
+	if data.SuggestedCategory == "" {
+		data.SuggestedCategory = "food"
+	}
+
+	// 5. Line items extraction
+	for _, line := range cleanLines {
+		upper := strings.ToUpper(line)
+		if strings.Contains(upper, "TOTAL") || strings.Contains(upper, "SUBTOTAL") ||
+			strings.Contains(upper, "TAX") || strings.Contains(upper, "TIP") ||
+			strings.Contains(upper, "CASH") || strings.Contains(upper, "CHANGE") ||
+			strings.Contains(upper, "BALANCE") || strings.Contains(upper, "CARD") ||
+			strings.Contains(upper, "INVOICE") || strings.Contains(upper, "RECEIPT") ||
+			strings.Contains(upper, "DATE") || strings.Contains(upper, "TEL") {
+			continue
+		}
+		if match := generalPriceRegex.FindStringSubmatch(line); len(match) > 1 {
+			data.LineItems = append(data.LineItems, line)
+			if len(data.LineItems) >= 10 {
+				break
+			}
+		}
+	}
+
+	if data.Confidence > 0.98 {
+		data.Confidence = 0.98
+	}
+
+	return data
+}
+
+func (s *DBStore) CreateReceipt(username, filePath, originalFilename, merchant string, totalAmount, taxAmount, tipAmount float64, receiptDate *time.Time, suggestedCategory, rawOCRText string) (*Receipt, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	rDate := time.Now()
+	if receiptDate != nil && !receiptDate.IsZero() {
+		rDate = *receiptDate
+	}
+
+	res, err := s.db.Exec(
+		`INSERT INTO receipts (username, file_path, original_filename, merchant, total_amount, tax_amount, tip_amount, receipt_date, suggested_category, raw_ocr_text, status, transaction_id)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scanned', 0)`,
+		username, filePath, originalFilename, merchant, totalAmount, taxAmount, tipAmount, rDate, suggestedCategory, rawOCRText,
+	)
+	if err != nil {
+		return nil, err
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	r := &Receipt{
+		ID:                int(id),
+		Username:          username,
+		FilePath:          filePath,
+		OriginalFilename:  originalFilename,
+		Merchant:          merchant,
+		TotalAmount:       totalAmount,
+		TaxAmount:         taxAmount,
+		TipAmount:         tipAmount,
+		ReceiptDate:       &rDate,
+		ReceiptDateStr:    rDate.Format("2006-01-02"),
+		SuggestedCategory: suggestedCategory,
+		RawOCRText:        rawOCRText,
+		Status:            "scanned",
+		TransactionID:     0,
+		CreatedAt:         time.Now(),
+		CreatedAtStr:      time.Now().Format("Jan 02, 2006"),
+	}
+	return r, nil
+}
+
+func (s *DBStore) GetReceipts(username string) ([]Receipt, ReceiptSummary, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var summary ReceiptSummary
+
+	rows, err := s.db.Query(
+		`SELECT id, username, file_path, original_filename, merchant, total_amount, tax_amount, tip_amount,
+		        receipt_date, suggested_category, raw_ocr_text, status, transaction_id, created_at
+		 FROM receipts
+		 WHERE username = ?
+		 ORDER BY created_at DESC, id DESC`,
+		username,
+	)
+	if err != nil {
+		return nil, summary, err
+	}
+	defer rows.Close()
+
+	var list []Receipt
+	for rows.Next() {
+		var r Receipt
+		var rDate time.Time
+		if err := rows.Scan(
+			&r.ID, &r.Username, &r.FilePath, &r.OriginalFilename, &r.Merchant,
+			&r.TotalAmount, &r.TaxAmount, &r.TipAmount, &rDate,
+			&r.SuggestedCategory, &r.RawOCRText, &r.Status, &r.TransactionID, &r.CreatedAt,
+		); err != nil {
+			log.Printf("receipt scan error: %v", err)
+			continue
+		}
+		r.ReceiptDate = &rDate
+		r.ReceiptDateStr = rDate.Format("2006-01-02")
+		r.CreatedAtStr = r.CreatedAt.Format("Jan 02, 2006")
+
+		summary.TotalCount++
+		summary.TotalAmount += r.TotalAmount
+		if r.TransactionID > 0 || r.Status == "linked" {
+			summary.LinkedCount++
+		} else {
+			summary.UnlinkedCount++
+		}
+		if summary.RecentMerchant == "" && r.Merchant != "" {
+			summary.RecentMerchant = r.Merchant
+		}
+
+		list = append(list, r)
+	}
+	if list == nil {
+		list = []Receipt{}
+	}
+	return list, summary, nil
+}
+
+func (s *DBStore) GetReceiptByID(id int, username string) (*Receipt, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var r Receipt
+	var rDate time.Time
+	err := s.db.QueryRow(
+		`SELECT id, username, file_path, original_filename, merchant, total_amount, tax_amount, tip_amount,
+		        receipt_date, suggested_category, raw_ocr_text, status, transaction_id, created_at
+		 FROM receipts
+		 WHERE id = ? AND username = ?`,
+		id, username,
+	).Scan(
+		&r.ID, &r.Username, &r.FilePath, &r.OriginalFilename, &r.Merchant,
+		&r.TotalAmount, &r.TaxAmount, &r.TipAmount, &rDate,
+		&r.SuggestedCategory, &r.RawOCRText, &r.Status, &r.TransactionID, &r.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	r.ReceiptDate = &rDate
+	r.ReceiptDateStr = rDate.Format("2006-01-02")
+	r.CreatedAtStr = r.CreatedAt.Format("Jan 02, 2006")
+	return &r, nil
+}
+
+func (s *DBStore) LinkReceiptToTransaction(receiptID, transactionID int, username string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, err := s.db.Exec(
+		"UPDATE receipts SET transaction_id = ?, status = 'linked' WHERE id = ? AND username = ?",
+		transactionID, receiptID, username,
+	)
+	return err
+}
+
+func (s *DBStore) DeleteReceipt(id int, username string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var filePath string
+	_ = s.db.QueryRow("SELECT file_path FROM receipts WHERE id = ? AND username = ?", id, username).Scan(&filePath)
+
+	_, err := s.db.Exec("DELETE FROM receipts WHERE id = ? AND username = ?", id, username)
+	if err != nil {
+		return err
+	}
+
+	if filePath != "" && strings.HasPrefix(filePath, "uploads/") {
+		_ = os.Remove(filePath)
+	}
+	return nil
+}
+
