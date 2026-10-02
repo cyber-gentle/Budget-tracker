@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math"
 	"net/url"
 	"os"
 	"sort"
@@ -751,6 +752,526 @@ func (s *DBStore) CategoryBreakdown(username string, allTime bool) (map[string]f
 		}
 	}
 	return res, nil
+}
+
+// ─── Financial Reports & Advanced Analytics ─────────────────────────────────
+
+type ReportKPIs struct {
+	TotalIncome           float64 `json:"total_income"`
+	TotalExpense          float64 `json:"total_expense"`
+	NetSavings            float64 `json:"net_savings"`
+	SavingsRate           int     `json:"savings_rate"`
+	DailyAvgSpend         float64 `json:"daily_avg_spend"`
+	DailyAvgIncome        float64 `json:"daily_avg_income"`
+	TransactionCount      int     `json:"transaction_count"`
+	IncomeCount           int     `json:"income_count"`
+	ExpenseCount          int     `json:"expense_count"`
+	LargestExpenseAmount  float64 `json:"largest_expense_amount"`
+	LargestExpenseNote    string  `json:"largest_expense_note"`
+	LargestExpenseDate    string  `json:"largest_expense_date"`
+	TopCategoryName       string  `json:"top_category_name"`
+	TopCategoryIcon       string  `json:"top_category_icon"`
+	TopCategoryAmount     float64 `json:"top_category_amount"`
+	EmergencyRunwayMonths float64 `json:"emergency_runway_months"`
+}
+
+type ReportTimelinePoint struct {
+	PeriodKey     string  `json:"period_key"`
+	Label         string  `json:"label"`
+	Income        float64 `json:"income"`
+	Expense       float64 `json:"expense"`
+	Net           float64 `json:"net"`
+	CumulativeNet float64 `json:"cumulative_net"`
+}
+
+type ReportCategoryItem struct {
+	Category   string  `json:"category"`
+	Name       string  `json:"name"`
+	Icon       string  `json:"icon"`
+	Color      string  `json:"color"`
+	Amount     float64 `json:"amount"`
+	Percentage int     `json:"percentage"`
+	Count      int     `json:"count"`
+	Type       string  `json:"type"`
+}
+
+type ReportTagItem struct {
+	Tag        string  `json:"tag"`
+	Amount     float64 `json:"amount"`
+	Count      int     `json:"count"`
+	Percentage int     `json:"percentage"`
+}
+
+type ReportAccountItem struct {
+	AccountID   int     `json:"account_id"`
+	AccountName string  `json:"account_name"`
+	Icon        string  `json:"icon"`
+	Color       string  `json:"color"`
+	Income      float64 `json:"income"`
+	Expense     float64 `json:"expense"`
+	Net         float64 `json:"net"`
+	Percentage  int     `json:"percentage"`
+}
+
+type FinancialReport struct {
+	Timeframe           string                `json:"timeframe"`
+	TimeframeLabel      string                `json:"timeframe_label"`
+	StartDate           string                `json:"start_date"`
+	EndDate             string                `json:"end_date"`
+	DaysInPeriod        int                   `json:"days_in_period"`
+	AccountID           int                   `json:"account_id"`
+	CategoryFilter      string                `json:"category_filter"`
+	Currency            string                `json:"currency"`
+	KPIs                ReportKPIs            `json:"kpis"`
+	Timeline            []ReportTimelinePoint `json:"timeline"`
+	ExpenseCategories   []ReportCategoryItem  `json:"expense_categories"`
+	IncomeCategories    []ReportCategoryItem  `json:"income_categories"`
+	TagsAnalytics       []ReportTagItem       `json:"tags_analytics"`
+	AccountDistribution []ReportAccountItem   `json:"account_distribution"`
+	Transactions        []Transaction         `json:"transactions"`
+}
+
+func (s *DBStore) GetDetailedFinancialReport(username, timeframe, startDateStr, endDateStr string, accountID int, categoryFilter string) (*FinancialReport, error) {
+	now := time.Now()
+	var start, end time.Time
+	timeframeLabel := "This Month"
+
+	timeframe = strings.ToLower(strings.TrimSpace(timeframe))
+	if timeframe == "" {
+		timeframe = "this_month"
+	}
+
+	switch timeframe {
+	case "this_month":
+		start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		end = start.AddDate(0, 1, 0).Add(-time.Nanosecond)
+		timeframeLabel = now.Format("January 2006")
+
+	case "last_month":
+		firstCurrent := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		start = firstCurrent.AddDate(0, -1, 0)
+		end = firstCurrent.Add(-time.Nanosecond)
+		timeframeLabel = start.Format("January 2006")
+
+	case "3m", "quarter":
+		start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, -2, 0)
+		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, 1, 0).Add(-time.Nanosecond)
+		timeframeLabel = "Last 3 Months"
+
+	case "6m":
+		start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, -5, 0)
+		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, 1, 0).Add(-time.Nanosecond)
+		timeframeLabel = "Last 6 Months"
+
+	case "ytd":
+		start = time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location())
+		end = time.Date(now.Year(), 12, 31, 23, 59, 59, 999999999, now.Location())
+		timeframeLabel = fmt.Sprintf("YTD %d", now.Year())
+
+	case "1y", "12m":
+		start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(-1, 1, 0)
+		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, 1, 0).Add(-time.Nanosecond)
+		timeframeLabel = "Last 12 Months"
+
+	case "all":
+		start = time.Date(2000, 1, 1, 0, 0, 0, 0, now.Location())
+		end = time.Date(2100, 1, 1, 0, 0, 0, 0, now.Location())
+		timeframeLabel = "All Time"
+
+	case "custom":
+		timeframeLabel = "Custom Range"
+		if startDateStr != "" {
+			if t, err := time.Parse("2006-01-02", startDateStr); err == nil {
+				start = t
+			}
+		}
+		if endDateStr != "" {
+			if t, err := time.Parse("2006-01-02", endDateStr); err == nil {
+				end = time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 999999999, now.Location())
+			}
+		}
+		if start.IsZero() {
+			start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		}
+		if end.IsZero() {
+			end = time.Now()
+		}
+		if start.After(end) {
+			start, end = end, start
+		}
+
+	default:
+		start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		end = start.AddDate(0, 1, 0).Add(-time.Nanosecond)
+		timeframeLabel = now.Format("January 2006")
+	}
+
+	days := int(end.Sub(start).Hours()/24) + 1
+	if days < 1 {
+		days = 1
+	}
+
+	// Lookup accounts for mapping and liquid balance
+	accounts, _ := s.GetAccounts(username)
+	var defaultAccID int
+	var totalLiquidBalance float64
+	for _, a := range accounts {
+		totalLiquidBalance += a.CurrentBalance
+		if a.IsDefault {
+			defaultAccID = a.ID
+		}
+	}
+	if defaultAccID == 0 && len(accounts) > 0 {
+		defaultAccID = accounts[0].ID
+	}
+
+	txs, err := s.GetTransactions(username)
+	if err != nil {
+		return nil, err
+	}
+
+	var filtered []Transaction
+	categoryFilter = strings.ToLower(strings.TrimSpace(categoryFilter))
+
+	for _, t := range txs {
+		if t.Date.Before(start) || t.Date.After(end) {
+			continue
+		}
+		effAccID := t.AccountID
+		if effAccID == 0 {
+			effAccID = defaultAccID
+		}
+		if accountID > 0 && effAccID != accountID {
+			continue
+		}
+		if categoryFilter != "" && categoryFilter != "all" && strings.ToLower(t.Category) != categoryFilter {
+			continue
+		}
+		filtered = append(filtered, t)
+	}
+
+	var totalIncome, totalExpense float64
+	var incomeCount, expenseCount int
+	var largestExpenseAmount float64
+	var largestExpenseNote, largestExpenseDate string
+
+	expCatMap := make(map[string]float64)
+	expCatCount := make(map[string]int)
+	incCatMap := make(map[string]float64)
+	incCatCount := make(map[string]int)
+	tagMap := make(map[string]float64)
+	tagCount := make(map[string]int)
+	accIncomeMap := make(map[int]float64)
+	accExpenseMap := make(map[int]float64)
+
+	for _, t := range filtered {
+		effAccID := t.AccountID
+		if effAccID == 0 {
+			effAccID = defaultAccID
+		}
+
+		if t.Type == "income" {
+			totalIncome += t.Amount
+			incomeCount++
+			incCatMap[t.Category] += t.Amount
+			incCatCount[t.Category]++
+			accIncomeMap[effAccID] += t.Amount
+		} else {
+			totalExpense += t.Amount
+			expenseCount++
+			expCatMap[t.Category] += t.Amount
+			expCatCount[t.Category]++
+			accExpenseMap[effAccID] += t.Amount
+
+			if t.Amount > largestExpenseAmount {
+				largestExpenseAmount = t.Amount
+				largestExpenseNote = t.Note
+				if largestExpenseNote == "" {
+					largestExpenseNote = t.Category
+				}
+				largestExpenseDate = t.Date.Format("Jan 02, 2006")
+			}
+
+			for _, tg := range t.TagList {
+				cleanTag := strings.TrimPrefix(strings.TrimSpace(tg), "#")
+				if cleanTag != "" {
+					tagMap[cleanTag] += t.Amount
+					tagCount[cleanTag]++
+				}
+			}
+		}
+	}
+
+	netSavings := totalIncome - totalExpense
+	savingsRate := 0
+	if totalIncome > 0 {
+		rate := int(((totalIncome - totalExpense) / totalIncome) * 100)
+		if rate > 0 {
+			savingsRate = rate
+		}
+	}
+	dailyAvgSpend := totalExpense / float64(days)
+	dailyAvgIncome := totalIncome / float64(days)
+
+	// Runway calculation
+	var emergencyRunway float64
+	monthlyBurn := dailyAvgSpend * 30.0
+	if monthlyBurn > 0 && totalLiquidBalance > 0 {
+		runway := totalLiquidBalance / monthlyBurn
+		emergencyRunway = math.Round(runway*10) / 10
+	}
+
+	// Lookup categories metadata
+	categories, _ := s.GetCategories(username)
+	categoryMeta := make(map[string]Category)
+	for _, c := range categories {
+		k := c.Slug
+		if k == "" {
+			k = c.Key
+		}
+		categoryMeta[k] = c
+		categoryMeta[c.Name] = c
+	}
+
+	// Expense Categories List
+	var expenseCategories []ReportCategoryItem
+	var topCatName, topCatIcon string
+	var topCatAmount float64
+
+	for catKey, amt := range expCatMap {
+		name := catKey
+		icon := "📦"
+		color := "#64748B"
+		if meta, ok := categoryMeta[catKey]; ok {
+			name = meta.Name
+			icon = meta.Icon
+			if icon == "" {
+				icon = meta.Emoji
+			}
+			color = meta.Color
+		}
+		pct := 0
+		if totalExpense > 0 {
+			pct = int(math.Round((amt / totalExpense) * 100))
+		}
+		expenseCategories = append(expenseCategories, ReportCategoryItem{
+			Category:   catKey,
+			Name:       name,
+			Icon:       icon,
+			Color:      color,
+			Amount:     amt,
+			Percentage: pct,
+			Count:      expCatCount[catKey],
+			Type:       "expense",
+		})
+	}
+	sort.Slice(expenseCategories, func(i, j int) bool {
+		return expenseCategories[i].Amount > expenseCategories[j].Amount
+	})
+	if len(expenseCategories) > 0 {
+		topCatName = expenseCategories[0].Name
+		topCatIcon = expenseCategories[0].Icon
+		topCatAmount = expenseCategories[0].Amount
+	}
+
+	// Income Categories List
+	var incomeCategories []ReportCategoryItem
+	for catKey, amt := range incCatMap {
+		name := catKey
+		icon := "💵"
+		color := "#10B981"
+		if meta, ok := categoryMeta[catKey]; ok {
+			name = meta.Name
+			icon = meta.Icon
+			if icon == "" {
+				icon = meta.Emoji
+			}
+			color = meta.Color
+		}
+		pct := 0
+		if totalIncome > 0 {
+			pct = int(math.Round((amt / totalIncome) * 100))
+		}
+		incomeCategories = append(incomeCategories, ReportCategoryItem{
+			Category:   catKey,
+			Name:       name,
+			Icon:       icon,
+			Color:      color,
+			Amount:     amt,
+			Percentage: pct,
+			Count:      incCatCount[catKey],
+			Type:       "income",
+		})
+	}
+	sort.Slice(incomeCategories, func(i, j int) bool {
+		return incomeCategories[i].Amount > incomeCategories[j].Amount
+	})
+
+	// Tag Analytics
+	var tagsAnalytics []ReportTagItem
+	for tg, amt := range tagMap {
+		pct := 0
+		if totalExpense > 0 {
+			pct = int(math.Round((amt / totalExpense) * 100))
+		}
+		tagsAnalytics = append(tagsAnalytics, ReportTagItem{
+			Tag:        tg,
+			Amount:     amt,
+			Count:      tagCount[tg],
+			Percentage: pct,
+		})
+	}
+	sort.Slice(tagsAnalytics, func(i, j int) bool {
+		return tagsAnalytics[i].Amount > tagsAnalytics[j].Amount
+	})
+	if len(tagsAnalytics) > 12 {
+		tagsAnalytics = tagsAnalytics[:12]
+	}
+
+	// Account Distribution
+	var accountDistribution []ReportAccountItem
+	for _, a := range accounts {
+		exp := accExpenseMap[a.ID]
+		inc := accIncomeMap[a.ID]
+		if exp == 0 && inc == 0 {
+			continue
+		}
+		pct := 0
+		if totalExpense > 0 {
+			pct = int(math.Round((exp / totalExpense) * 100))
+		}
+		accountDistribution = append(accountDistribution, ReportAccountItem{
+			AccountID:   a.ID,
+			AccountName: a.Name,
+			Icon:        a.Icon,
+			Color:       a.Color,
+			Income:      inc,
+			Expense:     exp,
+			Net:         inc - exp,
+			Percentage:  pct,
+		})
+	}
+	sort.Slice(accountDistribution, func(i, j int) bool {
+		return accountDistribution[i].Expense > accountDistribution[j].Expense
+	})
+
+	// Timeline construction
+	var timeline []ReportTimelinePoint
+	var cumNet float64
+
+	if days <= 35 && timeframe != "all" {
+		// Daily Timeline
+		dayTotals := make(map[string]*ReportTimelinePoint)
+		var orderedKeys []string
+
+		cur := start
+		for !cur.After(end) {
+			k := cur.Format("2006-01-02")
+			lbl := cur.Format("Jan 02")
+			dayTotals[k] = &ReportTimelinePoint{
+				PeriodKey: k,
+				Label:     lbl,
+			}
+			orderedKeys = append(orderedKeys, k)
+			cur = cur.AddDate(0, 0, 1)
+		}
+
+		for _, t := range filtered {
+			k := t.Date.Format("2006-01-02")
+			if pt, ok := dayTotals[k]; ok {
+				if t.Type == "income" {
+					pt.Income += t.Amount
+				} else {
+					pt.Expense += t.Amount
+				}
+			}
+		}
+
+		for _, k := range orderedKeys {
+			pt := dayTotals[k]
+			pt.Net = pt.Income - pt.Expense
+			cumNet += pt.Net
+			pt.CumulativeNet = cumNet
+			timeline = append(timeline, *pt)
+		}
+	} else {
+		// Monthly Timeline
+		monthTotals := make(map[string]*ReportTimelinePoint)
+		var orderedKeys []string
+
+		cur := time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, start.Location())
+		lastMonth := time.Date(end.Year(), end.Month(), 1, 0, 0, 0, 0, end.Location())
+
+		for !cur.After(lastMonth) {
+			k := cur.Format("2006-01")
+			lbl := cur.Format("Jan 2006")
+			monthTotals[k] = &ReportTimelinePoint{
+				PeriodKey: k,
+				Label:     lbl,
+			}
+			orderedKeys = append(orderedKeys, k)
+			cur = cur.AddDate(0, 1, 0)
+		}
+
+		for _, t := range filtered {
+			k := t.Date.Format("2006-01")
+			if pt, ok := monthTotals[k]; ok {
+				if t.Type == "income" {
+					pt.Income += t.Amount
+				} else {
+					pt.Expense += t.Amount
+				}
+			}
+		}
+
+		for _, k := range orderedKeys {
+			pt := monthTotals[k]
+			pt.Net = pt.Income - pt.Expense
+			cumNet += pt.Net
+			pt.CumulativeNet = cumNet
+			timeline = append(timeline, *pt)
+		}
+	}
+
+	// Sort filtered transactions Date DESC
+	sort.Slice(filtered, func(i, j int) bool {
+		return filtered[i].Date.After(filtered[j].Date)
+	})
+
+	return &FinancialReport{
+		Timeframe:      timeframe,
+		TimeframeLabel: timeframeLabel,
+		StartDate:      start.Format("2006-01-02"),
+		EndDate:        end.Format("2006-01-02"),
+		DaysInPeriod:   days,
+		AccountID:      accountID,
+		CategoryFilter: categoryFilter,
+		Currency:       s.GetCurrency(username),
+		KPIs: ReportKPIs{
+			TotalIncome:           totalIncome,
+			TotalExpense:          totalExpense,
+			NetSavings:            netSavings,
+			SavingsRate:           savingsRate,
+			DailyAvgSpend:         dailyAvgSpend,
+			DailyAvgIncome:        dailyAvgIncome,
+			TransactionCount:      len(filtered),
+			IncomeCount:           incomeCount,
+			ExpenseCount:          expenseCount,
+			LargestExpenseAmount:  largestExpenseAmount,
+			LargestExpenseNote:    largestExpenseNote,
+			LargestExpenseDate:    largestExpenseDate,
+			TopCategoryName:       topCatName,
+			TopCategoryIcon:       topCatIcon,
+			TopCategoryAmount:     topCatAmount,
+			EmergencyRunwayMonths: emergencyRunway,
+		},
+		Timeline:            timeline,
+		ExpenseCategories:   expenseCategories,
+		IncomeCategories:    incomeCategories,
+		TagsAnalytics:       tagsAnalytics,
+		AccountDistribution: accountDistribution,
+		Transactions:        filtered,
+	}, nil
 }
 
 // ─── Debts & IOUs Methods ───────────────────────────────────────────────────

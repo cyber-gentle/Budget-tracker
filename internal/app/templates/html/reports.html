@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Reports & Analytics — Spendly</title>
+    
+    <link rel="icon" type="image/svg+xml" href="/static/assets/imgs/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/globals.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        offwhite: '#F8FAFC',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Anti-flash theme script
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('spendly-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @media print {
+            header, #timeframe-toolbar, #export-dropdown-wrapper, .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .print-statement-header {
+                display: block !important;
+            }
+            .card-box {
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: none !important;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200">
+
+    <!-- Top Navigation Header -->
+    <header class="fixed top-0 left-0 right-0 z-40 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Left: Logo & Nav Links -->
+            <div class="flex items-center gap-6">
+                <a href="/dashboard" class="flex items-center gap-2.5 transition-opacity hover:opacity-85">
+                    <span class="w-8 h-8 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="20" height="14" x="2" y="5" rx="2"/>
+                            <line x1="2" x2="22" y1="10" y2="10"/>
+                        </svg>
+                    </span>
+                    <span class="font-heading font-extrabold text-base tracking-tight text-slate-900 dark:text-white">Spendly</span>
+                </a>
+
+                <nav class="hidden sm:flex items-center gap-1.5">
+                    <a href="/dashboard" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Dashboard
+                    </a>
+                    <a href="/debts" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Debts & IOUs
+                    </a>
+                    <a href="/subscriptions" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Subscriptions
+                    </a>
+                    <a href="/goals" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Savings Goals
+                    </a>
+                    <a href="/reports" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors">
+                        Reports
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center gap-1.5 sm:gap-3">
+                <!-- Theme Toggle Button -->
+                <button type="button" id="theme-toggle-btn" class="p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer" title="Toggle theme">
+                    <span id="theme-icon-container">
+                        <svg id="theme-icon-sun" class="hidden text-amber-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                        <svg id="theme-icon-moon" class="block text-slate-600 dark:text-slate-300" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    </span>
+                    <span id="theme-toggle-text" class="hidden sm:inline text-[11px] font-medium text-slate-600 dark:text-slate-300">Theme</span>
+                </button>
+
+                <!-- Currency Selector -->
+                <div class="flex items-center gap-1 sm:gap-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                    <span class="text-slate-400 hidden sm:inline">Currency:</span>
+                    <select id="currency-select" class="bg-transparent font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer text-xs">
+                        <option value="₦" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">₦ (NGN)</option>
+                        <option value="$" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">$ (USD)</option>
+                        <option value="€" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">€ (EUR)</option>
+                        <option value="£" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">£ (GBP)</option>
+                    </select>
+                </div>
+
+                <!-- Export & Statement Dropdown -->
+                <div class="relative" id="export-dropdown-wrapper">
+                    <button type="button" id="btn-export-dropdown" class="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        <span>Export</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div id="export-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1 divide-y divide-slate-100 dark:divide-slate-800">
+                        <div class="py-1">
+                            <button type="button" id="btn-export-csv" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
+                                <span>📄</span> Download CSV
+                            </button>
+                            <button type="button" id="btn-export-json" class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
+                                <span>📦</span> Backup JSON
+                            </button>
+                        </div>
+                        <div class="py-1">
+                            <button type="button" id="btn-print-statement" class="w-full text-left px-3 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 flex items-center gap-2 cursor-pointer">
+                                <span>🖨️</span> Print / Save PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile -->
+                <div class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-heading font-bold text-xs flex items-center justify-center uppercase shadow-sm">
+                    {{if .FullName}}{{printf "%.1s" .FullName}}{{else}}{{printf "%.1s" .Username}}{{end}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Horizontal Tab Bar -->
+        <div class="sm:hidden flex items-center gap-1 px-4 py-2 border-t border-slate-100 dark:border-slate-800 overflow-x-auto no-scrollbar">
+            <a href="/dashboard" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/debts" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>Debts</span>
+            </a>
+            <a href="/subscriptions" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/></svg>
+                <span>Subscriptions</span>
+            </a>
+            <a href="/goals" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <span>Goals</span>
+            </a>
+            <a href="/reports" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white dark:bg-emerald-600 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                <span>Reports</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Header Spacer -->
+    <div class="h-28 sm:h-20" aria-hidden="true"></div>
+
+    <!-- Print Only Header -->
+    <div class="print-statement-header hidden px-6 py-4 border-b border-slate-300 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-black text-slate-900">Spendly Financial Statement</h1>
+                <p class="text-xs text-slate-600" id="print-user-info">Account: {{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}} ({{.Email}})</p>
+            </div>
+            <div class="text-right">
+                <p class="text-xs font-bold text-slate-900" id="print-period-label">Period: This Month</p>
+                <p class="text-[10px] text-slate-500" id="print-generated-date">Generated on: </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-12 sm:pb-8 flex-1 w-full">
+
+        <!-- Timeframe & Filter Toolbar -->
+        <section id="timeframe-toolbar" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xs transition-colors space-y-3">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                
+                <!-- Timeframe Quick Pills (Horizontal Touch Carousel) -->
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0" id="timeframe-pills">
+                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:bg-emerald-600 shadow-xs" data-tf="this_month">This Month</button>
+                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="last_month">Last Month</button>
+                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="3m">3 Months</button>
+                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="6m">6 Months</button>
+                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="ytd">YTD</button>
+                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="all">All Time</button>
+                    <button type="button" class="timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="custom">Custom...</button>
+                </div>
+
+                <!-- Secondary Filters: Account & Category -->
+                <div class="flex items-center gap-2">
+                    <!-- Account Filter -->
+                    <div class="flex items-center gap-1.5 text-xs font-semibold">
+                        <select id="filter-account" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl focus:outline-none cursor-pointer">
+                            <option value="all">💳 All Wallets</option>
+                        </select>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="flex items-center gap-1.5 text-xs font-semibold">
+                        <select id="filter-category" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl focus:outline-none cursor-pointer">
+                            <option value="all">📦 All Categories</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Date Range Bar (Toggled when Custom is clicked) -->
+            <div id="custom-date-container" class="hidden pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500">From:</span>
+                    <input type="date" id="custom-start-date" class="px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500">To:</span>
+                    <input type="date" id="custom-end-date" class="px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+                </div>
+                <button type="button" id="btn-apply-custom-dates" class="px-3 py-1 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 rounded-lg hover:opacity-90 cursor-pointer">
+                    Apply Filter
+                </button>
+            </div>
+        </section>
+
+        <!-- Executive KPI Cards -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            <!-- Net Cash Flow -->
+            <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Net Cash Flow</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+                        ⚖️
+                    </span>
+                </div>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="font-heading text-lg sm:text-2xl font-black tracking-tight" id="kpi-net-savings">₦0</span>
+                </div>
+                <div class="mt-2 flex items-center gap-1.5">
+                    <span id="kpi-net-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">Surplus</span>
+                    <span class="text-[10px] text-slate-400" id="kpi-savings-rate">0% Savings Rate</span>
+                </div>
+            </div>
+
+            <!-- Total Income -->
+            <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Total Income</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                        ↓
+                    </span>
+                </div>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="font-heading text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight" id="kpi-income">₦0</span>
+                </div>
+                <div class="mt-2 text-[10px] text-slate-400 truncate">
+                    <span id="kpi-income-count">0</span> inflows recorded
+                </div>
+            </div>
+
+            <!-- Total Expenses -->
+            <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Total Expenses</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
+                        ↑
+                    </span>
+                </div>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="font-heading text-lg sm:text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight" id="kpi-expense">₦0</span>
+                </div>
+                <div class="mt-2 text-[10px] text-slate-400 truncate">
+                    Avg <span id="kpi-daily-spend" class="font-semibold text-slate-600 dark:text-slate-300">₦0</span> / day
+                </div>
+            </div>
+
+            <!-- Financial Runway & Health -->
+            <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Emergency Runway</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+                        🛡️
+                    </span>
+                </div>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="font-heading text-lg sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight" id="kpi-runway">0.0 mo</span>
+                </div>
+                <div class="mt-2 text-[10px] text-slate-400 truncate">
+                    Based on liquid balances & burn
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section (Grid: Waterfall/Trends 7 cols, Category Breakdown 5 cols) -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Cash Flow Timeline & Waterfall (7 cols) -->
+            <div class="lg:col-span-7 card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xs transition-colors space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Cash Flow Trajectory</h2>
+                        <p class="text-xs text-slate-400" id="timeline-subtitle">Inflows vs. Outflows across the selected period</p>
+                    </div>
+                    <!-- Legend -->
+                    <div class="flex items-center gap-3 text-[11px] font-semibold">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> Income</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500"></span> Expense</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Net Trend</span>
+                    </div>
+                </div>
+
+                <!-- Canvas Chart -->
+                <div class="relative w-full h-64 sm:h-72">
+                    <canvas id="cashflow-canvas" class="w-full h-full"></canvas>
+                    <div id="chart-empty" class="hidden absolute inset-0 flex items-center justify-center text-xs text-slate-400">
+                        No transactions recorded for this period.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Spending Distribution (5 cols) -->
+            <div class="lg:col-span-5 card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xs transition-colors space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Spending by Category</h2>
+                        <p class="text-xs text-slate-400">Outflow breakdown and percentages</p>
+                    </div>
+                    <span id="cat-count-badge" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">0 categories</span>
+                </div>
+
+                <!-- Ranked Category List -->
+                <div id="category-report-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+                    <div class="p-4 text-center text-xs text-slate-400">Loading categories...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Secondary Analytics (Grid: Wallet Outflows 6 cols, Tag Analytics 6 cols) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            
+            <!-- Outflows by Wallet / Account -->
+            <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xs transition-colors space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Spending by Wallet</h3>
+                        <p class="text-xs text-slate-400">Which account funds were drawn from</p>
+                    </div>
+                    <span class="text-base">💳</span>
+                </div>
+                <div id="account-report-list" class="space-y-2.5 pt-1">
+                    <p class="text-xs text-slate-400">Loading wallet distribution...</p>
+                </div>
+            </div>
+
+            <!-- Top Tags Spending Cloud -->
+            <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xs transition-colors space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Spending by Tag</h3>
+                        <p class="text-xs text-slate-400">Expense distribution across #tags</p>
+                    </div>
+                    <span class="text-base">🏷️</span>
+                </div>
+                <div id="tags-report-cloud" class="flex flex-wrap gap-2 pt-1">
+                    <p class="text-xs text-slate-400">Loading tag analytics...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Transaction Ledger for Selected Period -->
+        <section class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden transition-colors">
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Period Transaction Register</h3>
+                    <p class="text-xs text-slate-400" id="ledger-subtitle">Showing all transactions in this statement</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="ledger-count-badge" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">0 items</span>
+                </div>
+            </div>
+
+            <!-- Table for Desktop & Tablet -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 font-semibold">
+                        <tr>
+                            <th class="py-3 px-4">Date</th>
+                            <th class="py-3 px-4">Description / Note</th>
+                            <th class="py-3 px-4">Category</th>
+                            <th class="py-3 px-4">Wallet</th>
+                            <th class="py-3 px-4">Tags</th>
+                            <th class="py-3 px-4 text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledger-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tr><td colspan="6" class="py-6 text-center text-slate-400">Loading transactions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Card View for Mobile -->
+            <div id="ledger-mobile-cards" class="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                <div class="p-4 text-center text-xs text-slate-400">Loading transactions...</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6 border-t border-slate-200/80 dark:border-slate-800 text-center text-xs text-slate-400 transition-colors">
+        <p>Spendly &copy; 2026. Premium Personal Wealth & Finance Engine.</p>
+    </footer>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Application Logic -->
+    <script>
+        let currentCurrency = '{{.Currency}}' || '₦';
+        let activeTimeframe = 'this_month';
+        let currentReport = null;
+
+        // Theme Toggle Logic
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        const moonIcon = document.getElementById('theme-icon-moon');
+
+        function updateThemeIcons(isDark) {
+            if (isDark) {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        }
+        updateThemeIcons(document.documentElement.classList.contains('dark'));
+
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('spendly-theme', isDark ? 'dark' : 'light');
+                updateThemeIcons(isDark);
+                if (currentReport) renderCashFlowChart(currentReport.timeline);
+            });
+        }
+
+        // Currency Selector
+        const currencySelect = document.getElementById('currency-select');
+        if (currencySelect) {
+            currencySelect.value = currentCurrency;
+            currencySelect.addEventListener('change', async function() {
+                currentCurrency = this.value;
+                try {
+                    await fetch('/api/currency', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'currency=' + encodeURIComponent(currentCurrency)
+                    });
+                    loadReport();
+                } catch (e) {
+                    console.error('Failed to update currency', e);
+                }
+            });
+        }
+
+        // Format Helpers
+        function fmtMoney(num) {
+            const n = Math.trunc(Number(num) || 0);
+            const isNeg = n < 0;
+            const str = Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return (isNeg ? '-' : '') + currentCurrency + str;
+        }
+
+        function fmtDate(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function esc(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // Export Dropdown Controls
+        const btnExportDropdown = document.getElementById('btn-export-dropdown');
+        const exportMenu = document.getElementById('export-menu');
+        if (btnExportDropdown && exportMenu) {
+            btnExportDropdown.addEventListener('click', e => {
+                e.stopPropagation();
+                exportMenu.classList.toggle('hidden');
+            });
+            document.addEventListener('click', () => exportMenu.classList.add('hidden'));
+        }
+
+        function getFilterParams() {
+            const params = new URLSearchParams();
+            params.set('timeframe', activeTimeframe);
+            if (activeTimeframe === 'custom') {
+                const s = document.getElementById('custom-start-date').value;
+                const e = document.getElementById('custom-end-date').value;
+                if (s) params.set('start', s);
+                if (e) params.set('end', e);
+            }
+            const acc = document.getElementById('filter-account').value;
+            if (acc && acc !== 'all') params.set('account_id', acc);
+            const cat = document.getElementById('filter-category').value;
+            if (cat && cat !== 'all') params.set('category', cat);
+            return params;
+        }
+
+        document.getElementById('btn-export-csv').addEventListener('click', () => {
+            const p = getFilterParams();
+            p.set('format', 'csv');
+            window.location.href = '/api/export?' + p.toString();
+        });
+
+        document.getElementById('btn-export-json').addEventListener('click', () => {
+            const p = getFilterParams();
+            p.set('format', 'json');
+            window.location.href = '/api/export?' + p.toString();
+        });
+
+        document.getElementById('btn-print-statement').addEventListener('click', () => {
+            window.print();
+        });
+
+        // Load Wallets and Categories for Toolbar Filters
+        async function loadFilterOptions() {
+            try {
+                const [accRes, catRes] = await Promise.all([
+                    fetch('/api/accounts'),
+                    fetch('/api/categories')
+                ]);
+                if (accRes.ok) {
+                    const accData = await accRes.json();
+                    const accSelect = document.getElementById('filter-account');
+                    const accounts = accData.accounts || [];
+                    accSelect.innerHTML = '<option value="all">💳 All Wallets</option>' + accounts.map(a => `
+                        <option value="${a.id}">${a.icon || '🏦'} ${esc(a.name)}</option>
+                    `).join('');
+                }
+                if (catRes.ok) {
+                    const catData = await catRes.json();
+                    const catSelect = document.getElementById('filter-category');
+                    const cats = Array.isArray(catData) ? catData : (catData.categories || []);
+                    catSelect.innerHTML = '<option value="all">📦 All Categories</option>' + cats.map(c => `
+                        <option value="${c.slug || c.key}">${c.icon || c.emoji || '📦'} ${esc(c.name || c.label)}</option>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Error loading filter options:', err);
+            }
+        }
+
+        // Timeframe Pill Handlers
+        document.getElementById('timeframe-pills').addEventListener('click', e => {
+            const btn = e.target.closest('.timeframe-btn');
+            if (!btn) return;
+            const tf = btn.dataset.tf;
+            activeTimeframe = tf;
+
+            document.querySelectorAll('.timeframe-btn').forEach(b => {
+                b.className = 'timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300';
+            });
+            btn.className = 'timeframe-btn px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:bg-emerald-600 shadow-xs';
+
+            const customContainer = document.getElementById('custom-date-container');
+            if (tf === 'custom') {
+                customContainer.classList.remove('hidden');
+                // Default custom inputs to 30 days ago to today
+                const now = new Date();
+                const past = new Date(Date.now() - 30*86400000);
+                if (!document.getElementById('custom-end-date').value) {
+                    document.getElementById('custom-end-date').value = now.toISOString().split('T')[0];
+                }
+                if (!document.getElementById('custom-start-date').value) {
+                    document.getElementById('custom-start-date').value = past.toISOString().split('T')[0];
+                }
+            } else {
+                customContainer.classList.add('hidden');
+                loadReport();
+            }
+        });
+
+        document.getElementById('btn-apply-custom-dates').addEventListener('click', () => {
+            loadReport();
+        });
+
+        document.getElementById('filter-account').addEventListener('change', () => loadReport());
+        document.getElementById('filter-category').addEventListener('change', () => loadReport());
+
+        // Master Report Loader
+        async function loadReport() {
+            try {
+                const params = getFilterParams();
+                const res = await fetch('/api/reports?' + params.toString());
+                if (!res.ok) return;
+                currentReport = await res.json();
+                renderReportUI(currentReport);
+            } catch (err) {
+                console.error('Error loading report:', err);
+            }
+        }
+
+        // Render UI with Report Data
+        function renderReportUI(rep) {
+            if (!rep) return;
+
+            // Header labels
+            document.getElementById('print-period-label').textContent = `Period: ${rep.timeframe_label} (${rep.start_date} to ${rep.end_date})`;
+            document.getElementById('print-generated-date').textContent = `Generated on: ${new Date().toLocaleDateString()}`;
+
+            // 1. KPIs
+            const k = rep.kpis || {};
+            const netSavingsEl = document.getElementById('kpi-net-savings');
+            const netBadgeEl = document.getElementById('kpi-net-badge');
+            
+            netSavingsEl.textContent = fmtMoney(k.net_savings);
+            if (k.net_savings >= 0) {
+                netSavingsEl.className = 'font-heading text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight';
+                netBadgeEl.textContent = 'Surplus';
+                netBadgeEl.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
+            } else {
+                netSavingsEl.className = 'font-heading text-lg sm:text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight';
+                netBadgeEl.textContent = 'Deficit';
+                netBadgeEl.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400';
+            }
+
+            document.getElementById('kpi-savings-rate').textContent = `${k.savings_rate}% Savings Rate`;
+            document.getElementById('kpi-income').textContent = fmtMoney(k.total_income);
+            document.getElementById('kpi-income-count').textContent = k.income_count || 0;
+            document.getElementById('kpi-expense').textContent = fmtMoney(k.total_expense);
+            document.getElementById('kpi-daily-spend').textContent = fmtMoney(k.daily_avg_spend);
+            document.getElementById('kpi-runway').textContent = `${k.emergency_runway_months || 0} mo`;
+
+            // 2. Timeline Chart
+            renderCashFlowChart(rep.timeline || []);
+
+            // 3. Category Breakdown
+            renderCategoryBreakdown(rep.expense_categories || [], k.total_expense || 0);
+
+            // 4. Wallet Distribution
+            renderAccountDistribution(rep.account_distribution || [], k.total_expense || 0);
+
+            // 5. Tag Analytics
+            renderTagAnalytics(rep.tags_analytics || []);
+
+            // 6. Ledger Table & Cards
+            renderLedger(rep.transactions || []);
+        }
+
+        // HTML5 Canvas Cash Flow Bar & Line Chart
+        function renderCashFlowChart(timeline) {
+            const canvas = document.getElementById('cashflow-canvas');
+            const emptyEl = document.getElementById('chart-empty');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+
+            const width = rect.width;
+            const height = rect.height;
+
+            if (!timeline || timeline.length === 0) {
+                emptyEl.classList.remove('hidden');
+                ctx.clearRect(0, 0, width, height);
+                return;
+            }
+            emptyEl.classList.add('hidden');
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94A3B8' : '#64748B';
+            const gridColor = isDark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.8)';
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Find maximum value
+            let maxVal = 100;
+            for (const pt of timeline) {
+                if (pt.income > maxVal) maxVal = pt.income;
+                if (pt.expense > maxVal) maxVal = pt.expense;
+            }
+            maxVal = Math.ceil(maxVal * 1.15);
+
+            const padBottom = 28;
+            const padLeft = 45;
+            const padRight = 15;
+            const padTop = 15;
+            const chartW = width - padLeft - padRight;
+            const chartH = height - padTop - padBottom;
+
+            // Draw Y-Axis Grid & Labels
+            const yTicks = 4;
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.fillStyle = textColor;
+
+            for (let i = 0; i <= yTicks; i++) {
+                const val = (maxVal / yTicks) * i;
+                const y = padTop + chartH - (chartH * (i / yTicks));
+                
+                ctx.beginPath();
+                ctx.strokeStyle = gridColor;
+                ctx.lineWidth = 1;
+                ctx.moveTo(padLeft, y);
+                ctx.lineTo(width - padRight, y);
+                ctx.stroke();
+
+                let valStr = Math.trunc(val).toString();
+                if (val >= 1000000) valStr = (val / 1000000).toFixed(1) + 'M';
+                else if (val >= 1000) valStr = (val / 1000).toFixed(0) + 'k';
+                ctx.fillText(valStr, padLeft - 6, y);
+            }
+
+            // Draw Bars
+            const count = timeline.length;
+            const slotW = chartW / count;
+            const barW = Math.max(3, Math.min(14, slotW * 0.35));
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            const netPoints = [];
+
+            for (let i = 0; i < count; i++) {
+                const pt = timeline[i];
+                const xCenter = padLeft + (i * slotW) + (slotW / 2);
+
+                const incH = (pt.income / maxVal) * chartH;
+                const expH = (pt.expense / maxVal) * chartH;
+
+                // Income Bar (Green)
+                if (incH > 0) {
+                    ctx.fillStyle = '#10B981';
+                    ctx.beginPath();
+                    const xInc = xCenter - barW - 1;
+                    const yInc = padTop + chartH - incH;
+                    ctx.roundRect(xInc, yInc, barW, incH, [3, 3, 0, 0]);
+                    ctx.fill();
+                }
+
+                // Expense Bar (Rose)
+                if (expH > 0) {
+                    ctx.fillStyle = '#F43F5E';
+                    ctx.beginPath();
+                    const xExp = xCenter + 1;
+                    const yExp = padTop + chartH - expH;
+                    ctx.roundRect(xExp, yExp, barW, expH, [3, 3, 0, 0]);
+                    ctx.fill();
+                }
+
+                // Collect Net Trend point
+                const netY = padTop + chartH - ((pt.income - pt.expense) / maxVal) * chartH;
+                netPoints.push({ x: xCenter, y: Math.max(padTop, Math.min(padTop + chartH, netY)) });
+
+                // X-Axis Labels (Skip if too crowded)
+                const skipInterval = count > 20 ? Math.ceil(count / 8) : (count > 10 ? 2 : 1);
+                if (i % skipInterval === 0 || i === count - 1) {
+                    ctx.fillStyle = textColor;
+                    ctx.fillText(pt.label, xCenter, padTop + chartH + 8);
+                }
+            }
+
+            // Draw Net Trend Spline
+            if (netPoints.length > 1) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#3B82F6';
+                ctx.lineWidth = 2.5;
+                ctx.moveTo(netPoints[0].x, netPoints[0].y);
+
+                for (let i = 1; i < netPoints.length; i++) {
+                    const xc = (netPoints[i].x + netPoints[i - 1].x) / 2;
+                    const yc = (netPoints[i].y + netPoints[i - 1].y) / 2;
+                    ctx.quadraticCurveTo(netPoints[i - 1].x, netPoints[i - 1].y, xc, yc);
+                }
+                ctx.lineTo(netPoints[netPoints.length - 1].x, netPoints[netPoints.length - 1].y);
+                ctx.stroke();
+
+                // Draw Dots
+                for (const p of netPoints) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = '#3B82F6';
+                    ctx.fill();
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeStyle = isDark ? '#0F172A' : '#FFFFFF';
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Render Category Breakdown
+        function renderCategoryBreakdown(categories, totalExpense) {
+            const listEl = document.getElementById('category-report-list');
+            const badgeEl = document.getElementById('cat-count-badge');
+            if (!listEl) return;
+
+            badgeEl.textContent = `${categories.length} categories`;
+
+            if (!categories || categories.length === 0) {
+                listEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-8">No category expenses in this period.</p>';
+                return;
+            }
+
+            listEl.innerHTML = categories.map(c => `
+                <div class="space-y-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0 font-bold" style="background-color: ${c.color}20; color: ${c.color}; border: 1px solid ${c.color}40;">
+                                ${c.icon || '📦'}
+                            </span>
+                            <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${esc(c.name)}</span>
+                            <span class="text-[10px] text-slate-400">(${c.count} txs)</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="font-bold text-slate-900 dark:text-white">${fmtMoney(c.amount)}</span>
+                            <span class="text-[10px] font-bold text-slate-400 w-8 text-right">${c.percentage}%</span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-300" style="width: ${c.percentage}%; background-color: ${c.color};"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Account Outflows
+        function renderAccountDistribution(accounts, totalExpense) {
+            const listEl = document.getElementById('account-report-list');
+            if (!listEl) return;
+
+            if (!accounts || accounts.length === 0) {
+                listEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">No wallet activity in this period.</p>';
+                return;
+            }
+
+            listEl.innerHTML = accounts.map(a => `
+                <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 space-y-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-sm shrink-0">${a.icon || '🏦'}</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${esc(a.account_name)}</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="font-bold text-rose-500">-${fmtMoney(a.expense)}</span>
+                            <span class="text-[10px] font-bold text-slate-400">(${a.percentage}%)</span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-slate-200/60 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-300 bg-rose-500" style="width: ${a.percentage}%;"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Tag Analytics
+        function renderTagAnalytics(tags) {
+            const container = document.getElementById('tags-report-cloud');
+            if (!container) return;
+
+            if (!tags || tags.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 text-center w-full py-4">No tagged expenses found in this period.</p>';
+                return;
+            }
+
+            container.innerHTML = tags.map(t => `
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition-transform hover:scale-105">
+                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300">#${esc(t.tag)}</span>
+                    <span class="text-xs font-black text-rose-500">${fmtMoney(t.amount)}</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${t.count}</span>
+                </div>
+            `).join('');
+        }
+
+        // Render Transaction Register (Table & Mobile Cards)
+        function renderLedger(txs) {
+            const tbody = document.getElementById('ledger-table-body');
+            const mobileContainer = document.getElementById('ledger-mobile-cards');
+            const countBadge = document.getElementById('ledger-count-badge');
+
+            countBadge.textContent = `${txs.length} item${txs.length === 1 ? '' : 's'}`;
+
+            if (!txs || txs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-400">No transactions match the selected period and filters.</td></tr>';
+                mobileContainer.innerHTML = '<div class="p-8 text-center text-xs text-slate-400">No transactions match the selected period and filters.</div>';
+                return;
+            }
+
+            // Table Rows
+            tbody.innerHTML = txs.map(t => {
+                const isExp = t.type === 'expense';
+                const sign = isExp ? '-' : '+';
+                const color = isExp ? 'text-rose-500 font-bold' : 'text-emerald-600 font-bold';
+                const tagsHtml = (t.tag_list && t.tag_list.length > 0)
+                    ? t.tag_list.map(tg => `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold mr-1">#${esc(tg)}</span>`).join('')
+                    : '<span class="text-slate-300 dark:text-slate-600">—</span>';
+
+                return `
+                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                        <td class="py-3 px-4 whitespace-nowrap text-slate-500">${esc(fmtDate(t.date))}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">${esc(t.note || t.category)}</td>
+                        <td class="py-3 px-4 whitespace-nowrap text-slate-600 dark:text-slate-400">${esc(t.category)}</td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1 font-semibold text-[11px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg text-slate-700 dark:text-slate-300">
+                                <span>${t.account_icon || '🏦'}</span> ${esc(t.account_name || 'Main Wallet')}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">${tagsHtml}</td>
+                        <td class="py-3 px-4 text-right whitespace-nowrap ${color}">${sign}${fmtMoney(t.amount)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Mobile Cards
+            mobileContainer.innerHTML = txs.map(t => {
+                const isExp = t.type === 'expense';
+                const sign = isExp ? '-' : '+';
+                const color = isExp ? 'text-rose-500 font-bold' : 'text-emerald-600 font-bold';
+
+                return `
+                    <div class="p-3.5 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${esc(t.note || t.category)}</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">
+                                ${esc(fmtDate(t.date))} · <span class="font-medium">${esc(t.category)}</span> · 
+                                <span class="font-semibold text-slate-600 dark:text-slate-300">${t.account_icon || '🏦'} ${esc(t.account_name || 'Wallet')}</span>
+                            </p>
+                            ${t.tag_list && t.tag_list.length > 0 ? `
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    ${t.tag_list.map(tg => `<span class="text-[10px] font-semibold text-slate-500">#${esc(tg)}</span>`).join(' ')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="text-xs ${color}">${sign}${fmtMoney(t.amount)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Initialize Page
+        async function init() {
+            await loadFilterOptions();
+            await loadReport();
+        }
+
+        init();
+    </script>
+</body>
+</html>

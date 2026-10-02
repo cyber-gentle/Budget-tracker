@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -882,6 +886,173 @@ func TestAccountsAndTransfersFlow(t *testing.T) {
 		if tx.Amount == 15000 && tx.AccountID != bankID {
 			t.Fatalf("expected transaction to be reassigned to bankID %d, got %d", bankID, tx.AccountID)
 		}
+	}
+}
+
+func TestReportsAndAnalyticsFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "test_reports.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	username := "analyst_user"
+	_ = store.Signup(username, "analyst@example.com", "hash123", "Analyst User")
+
+	// 1. Setup accounts
+	bank, err := store.CreateAccount(username, "Zenith Bank", "bank", "₦", "#3B82F6", "🏦", 150000, true)
+	if err != nil {
+		t.Fatalf("failed to create bank account: %v", err)
+	}
+	cash, err := store.CreateAccount(username, "Cash Wallet", "cash", "₦", "#10B981", "💵", 20000, false)
+	if err != nil {
+		t.Fatalf("failed to create cash account: %v", err)
+	}
+
+	// 2. Add transactions across time
+	now := time.Now()
+	thisMonthDate := time.Date(now.Year(), now.Month(), 5, 12, 0, 0, 0, now.Location())
+	lastMonthDate := time.Date(now.Year(), now.Month(), 1, 12, 0, 0, 0, now.Location()).AddDate(0, -1, 4)
+
+	// Income this month (Bank)
+	err = store.AddTransactionFull(username, 300000, "salary", "Monthly Tech Salary", "income", "salary, work", bank.ID, thisMonthDate)
+	if err != nil {
+		t.Fatalf("failed to add income: %v", err)
+	}
+
+	// Expenses this month
+	_ = store.AddTransactionFull(username, 50000, "housing", "Apartment Rent", "expense", "rent, housing", bank.ID, thisMonthDate)
+	_ = store.AddTransactionFull(username, 20000, "food", "Supermarket Groceries", "expense", "food, groceries", bank.ID, thisMonthDate)
+	_ = store.AddTransactionFull(username, 10000, "transport", "Fuel & Uber", "expense", "fuel, travel", cash.ID, thisMonthDate)
+
+	// Expense last month
+	_ = store.AddTransactionFull(username, 25000, "entertainment", "Concert Tickets", "expense", "fun, music", bank.ID, lastMonthDate)
+
+	// 3. Test This Month Report
+	rep, err := store.GetDetailedFinancialReport(username, "this_month", "", "", 0, "")
+	if err != nil {
+		t.Fatalf("failed to get report: %v", err)
+	}
+
+	if rep.KPIs.TotalIncome != 300000 {
+		t.Fatalf("expected total income 300000, got %.2f", rep.KPIs.TotalIncome)
+	}
+	if rep.KPIs.TotalExpense != 80000 {
+		t.Fatalf("expected total expense 80000, got %.2f", rep.KPIs.TotalExpense)
+	}
+	if rep.KPIs.NetSavings != 220000 {
+		t.Fatalf("expected net savings 220000, got %.2f", rep.KPIs.NetSavings)
+	}
+	if rep.KPIs.SavingsRate != 73 {
+		t.Fatalf("expected savings rate 73%%, got %d%%", rep.KPIs.SavingsRate)
+	}
+	if rep.KPIs.LargestExpenseAmount != 50000 {
+		t.Fatalf("expected largest expense 50000, got %.2f", rep.KPIs.LargestExpenseAmount)
+	}
+	if rep.KPIs.EmergencyRunwayMonths <= 0 {
+		t.Fatalf("expected positive emergency runway months, got %.2f", rep.KPIs.EmergencyRunwayMonths)
+	}
+
+	// Verify Category breakdown
+	if len(rep.ExpenseCategories) != 3 {
+		t.Fatalf("expected 3 expense categories, got %d", len(rep.ExpenseCategories))
+	}
+	if rep.ExpenseCategories[0].Amount != 50000 || rep.ExpenseCategories[0].Category != "housing" {
+		t.Fatalf("expected top category to be housing (50000), got %v", rep.ExpenseCategories[0])
+	}
+
+	// Verify Tag breakdown
+	if len(rep.TagsAnalytics) == 0 {
+		t.Fatalf("expected tags analytics to be populated")
+	}
+
+	// Verify Account distribution
+	if len(rep.AccountDistribution) != 2 {
+		t.Fatalf("expected 2 active accounts in distribution, got %d", len(rep.AccountDistribution))
+	}
+
+	// 4. Test Last Month Report
+	lastMonthRep, err := store.GetDetailedFinancialReport(username, "last_month", "", "", 0, "")
+	if err != nil {
+		t.Fatalf("failed to get last month report: %v", err)
+	}
+	if lastMonthRep.KPIs.TotalExpense != 25000 {
+		t.Fatalf("expected last month expense 25000, got %.2f", lastMonthRep.KPIs.TotalExpense)
+	}
+
+	// 5. Test Filter by Account (Cash only)
+	cashRep, err := store.GetDetailedFinancialReport(username, "this_month", "", "", cash.ID, "")
+	if err != nil {
+		t.Fatalf("failed to get cash report: %v", err)
+	}
+	if cashRep.KPIs.TotalExpense != 10000 {
+		t.Fatalf("expected cash only expense to be 10000, got %.2f", cashRep.KPIs.TotalExpense)
+	}
+
+	// 6. Test Filter by Category (Food only)
+	foodRep, err := store.GetDetailedFinancialReport(username, "this_month", "", "", 0, "food")
+	if err != nil {
+		t.Fatalf("failed to get food report: %v", err)
+	}
+	if foodRep.KPIs.TotalExpense != 20000 {
+		t.Fatalf("expected food only expense to be 20000, got %.2f", foodRep.KPIs.TotalExpense)
+	}
+
+	// 7. Test HTTP API Endpoints
+	application := app.NewApp(store)
+	sessionID, err := store.Login("analyst_user", "hash123")
+	if err != nil || sessionID == "" {
+		t.Fatalf("login failed: %v", err)
+	}
+
+	// A. GET /api/reports
+	req := httptest.NewRequest(http.MethodGet, "/api/reports?timeframe=this_month", nil)
+	req.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	rec := httptest.NewRecorder()
+	application.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /api/reports, got %d: %s", rec.Code, rec.Body.String())
+	}
+	var apiReport app.FinancialReport
+	if err := json.Unmarshal(rec.Body.Bytes(), &apiReport); err != nil {
+		t.Fatalf("failed to decode /api/reports response: %v", err)
+	}
+	if apiReport.KPIs.TotalIncome != 300000 {
+		t.Fatalf("expected API report income 300000, got %.2f", apiReport.KPIs.TotalIncome)
+	}
+
+	// B. GET /api/export (CSV)
+	reqCSV := httptest.NewRequest(http.MethodGet, "/api/export?timeframe=this_month", nil)
+	reqCSV.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recCSV := httptest.NewRecorder()
+	application.ServeHTTP(recCSV, reqCSV)
+
+	if recCSV.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /api/export, got %d", recCSV.Code)
+	}
+	csvBody := recCSV.Body.String()
+	if !strings.Contains(csvBody, "Zenith Bank") || !strings.Contains(csvBody, "Monthly Tech Salary") {
+		t.Fatalf("expected CSV export to contain account name and transaction details, got: %s", csvBody)
+	}
+
+	// C. GET /api/export?format=json
+	reqJSON := httptest.NewRequest(http.MethodGet, "/api/export?timeframe=this_month&format=json", nil)
+	reqJSON.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recJSON := httptest.NewRecorder()
+	application.ServeHTTP(recJSON, reqJSON)
+
+	if recJSON.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /api/export?format=json, got %d", recJSON.Code)
+	}
+	var jsonExport []app.Transaction
+	if err := json.Unmarshal(recJSON.Body.Bytes(), &jsonExport); err != nil {
+		t.Fatalf("failed to parse JSON export: %v", err)
+	}
+	if len(jsonExport) != 4 {
+		t.Fatalf("expected 4 transactions in export for this month, got %d", len(jsonExport))
 	}
 }
 

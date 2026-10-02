@@ -71,6 +71,7 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/debts", app.HandleDebts)
 	app.Mux.HandleFunc("/subscriptions", app.HandleSubscriptionsPage)
 	app.Mux.HandleFunc("/goals", app.HandleGoalsPage)
+	app.Mux.HandleFunc("/reports", app.HandleReportsPage)
 
 	// Auth APIs
 	app.Mux.HandleFunc("/api/signup", app.HandleSignupAPI)
@@ -104,9 +105,10 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/accounts/transfers", app.HandleAccountTransfersListAPI)
 	app.Mux.HandleFunc("/api/accounts/", app.HandleAccountByID)
 
-	// Budgets, Analytics, Export, Currency APIs
+	// Budgets, Analytics, Reports, Export, Currency APIs
 	app.Mux.HandleFunc("/api/budgets", app.HandleBudgets)
 	app.Mux.HandleFunc("/api/analytics", app.HandleAnalytics)
+	app.Mux.HandleFunc("/api/reports", app.HandleReportsAPI)
 	app.Mux.HandleFunc("/api/export", app.HandleExportCSV)
 	app.Mux.HandleFunc("/api/currency", app.HandleCurrencyAPI)
 	app.Mux.HandleFunc("/api/profile", app.HandleProfileAPI)
@@ -531,7 +533,67 @@ func (app *App) HandleAnalytics(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ─── CSV Export API Handler ─────────────────────────────────────────────────
+// ─── Financial Reports & Analytics Handlers ─────────────────────────────────
+
+func (app *App) HandleReportsPage(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+	prof, _ := app.DB.GetProfile(username)
+	fullName := ""
+	email := ""
+	if prof != nil {
+		fullName = prof.FullName
+		email = prof.Email
+	}
+
+	data := struct {
+		Username string
+		FullName string
+		Email    string
+		Currency string
+	}{
+		Username: username,
+		FullName: fullName,
+		Email:    email,
+		Currency: curr,
+	}
+
+	app.renderTemplate(w, "reports.html", data)
+}
+
+func (app *App) HandleReportsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	timeframe := r.URL.Query().Get("timeframe")
+	startDateStr := r.URL.Query().Get("start")
+	endDateStr := r.URL.Query().Get("end")
+	accIDStr := r.URL.Query().Get("account_id")
+	categoryFilter := r.URL.Query().Get("category")
+
+	accID := 0
+	if accIDStr != "" && accIDStr != "all" {
+		accID, _ = strconv.Atoi(accIDStr)
+	}
+
+	report, err := app.DB.GetDetailedFinancialReport(username, timeframe, startDateStr, endDateStr, accID, categoryFilter)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, report)
+}
+
+// ─── CSV & JSON Export API Handler ──────────────────────────────────────────
 
 func (app *App) HandleExportCSV(w http.ResponseWriter, r *http.Request) {
 	username, ok := app.getSessionUser(r)
@@ -540,9 +602,40 @@ func (app *App) HandleExportCSV(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txs, err := app.DB.GetTransactions(username)
+	timeframe := r.URL.Query().Get("timeframe")
+	startDateStr := r.URL.Query().Get("start")
+	endDateStr := r.URL.Query().Get("end")
+	accIDStr := r.URL.Query().Get("account_id")
+	categoryFilter := r.URL.Query().Get("category")
+	typeFilter := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("type")))
+	format := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("format")))
+
+	accID := 0
+	if accIDStr != "" && accIDStr != "all" {
+		accID, _ = strconv.Atoi(accIDStr)
+	}
+
+	report, err := app.DB.GetDetailedFinancialReport(username, timeframe, startDateStr, endDateStr, accID, categoryFilter)
 	if err != nil {
 		http.Error(w, "export failed", http.StatusInternalServerError)
+		return
+	}
+
+	txs := report.Transactions
+	if typeFilter != "" && typeFilter != "all" {
+		var matched []Transaction
+		for _, t := range txs {
+			if strings.ToLower(t.Type) == typeFilter {
+				matched = append(matched, t)
+			}
+		}
+		txs = matched
+	}
+
+	if format == "json" {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"spendly_%s_export.json\"", username))
+		_ = json.NewEncoder(w).Encode(txs)
 		return
 	}
 
@@ -552,14 +645,20 @@ func (app *App) HandleExportCSV(w http.ResponseWriter, r *http.Request) {
 	writer := csv.NewWriter(w)
 	defer writer.Flush()
 
-	writer.Write([]string{"ID", "Date", "Type", "Category", "Amount", "Note"})
+	writer.Write([]string{"ID", "Date", "Type", "Category", "Wallet", "Amount", "Tags", "Note"})
 	for _, t := range txs {
+		accName := t.AccountName
+		if accName == "" {
+			accName = "Main Wallet"
+		}
 		writer.Write([]string{
 			strconv.Itoa(t.ID),
 			t.Date.Format("2006-01-02 15:04:05"),
 			t.Type,
 			t.Category,
+			accName,
 			fmt.Sprintf("%.2f", t.Amount),
+			t.Tags,
 			t.Note,
 		})
 	}
