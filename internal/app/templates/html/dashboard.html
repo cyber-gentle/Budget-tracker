@@ -112,11 +112,11 @@
                     </select>
                 </div>
 
-                <!-- Export CSV -->
-                <a href="/api/export" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm" title="Download transactions as CSV">
+                <!-- Export Button (Desktop & Mobile) -->
+                <button type="button" id="btn-export-header" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm cursor-pointer" title="Export transactions (CSV / JSON)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                    <span>Export CSV</span>
-                </a>
+                    <span class="hidden sm:inline">Export</span>
+                </button>
 
                 <!-- User Profile Dropdown -->
                 <div class="relative">
@@ -154,6 +154,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
                                 <span>Reports & Analytics</span>
                             </a>
+                            <button type="button" id="btn-dropdown-export" class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                <span>Export Data (CSV / JSON)</span>
+                            </button>
                             <button type="button" id="btn-open-category-modal-menu" class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                                 <span>Categories & Tags</span>
@@ -211,6 +215,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
                 <span>Reports</span>
             </a>
+            <button type="button" id="btn-mobile-export" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                <span>Export</span>
+            </button>
         </div>
     </header>
  
@@ -639,8 +647,14 @@
                     <!-- Search & Filter Controls -->
                     <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 space-y-3">
                         <div class="flex items-center justify-between gap-3">
-                            <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Recent Transactions</h2>
-                            <span id="tx-count" class="text-xs font-semibold text-slate-400 dark:text-slate-500">0 transactions</span>
+                            <div class="flex items-center gap-2">
+                                <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Recent Transactions</h2>
+                                <span id="tx-count" class="text-xs font-semibold text-slate-400 dark:text-slate-500">0 transactions</span>
+                            </div>
+                            <button type="button" id="btn-tx-export" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer" title="Export transactions ledger (CSV / JSON)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                <span>Export</span>
+                            </button>
                         </div>
 
                         <!-- Search input + Filters -->
@@ -1023,6 +1037,85 @@
                 <div class="flex gap-2.5 pt-2">
                     <button type="button" id="auto-503020-cancel" class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
                     <button type="submit" id="auto-503020-submit" class="flex-1 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors cursor-pointer">Apply Allocations</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Export Data Modal -->
+    <div id="export-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📊</span>
+                    <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Export Transactions</h3>
+                </div>
+                <button type="button" id="export-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Download your transaction records for accounting, spreadsheets, or offline backups.
+            </p>
+
+            <form id="export-form" class="space-y-4">
+                <!-- Format Selector -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">File Format</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 cursor-pointer hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
+                            <input type="radio" name="export-format" value="csv" checked class="text-slate-900 focus:ring-0">
+                            <div>
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">CSV (.csv)</span>
+                                <span class="block text-[10px] text-slate-400">Excel, Sheets, Numbers</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 cursor-pointer hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
+                            <input type="radio" name="export-format" value="json" class="text-slate-900 focus:ring-0">
+                            <div>
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">JSON (.json)</span>
+                                <span class="block text-[10px] text-slate-400">Raw ledger records</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Timeframe Selector -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Timeframe</label>
+                    <select id="export-timeframe" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 transition-colors cursor-pointer">
+                        <option value="all_time">All Time (Entire History)</option>
+                        <option value="this_month" selected>This Month</option>
+                        <option value="last_month">Last Month</option>
+                        <option value="30d">Last 30 Days</option>
+                        <option value="this_year">This Year</option>
+                    </select>
+                </div>
+
+                <!-- Account / Wallet Selector -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Wallet / Account</label>
+                    <select id="export-account" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 transition-colors cursor-pointer">
+                        <option value="all">All Wallets</option>
+                    </select>
+                </div>
+
+                <!-- Transaction Type Selector -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Transaction Type</label>
+                    <select id="export-type" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 transition-colors cursor-pointer">
+                        <option value="all">All (Income & Expenses)</option>
+                        <option value="expense">Expenses Only</option>
+                        <option value="income">Income Only</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-2.5 pt-2">
+                    <button type="button" id="export-cancel" class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                    <button type="submit" id="export-submit" class="flex-1 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        <span>Download Export</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -4313,6 +4406,102 @@
                         errEl.classList.remove('hidden');
                     }
                 }
+            });
+        }
+
+        // ─── Export Modal Logic ──────────────────────────────────────────────────
+        function openExportModal(defaults = {}) {
+            const modal = document.getElementById('export-modal');
+            if (!modal) return;
+
+            // Populate Wallets
+            const accSelect = document.getElementById('export-account');
+            if (accSelect) {
+                accSelect.innerHTML = '<option value="all">All Wallets</option>';
+                if (userAccounts && userAccounts.length) {
+                    for (const a of userAccounts) {
+                        const opt = document.createElement('option');
+                        opt.value = a.id;
+                        opt.textContent = `${a.icon || '🏦'} ${a.name}`;
+                        accSelect.appendChild(opt);
+                    }
+                }
+            }
+
+            // Defaults if provided
+            if (defaults.timeframe) {
+                const tfEl = document.getElementById('export-timeframe');
+                if (tfEl) tfEl.value = defaults.timeframe;
+            }
+            if (defaults.account_id && accSelect) {
+                accSelect.value = defaults.account_id;
+            }
+            if (defaults.type) {
+                const typeEl = document.getElementById('export-type');
+                if (typeEl) typeEl.value = defaults.type;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            const modal = document.getElementById('export-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // Triggers
+        const btnExportHeader = document.getElementById('btn-export-header');
+        if (btnExportHeader) btnExportHeader.addEventListener('click', () => openExportModal());
+
+        const btnDropdownExport = document.getElementById('btn-dropdown-export');
+        if (btnDropdownExport) {
+            btnDropdownExport.addEventListener('click', () => {
+                const menu = document.getElementById('user-dropdown-menu');
+                if (menu) menu.classList.add('hidden');
+                openExportModal();
+            });
+        }
+
+        const btnMobileExport = document.getElementById('btn-mobile-export');
+        if (btnMobileExport) btnMobileExport.addEventListener('click', () => openExportModal());
+
+        const btnTxExport = document.getElementById('btn-tx-export');
+        if (btnTxExport) {
+            btnTxExport.addEventListener('click', () => {
+                const accVal = document.getElementById('wallet-filter') ? document.getElementById('wallet-filter').value : 'all';
+                const typeVal = document.getElementById('type-filter') ? document.getElementById('type-filter').value : 'all';
+                openExportModal({
+                    timeframe: 'this_month',
+                    account_id: accVal,
+                    type: typeVal
+                });
+            });
+        }
+
+        const exportModalClose = document.getElementById('export-modal-close');
+        if (exportModalClose) exportModalClose.addEventListener('click', closeExportModal);
+
+        const exportCancel = document.getElementById('export-cancel');
+        if (exportCancel) exportCancel.addEventListener('click', closeExportModal);
+
+        const exportForm = document.getElementById('export-form');
+        if (exportForm) {
+            exportForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fmt = document.querySelector('input[name="export-format"]:checked')?.value || 'csv';
+                const timeframe = document.getElementById('export-timeframe')?.value || 'all_time';
+                const account = document.getElementById('export-account')?.value || 'all';
+                const type = document.getElementById('export-type')?.value || 'all';
+
+                const params = new URLSearchParams();
+                params.set('format', fmt);
+                params.set('timeframe', timeframe);
+                if (account !== 'all') params.set('account_id', account);
+                if (type !== 'all') params.set('type', type);
+
+                closeExportModal();
+                showToast(`Generating ${fmt.toUpperCase()} export...`);
+                window.location.href = `/api/export?${params.toString()}`;
             });
         }
 
