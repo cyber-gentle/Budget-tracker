@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -1055,6 +1056,219 @@ func TestReportsAndAnalyticsFlow(t *testing.T) {
 		t.Fatalf("expected 4 transactions in export for this month, got %d", len(jsonExport))
 	}
 }
+
+func TestSmartBudgetingRulesFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "test_smart_budgets.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	username := "smartbudgeter"
+	_ = store.Signup(username, "smart@spendly.app", "pass12345", "Smart Budgeter")
+
+	// 1. Test Category Bucket Classification
+	if app.ClassifyCategoryBucket("food") != "needs" {
+		t.Fatalf("expected food to be 'needs', got '%s'", app.ClassifyCategoryBucket("food"))
+	}
+	if app.ClassifyCategoryBucket("housing") != "needs" {
+		t.Fatalf("expected housing to be 'needs'")
+	}
+	if app.ClassifyCategoryBucket("entertainment") != "wants" {
+		t.Fatalf("expected entertainment to be 'wants'")
+	}
+	if app.ClassifyCategoryBucket("shopping") != "wants" {
+		t.Fatalf("expected shopping to be 'wants'")
+	}
+	if app.ClassifyCategoryBucket("savings") != "savings" {
+		t.Fatalf("expected savings to be 'savings'")
+	}
+	if app.ClassifyCategoryBucket("crypto_vault") != "savings" {
+		t.Fatalf("expected crypto_vault to be 'savings'")
+	}
+	if app.ClassifyCategoryBucket("pharmacy_bills") != "needs" {
+		t.Fatalf("expected pharmacy_bills to be 'needs'")
+	}
+
+	// 2. Add Transactions for current month
+	now := time.Now()
+	// Income: ₦400,000
+	_ = store.AddTransactionFull(username, 400000, "salary", "Main Salary", "income", "#work", 1, now)
+
+	// Needs (50% target = ₦200,000): Food ₦60,000 + Housing ₦100,000 + Transport ₦20,000 = ₦180,000
+	_ = store.AddTransactionFull(username, 60000, "food", "Groceries & Market", "expense", "#home", 1, now)
+	_ = store.AddTransactionFull(username, 100000, "housing", "Apartment Rent Share", "expense", "#fixed", 1, now)
+	_ = store.AddTransactionFull(username, 20000, "transport", "Fuel & Transit", "expense", "#commute", 1, now)
+
+	// Wants (30% target = ₦120,000): Entertainment ₦50,000 + Shopping ₦30,000 = ₦80,000
+	_ = store.AddTransactionFull(username, 50000, "entertainment", "Weekend Outing", "expense", "#fun", 1, now)
+	_ = store.AddTransactionFull(username, 30000, "shopping", "New Sneakers", "expense", "#fashion", 1, now)
+
+	// Savings (20% target = ₦80,000): Savings transaction ₦40,000
+	_ = store.AddTransactionFull(username, 40000, "savings", "Emergency Fund Deposit", "expense", "#vault", 1, now)
+
+	// Set custom category envelope limits
+	_ = store.SetBudget(username, "food", 50000)          // Spent 60,000 -> Exceeded!
+	_ = store.SetBudget(username, "entertainment", 60000) // Spent 50,000 / 60,000 -> 83% (Caution/Near limit)
+	_ = store.SetBudget(username, "transport", 40000)     // Spent 20,000 / 40,000 -> 50% (On track)
+
+	// 3. Test GetSmartBudgetReport
+	report, err := store.GetSmartBudgetReport(username)
+	if err != nil {
+		t.Fatalf("failed to get smart budget report: %v", err)
+	}
+
+	if report.MonthlyIncome != 400000 {
+		t.Fatalf("expected monthly income 400000, got %.2f", report.MonthlyIncome)
+	}
+	if report.TotalExpense != 300000 {
+		t.Fatalf("expected total expense 300000, got %.2f", report.TotalExpense)
+	}
+
+	// Verify 50/30/20 Buckets
+	if len(report.Rule503020) != 3 {
+		t.Fatalf("expected 3 buckets in 50/30/20 rule, got %d", len(report.Rule503020))
+	}
+
+	var needsBucket, wantsBucket, savingsBucket *app.Rule503020Bucket
+	for i := range report.Rule503020 {
+		switch report.Rule503020[i].Key {
+		case "needs":
+			needsBucket = &report.Rule503020[i]
+		case "wants":
+			wantsBucket = &report.Rule503020[i]
+		case "savings":
+			savingsBucket = &report.Rule503020[i]
+		}
+	}
+
+	if needsBucket == nil || needsBucket.TargetAmount != 200000 || needsBucket.ActualSpent != 180000 {
+		t.Fatalf("unexpected needs bucket: %+v", needsBucket)
+	}
+	if wantsBucket == nil || wantsBucket.TargetAmount != 120000 || wantsBucket.ActualSpent != 80000 {
+		t.Fatalf("unexpected wants bucket: %+v", wantsBucket)
+	}
+	// Total savings includes explicit savings (40,000) + surplus income (400,000 - 300,000 = 100,000) = 140,000
+	if savingsBucket == nil || savingsBucket.TargetAmount != 80000 || savingsBucket.ActualSpent != 140000 {
+		t.Fatalf("unexpected savings bucket: %+v", savingsBucket)
+	}
+
+	// Verify Envelopes
+	var foodEnv, entEnv, transEnv *app.BudgetEnvelope
+	for i := range report.Envelopes {
+		switch report.Envelopes[i].Category {
+		case "food":
+			foodEnv = &report.Envelopes[i]
+		case "entertainment":
+			entEnv = &report.Envelopes[i]
+		case "transport":
+			transEnv = &report.Envelopes[i]
+		}
+	}
+
+	if foodEnv == nil || foodEnv.PaceStatus != "exceeded" {
+		t.Fatalf("expected food envelope to be 'exceeded', got %+v", foodEnv)
+	}
+	if entEnv == nil || (entEnv.PaceStatus != "caution" && entEnv.PaceStatus != "warning") {
+		t.Fatalf("expected entertainment envelope to be caution or warning, got %+v", entEnv)
+	}
+	if transEnv == nil {
+		t.Fatalf("expected transport envelope to exist")
+	}
+
+	// Verify Dynamic Alerts
+	if len(report.Alerts) == 0 {
+		t.Fatalf("expected spending alerts to be generated")
+	}
+	hasExceededAlert := false
+	for _, a := range report.Alerts {
+		if a.Category == "food" && a.Type == "danger" {
+			hasExceededAlert = true
+			break
+		}
+	}
+	if !hasExceededAlert {
+		t.Fatalf("expected danger alert for exceeded food envelope, got: %+v", report.Alerts)
+	}
+
+	// 4. Test Apply503020AutoBudget
+	autoBudgets, err := store.Apply503020AutoBudget(username, 500000)
+	if err != nil {
+		t.Fatalf("failed to apply auto 50/30/20 budget: %v", err)
+	}
+
+	// Needs (50% of 500k = 250k): food (40% of needs = 100k), housing (35% = 87.5k), transport (15% = 37.5k), bills (10% = 25k)
+	if autoBudgets["food"] != 100000 {
+		t.Fatalf("expected auto food budget 100000, got %.2f", autoBudgets["food"])
+	}
+	if autoBudgets["savings"] != 100000 { // 20% of 500k
+		t.Fatalf("expected auto savings budget 100000, got %.2f", autoBudgets["savings"])
+	}
+
+	// 5. Test HTTP API Endpoints
+	application := app.NewApp(store)
+	sessionID, err := store.Login(username, "pass12345")
+	if err != nil || sessionID == "" {
+		t.Fatalf("failed to login: %v", err)
+	}
+
+	// A. GET /api/budgets/smart
+	reqSmart := httptest.NewRequest(http.MethodGet, "/api/budgets/smart", nil)
+	reqSmart.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recSmart := httptest.NewRecorder()
+	application.ServeHTTP(recSmart, reqSmart)
+
+	if recSmart.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /api/budgets/smart, got %d: %s", recSmart.Code, recSmart.Body.String())
+	}
+	var apiSmartReport app.SmartBudgetReport
+	if err := json.Unmarshal(recSmart.Body.Bytes(), &apiSmartReport); err != nil {
+		t.Fatalf("failed to parse /api/budgets/smart response: %v", err)
+	}
+	if len(apiSmartReport.Rule503020) != 3 {
+		t.Fatalf("expected 3 50/30/20 rules in API response, got %d", len(apiSmartReport.Rule503020))
+	}
+
+	// B. POST /api/budgets/auto-503020
+	form := url.Values{}
+	form.Set("base_income", "600000")
+	reqAuto := httptest.NewRequest(http.MethodPost, "/api/budgets/auto-503020", strings.NewReader(form.Encode()))
+	reqAuto.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	reqAuto.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recAuto := httptest.NewRecorder()
+	application.ServeHTTP(recAuto, reqAuto)
+
+	if recAuto.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /api/budgets/auto-503020, got %d: %s", recAuto.Code, recAuto.Body.String())
+	}
+	var autoResp map[string]any
+	if err := json.Unmarshal(recAuto.Body.Bytes(), &autoResp); err != nil {
+		t.Fatalf("failed to unmarshal auto budget response: %v", err)
+	}
+	if autoResp["status"] != "ok" {
+		t.Fatalf("expected status 'ok', got %v", autoResp["status"])
+	}
+
+	// C. GET /api/budgets includes smart_report
+	reqBudgets := httptest.NewRequest(http.MethodGet, "/api/budgets", nil)
+	reqBudgets.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recBudgets := httptest.NewRecorder()
+	application.ServeHTTP(recBudgets, reqBudgets)
+
+	if recBudgets.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from /api/budgets, got %d", recBudgets.Code)
+	}
+	var budgetsResp map[string]any
+	if err := json.Unmarshal(recBudgets.Body.Bytes(), &budgetsResp); err != nil {
+		t.Fatalf("failed to unmarshal /api/budgets response: %v", err)
+	}
+	if budgetsResp["smart_report"] == nil {
+		t.Fatalf("expected /api/budgets to contain 'smart_report'")
+	}
+}
+
 
 
 

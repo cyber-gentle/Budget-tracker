@@ -3027,4 +3027,553 @@ func (s *DBStore) GetAccountTransfers(username string, limit int) ([]AccountTran
 	return transfers, nil
 }
 
+// ─── Step 6: Smart Budgeting Rules (50/30/20 Rule, Envelope Budgeting, Dynamic Spending Alerts) ───
+
+type BudgetEnvelope struct {
+	Category       string  `json:"category"`
+	CategoryLabel  string  `json:"category_label"`
+	Icon           string  `json:"icon"`
+	Color          string  `json:"color"`
+	Bucket         string  `json:"bucket"` // "needs", "wants", "savings"
+	MonthlyLimit   float64 `json:"monthly_limit"`
+	Spent          float64 `json:"spent"`
+	Remaining      float64 `json:"remaining"`
+	PercentUsed    float64 `json:"percent_used"`
+	DailyBudget    float64 `json:"daily_budget"`    // MonthlyLimit / DaysInMonth
+	DailySpentAvg  float64 `json:"daily_spent_avg"` // Spent / DayOfMonth
+	ProjectedSpend float64 `json:"projected_spend"` // DailySpentAvg * DaysInMonth
+	PacePercent    float64 `json:"pace_percent"`    // (ProjectedSpend / MonthlyLimit) * 100
+	PaceStatus     string  `json:"pace_status"`     // "on_track", "caution", "warning", "exceeded", "unbudgeted"
+	PaceMessage    string  `json:"pace_message"`
+}
+
+type Rule503020Bucket struct {
+	Name           string   `json:"name"`           // "Needs", "Wants", "Savings"
+	Key            string   `json:"key"`            // "needs", "wants", "savings"
+	TargetPercent  float64  `json:"target_percent"` // 50, 30, 20
+	TargetAmount   float64  `json:"target_amount"`  // Income * (TargetPercent / 100)
+	ActualSpent    float64  `json:"actual_spent"`
+	ActualPercent  float64  `json:"actual_percent"`  // (ActualSpent / Income) * 100
+	VarianceAmount float64  `json:"variance_amount"` // TargetAmount - ActualSpent (positive = safe/under budget)
+	Status         string   `json:"status"`          // "on_track", "caution", "over"
+	Categories     []string `json:"categories"`
+}
+
+type SpendingAlert struct {
+	Type     string  `json:"type"` // "danger", "warning", "caution", "info", "success"
+	Title    string  `json:"title"`
+	Message  string  `json:"message"`
+	Category string  `json:"category,omitempty"`
+	Pace     float64 `json:"pace,omitempty"`
+}
+
+type SmartBudgetReport struct {
+	CurrentMonth         string             `json:"current_month"`
+	DayOfMonth           int                `json:"day_of_month"`
+	DaysInMonth          int                `json:"days_in_month"`
+	DaysRemaining        int                `json:"days_remaining"`
+	MonthProgressPct     float64            `json:"month_progress_pct"`
+	MonthlyIncome        float64            `json:"monthly_income"`
+	IncomeSource         string             `json:"income_source"` // "current_month", "average", "estimated"
+	TotalExpense         float64            `json:"total_expense"`
+	TotalBudgetLimit     float64            `json:"total_budget_limit"`
+	TotalBudgetSpent     float64            `json:"total_budget_spent"`
+	TotalBudgetRemaining float64            `json:"total_budget_remaining"`
+	BudgetProgressPct    float64            `json:"budget_progress_pct"`
+	OverallPaceStatus    string             `json:"overall_pace_status"` // "on_track", "caution", "warning", "exceeded"
+	Rule503020           []Rule503020Bucket `json:"rule_50_30_20"`
+	Envelopes            []BudgetEnvelope   `json:"envelopes"`
+	Alerts               []SpendingAlert    `json:"alerts"`
+	Currency             string             `json:"currency"`
+}
+
+// ClassifyCategoryBucket classifies any category slug/name into Needs (50%), Wants (30%), or Savings (20%).
+func ClassifyCategoryBucket(category string) string {
+	c := strings.ToLower(strings.TrimSpace(category))
+	switch c {
+	case "savings", "investment", "investments", "debt", "debt repayment", "crypto", "emergency fund", "vault", "pension", "retirement":
+		return "savings"
+	case "housing", "rent", "mortgage", "utilities", "bills", "food", "groceries", "supermarket",
+		"transport", "transportation", "fuel", "gas", "car", "healthcare", "health", "medical", "pharmacy", "doctor",
+		"education", "school", "tuition", "insurance":
+		return "needs"
+	case "entertainment", "shopping", "personal", "personal care", "dining", "restaurant", "takeout", "travel", "vacation",
+		"hobbies", "gifts", "subscriptions", "other", "general", "leisure":
+		return "wants"
+	}
+
+	// Keyword heuristics for custom user categories
+	if strings.Contains(c, "sav") || strings.Contains(c, "invest") || strings.Contains(c, "debt") || strings.Contains(c, "fund") || strings.Contains(c, "crypto") {
+		return "savings"
+	}
+	if strings.Contains(c, "rent") || strings.Contains(c, "hous") || strings.Contains(c, "util") || strings.Contains(c, "bill") ||
+		strings.Contains(c, "food") || strings.Contains(c, "grocer") || strings.Contains(c, "trans") || strings.Contains(c, "fuel") ||
+		strings.Contains(c, "health") || strings.Contains(c, "medic") || strings.Contains(c, "educat") || strings.Contains(c, "insur") {
+		return "needs"
+	}
+	return "wants"
+}
+
+// GetSmartBudgetReport aggregates envelope limits, burn rate pace, 50/30/20 rule breakdown, and proactive spending alerts.
+func (s *DBStore) GetSmartBudgetReport(username string) (*SmartBudgetReport, error) {
+	currency := s.GetCurrency(username)
+	if currency == "" {
+		currency = "₦"
+	}
+
+	now := time.Now()
+	firstOfNextMonth := time.Date(now.Year(), now.Month()+1, 1, 0, 0, 0, 0, now.Location())
+	lastOfThisMonth := firstOfNextMonth.Add(-time.Nanosecond)
+	daysInMonth := lastOfThisMonth.Day()
+	dayOfMonth := now.Day()
+	if dayOfMonth < 1 {
+		dayOfMonth = 1
+	}
+	daysRemaining := daysInMonth - dayOfMonth
+	if daysRemaining < 0 {
+		daysRemaining = 0
+	}
+	monthProgressPct := math.Round((float64(dayOfMonth)/float64(daysInMonth))*1000) / 10
+
+	// 1. Fetch transactions
+	txs, err := s.GetTransactions(username)
+	if err != nil {
+		return nil, err
+	}
+
+	var thisMonthIncome, thisMonthExpense float64
+	var pastIncomeSum float64
+	var pastIncomeMonths int
+	categorySpent := make(map[string]float64)
+
+	// Past 3 months tracking for baseline
+	monthIncomes := make(map[string]float64)
+
+	for _, t := range txs {
+		isThisMonth := t.Date.Year() == now.Year() && t.Date.Month() == now.Month()
+		mKey := fmt.Sprintf("%04d-%02d", t.Date.Year(), t.Date.Month())
+
+		if t.Type == "income" {
+			monthIncomes[mKey] += t.Amount
+			if isThisMonth {
+				thisMonthIncome += t.Amount
+			}
+		} else if t.Type == "expense" && isThisMonth {
+			thisMonthExpense += t.Amount
+			categorySpent[t.Category] += t.Amount
+		}
+	}
+
+	for k, v := range monthIncomes {
+		if k != fmt.Sprintf("%04d-%02d", now.Year(), now.Month()) {
+			pastIncomeSum += v
+			pastIncomeMonths++
+		}
+	}
+
+	effectiveIncome := thisMonthIncome
+	incomeSource := "current_month"
+	if effectiveIncome <= 0 {
+		if pastIncomeMonths > 0 {
+			effectiveIncome = pastIncomeSum / float64(pastIncomeMonths)
+			incomeSource = "average"
+		} else {
+			incomeSource = "estimated"
+			// Baseline fallback
+			effectiveIncome = 250000
+		}
+	}
+
+	// 2. Fetch category budgets and category metadata
+	budgets, _ := s.GetBudgets(username)
+	if budgets == nil {
+		budgets = make(map[string]float64)
+	}
+	categories, _ := s.GetCategories(username)
+
+	catMetaMap := make(map[string]Category)
+	for _, c := range categories {
+		catMetaMap[strings.ToLower(c.Slug)] = c
+		catMetaMap[strings.ToLower(c.Name)] = c
+	}
+
+	// Collect unique categories with budgets or spending
+	catSet := make(map[string]bool)
+	for k := range budgets {
+		catSet[k] = true
+	}
+	for k := range categorySpent {
+		catSet[k] = true
+	}
+
+	var envelopes []BudgetEnvelope
+	var totalBudgetLimit, totalBudgetSpent float64
+
+	for catKey := range catSet {
+		limit := budgets[catKey]
+		spent := categorySpent[catKey]
+		bucket := ClassifyCategoryBucket(catKey)
+
+		if limit > 0 {
+			totalBudgetLimit += limit
+			totalBudgetSpent += spent
+		}
+
+		remaining := limit - spent
+		var pctUsed float64
+		if limit > 0 {
+			pctUsed = math.Round((spent/limit)*1000) / 10
+		}
+
+		dailyBudget := 0.0
+		if limit > 0 {
+			dailyBudget = math.Round((limit/float64(daysInMonth))*100) / 100
+		}
+
+		dailySpentAvg := math.Round((spent/float64(dayOfMonth))*100) / 100
+		projectedSpend := math.Round((dailySpentAvg*float64(daysInMonth))*100) / 100
+
+		pacePercent := 0.0
+		if limit > 0 {
+			pacePercent = math.Round((projectedSpend/limit)*1000) / 10
+		}
+
+		var paceStatus, paceMsg string
+		if limit <= 0 {
+			paceStatus = "unbudgeted"
+			paceMsg = "No monthly limit set"
+		} else if spent > limit {
+			paceStatus = "exceeded"
+			paceMsg = fmt.Sprintf("Exceeded limit by %s%.0f", currency, spent-limit)
+		} else if pacePercent > 115 && dayOfMonth >= 2 {
+			paceStatus = "warning"
+			paceMsg = fmt.Sprintf("Projected to overshoot by %s%.0f (+%.0f%%)", currency, projectedSpend-limit, pacePercent-100)
+		} else if pctUsed >= 80 {
+			paceStatus = "caution"
+			paceMsg = fmt.Sprintf("%s%.0f remaining (%d days left)", currency, remaining, daysRemaining)
+		} else {
+			paceStatus = "on_track"
+			dailyRemaining := 0.0
+			if daysRemaining > 0 {
+				dailyRemaining = remaining / float64(daysRemaining)
+			}
+			paceMsg = fmt.Sprintf("On track (%s%.0f/day remaining)", currency, dailyRemaining)
+		}
+
+		// Icon and display label
+		catLabel := catKey
+		catIcon := "🏷️"
+		catColor := "#64748B"
+		if meta, ok := catMetaMap[strings.ToLower(catKey)]; ok {
+			catLabel = meta.Name
+			if meta.Emoji != "" {
+				catIcon = meta.Emoji
+			}
+			if meta.Color != "" {
+				catColor = meta.Color
+			}
+		} else {
+			// standard fallback
+			switch strings.ToLower(catKey) {
+			case "food":
+				catLabel = "Food & Dining"
+				catIcon = "🍔"
+				catColor = "#F59E0B"
+			case "transport":
+				catLabel = "Transportation"
+				catIcon = "🚗"
+				catColor = "#3B82F6"
+			case "housing":
+				catLabel = "Housing & Utilities"
+				catIcon = "🏠"
+				catColor = "#8B5CF6"
+			case "entertainment":
+				catLabel = "Entertainment"
+				catIcon = "🎬"
+				catColor = "#EC4899"
+			case "shopping":
+				catLabel = "Shopping & Retail"
+				catIcon = "🛍️"
+				catColor = "#10B981"
+			case "healthcare":
+				catLabel = "Healthcare & Medical"
+				catIcon = "💊"
+				catColor = "#EF4444"
+			case "bills":
+				catLabel = "Bills & Subscriptions"
+				catIcon = "💡"
+				catColor = "#06B6D4"
+			case "personal":
+				catLabel = "Personal Care"
+				catIcon = "✨"
+				catColor = "#F43F5E"
+			case "savings":
+				catLabel = "Savings & Vaults"
+				catIcon = "💰"
+				catColor = "#14B8A6"
+			}
+		}
+
+		envelopes = append(envelopes, BudgetEnvelope{
+			Category:       catKey,
+			CategoryLabel:  catLabel,
+			Icon:           catIcon,
+			Color:          catColor,
+			Bucket:         bucket,
+			MonthlyLimit:   limit,
+			Spent:          spent,
+			Remaining:      remaining,
+			PercentUsed:    pctUsed,
+			DailyBudget:    dailyBudget,
+			DailySpentAvg:  dailySpentAvg,
+			ProjectedSpend: projectedSpend,
+			PacePercent:    pacePercent,
+			PaceStatus:     paceStatus,
+			PaceMessage:    paceMsg,
+		})
+	}
+
+	// Sort envelopes: exceeded first, warning, caution, on_track, unbudgeted
+	statusOrder := map[string]int{
+		"exceeded":   1,
+		"warning":    2,
+		"caution":    3,
+		"on_track":   4,
+		"unbudgeted": 5,
+	}
+	sort.Slice(envelopes, func(i, j int) bool {
+		oI := statusOrder[envelopes[i].PaceStatus]
+		oJ := statusOrder[envelopes[j].PaceStatus]
+		if oI != oJ {
+			return oI < oJ
+		}
+		return envelopes[i].PercentUsed > envelopes[j].PercentUsed
+	})
+
+	totalBudgetRemaining := totalBudgetLimit - totalBudgetSpent
+	var budgetProgressPct float64
+	if totalBudgetLimit > 0 {
+		budgetProgressPct = math.Round((totalBudgetSpent/totalBudgetLimit)*1000) / 10
+	}
+
+	overallPaceStatus := "on_track"
+	if totalBudgetLimit > 0 {
+		if totalBudgetSpent > totalBudgetLimit {
+			overallPaceStatus = "exceeded"
+		} else if budgetProgressPct > monthProgressPct+15 {
+			overallPaceStatus = "warning"
+		} else if budgetProgressPct > monthProgressPct+5 {
+			overallPaceStatus = "caution"
+		}
+	}
+
+	// 3. 50/30/20 Rule Breakdown
+	targetNeeds := math.Round(effectiveIncome * 0.50)
+	targetWants := math.Round(effectiveIncome * 0.30)
+	targetSavings := math.Round(effectiveIncome * 0.20)
+
+	var actualNeeds, actualWants, actualSavingsSpent float64
+	var needsCats, wantsCats, savingsCats []string
+
+	for catKey, spent := range categorySpent {
+		bucket := ClassifyCategoryBucket(catKey)
+		switch bucket {
+		case "needs":
+			actualNeeds += spent
+			needsCats = append(needsCats, catKey)
+		case "wants":
+			actualWants += spent
+			wantsCats = append(wantsCats, catKey)
+		case "savings":
+			actualSavingsSpent += spent
+			savingsCats = append(savingsCats, catKey)
+		}
+	}
+
+	// If net surplus exists (income > expense), unspent funds count towards retained savings
+	surplusSavings := 0.0
+	if thisMonthIncome > thisMonthExpense {
+		surplusSavings = thisMonthIncome - thisMonthExpense
+	}
+	totalActualSavings := actualSavingsSpent + surplusSavings
+
+	calcPct := func(val float64) float64 {
+		if effectiveIncome <= 0 {
+			return 0
+		}
+		return math.Round((val/effectiveIncome)*1000) / 10
+	}
+
+	determineStatus := func(spent, target float64, isSavings bool) string {
+		if isSavings {
+			if spent >= target {
+				return "on_track"
+			} else if spent >= target*0.7 {
+				return "caution"
+			}
+			return "over" // below target
+		}
+		if spent > target {
+			return "over"
+		} else if spent > target*0.85 {
+			return "caution"
+		}
+		return "on_track"
+	}
+
+	rule503020 := []Rule503020Bucket{
+		{
+			Name:           "Needs (50%)",
+			Key:            "needs",
+			TargetPercent:  50,
+			TargetAmount:   targetNeeds,
+			ActualSpent:    actualNeeds,
+			ActualPercent:  calcPct(actualNeeds),
+			VarianceAmount: targetNeeds - actualNeeds,
+			Status:         determineStatus(actualNeeds, targetNeeds, false),
+			Categories:     needsCats,
+		},
+		{
+			Name:           "Wants (30%)",
+			Key:            "wants",
+			TargetPercent:  30,
+			TargetAmount:   targetWants,
+			ActualSpent:    actualWants,
+			ActualPercent:  calcPct(actualWants),
+			VarianceAmount: targetWants - actualWants,
+			Status:         determineStatus(actualWants, targetWants, false),
+			Categories:     wantsCats,
+		},
+		{
+			Name:           "Savings & Debt (20%)",
+			Key:            "savings",
+			TargetPercent:  20,
+			TargetAmount:   targetSavings,
+			ActualSpent:    totalActualSavings,
+			ActualPercent:  calcPct(totalActualSavings),
+			VarianceAmount: totalActualSavings - targetSavings,
+			Status:         determineStatus(totalActualSavings, targetSavings, true),
+			Categories:     savingsCats,
+		},
+	}
+
+	// 4. Dynamic Spending Alerts
+	var alerts []SpendingAlert
+
+	for _, env := range envelopes {
+		if env.PaceStatus == "exceeded" {
+			alerts = append(alerts, SpendingAlert{
+				Type:     "danger",
+				Title:    fmt.Sprintf("%s Envelope Exceeded!", env.CategoryLabel),
+				Message:  fmt.Sprintf("You have spent %s%.0f, exceeding your %s%.0f monthly limit by %s%.0f.", currency, env.Spent, currency, env.MonthlyLimit, currency, env.Spent-env.MonthlyLimit),
+				Category: env.Category,
+				Pace:     env.PacePercent,
+			})
+		} else if env.PaceStatus == "warning" {
+			alerts = append(alerts, SpendingAlert{
+				Type:     "warning",
+				Title:    fmt.Sprintf("%s Burning Faster Than Normal", env.CategoryLabel),
+				Message:  fmt.Sprintf("Current burn rate is pacing at %.0f%% of monthly envelope. Projected month-end spend is %s%.0f.", env.PacePercent, currency, env.ProjectedSpend),
+				Category: env.Category,
+				Pace:     env.PacePercent,
+			})
+		}
+	}
+
+	if calcPct(actualWants) > 35 {
+		alerts = append(alerts, SpendingAlert{
+			Type:    "warning",
+			Title:   "50/30/20 Wants Exceeded",
+			Message: fmt.Sprintf("Lifestyle & non-essential spending is currently taking up %.1f%% of your monthly income (target: 30%% max).", calcPct(actualWants)),
+		})
+	}
+
+	if calcPct(actualNeeds) > 55 {
+		alerts = append(alerts, SpendingAlert{
+			Type:    "danger",
+			Title:   "Essential Needs Above 50%",
+			Message: fmt.Sprintf("Essential living expenses are currently consuming %.1f%% of your monthly income (target: 50%%).", calcPct(actualNeeds)),
+		})
+	}
+
+	if calcPct(totalActualSavings) >= 20 {
+		alerts = append(alerts, SpendingAlert{
+			Type:    "success",
+			Title:   "50/30/20 Savings Goal Achieved!",
+			Message: fmt.Sprintf("Fantastic discipline! You have allocated or retained %.1f%% of income into savings & debt payoff this month.", calcPct(totalActualSavings)),
+		})
+	}
+
+	if len(alerts) == 0 {
+		alerts = append(alerts, SpendingAlert{
+			Type:    "info",
+			Title:   "Budgets On Track",
+			Message: "All spending envelopes are pacing normally within current month parameters.",
+		})
+	}
+
+	return &SmartBudgetReport{
+		CurrentMonth:         now.Format("January 2006"),
+		DayOfMonth:           dayOfMonth,
+		DaysInMonth:          daysInMonth,
+		DaysRemaining:        daysRemaining,
+		MonthProgressPct:     monthProgressPct,
+		MonthlyIncome:        effectiveIncome,
+		IncomeSource:         incomeSource,
+		TotalExpense:         thisMonthExpense,
+		TotalBudgetLimit:     totalBudgetLimit,
+		TotalBudgetSpent:     totalBudgetSpent,
+		TotalBudgetRemaining: totalBudgetRemaining,
+		BudgetProgressPct:    budgetProgressPct,
+		OverallPaceStatus:    overallPaceStatus,
+		Rule503020:           rule503020,
+		Envelopes:            envelopes,
+		Alerts:               alerts,
+		Currency:             currency,
+	}, nil
+}
+
+// Apply503020AutoBudget automatically sets category budget caps based on 50/30/20 distribution of monthly income.
+func (s *DBStore) Apply503020AutoBudget(username string, baseIncome ...float64) (map[string]float64, error) {
+	income := 0.0
+	if len(baseIncome) > 0 && baseIncome[0] > 0 {
+		income = baseIncome[0]
+	} else {
+		rep, _ := s.GetSmartBudgetReport(username)
+		if rep != nil && rep.MonthlyIncome > 0 {
+			income = rep.MonthlyIncome
+		} else {
+			income = 250000
+		}
+	}
+
+	needsTarget := income * 0.50
+	wantsTarget := income * 0.30
+	savingsTarget := income * 0.20
+
+	round500 := func(val float64) float64 {
+		return math.Round(val/500) * 500
+	}
+
+	autoAllocations := map[string]float64{
+		"food":          round500(needsTarget * 0.40),
+		"housing":       round500(needsTarget * 0.35),
+		"transport":     round500(needsTarget * 0.15),
+		"bills":         round500(needsTarget * 0.10),
+		"shopping":      round500(wantsTarget * 0.40),
+		"entertainment": round500(wantsTarget * 0.35),
+		"personal":      round500(wantsTarget * 0.25),
+		"savings":       round500(savingsTarget),
+	}
+
+	for cat, limit := range autoAllocations {
+		if err := s.SetBudget(username, cat, limit); err != nil {
+			return nil, err
+		}
+	}
+
+	return s.GetBudgets(username)
+}
+
+
 

@@ -407,22 +407,87 @@
                     </div>
                 </div>
 
-                <!-- Monthly Category Budgets -->
+                <!-- Smart Category Budgets & 50/30/20 Rules -->
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center justify-between mb-3.5">
                         <div>
-                            <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Category Budgets</h2>
-                            <p class="text-xs text-slate-400 dark:text-slate-500">Track monthly spending limits</p>
+                            <div class="flex items-center gap-2">
+                                <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Smart Budgets</h2>
+                                <span id="budget-pace-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">On Track</span>
+                            </div>
+                            <p class="text-xs text-slate-400 dark:text-slate-500">Virtual envelopes & 50/30/20 rule</p>
                         </div>
-                        <button type="button" id="btn-manage-budgets" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                            <span>Set Limits</span>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" id="btn-auto-503020" title="Apply 50/30/20 Rule based on your income" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-white bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                <span>Auto 50/30/20</span>
+                            </button>
+                            <button type="button" id="btn-manage-budgets" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                <span>Set Limits</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mode Switcher Tabs -->
+                    <div class="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl mb-3.5 text-xs font-semibold">
+                        <button type="button" id="budget-tab-envelopes" class="flex-1 py-1.5 text-center rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-700 shadow-xs cursor-pointer">
+                            Envelopes
+                        </button>
+                        <button type="button" id="budget-tab-503020" class="flex-1 py-1.5 text-center rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                            50/30/20 Rule
                         </button>
                     </div>
 
-                    <!-- Budgets List -->
-                    <div id="budgets-list" class="space-y-3.5">
-                        <div class="text-center py-6 text-xs text-slate-400 dark:text-slate-500">Loading budgets...</div>
+                    <!-- Spending Pace Alerts Ribbon (conditionally visible) -->
+                    <div id="budget-alerts-container" class="space-y-2 mb-3.5 hidden">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Tab Content: Envelopes -->
+                    <div id="tab-envelopes-content">
+                        <!-- Month Progress / Budget Burn Summary -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 mb-3 flex items-center justify-between text-[11px]">
+                            <span id="budget-month-progress" class="text-slate-500 dark:text-slate-400 font-medium">Month is 0% elapsed</span>
+                            <span id="budget-overall-burn" class="font-bold text-slate-700 dark:text-slate-300">0% spent</span>
+                        </div>
+
+                        <!-- Envelopes List -->
+                        <div id="budgets-list" class="space-y-3">
+                            <div class="text-center py-6 text-xs text-slate-400 dark:text-slate-500">Loading envelopes...</div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content: 50/30/20 Rule -->
+                    <div id="tab-503020-content" class="hidden space-y-3.5">
+                        <!-- Visual Tri-color Gauge -->
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-slate-900 dark:text-white">Income Allocation</span>
+                                <span id="rule-income-badge" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Income: ₦0</span>
+                            </div>
+                            <!-- Tri-color Segmented Bar -->
+                            <div class="w-full h-3 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex">
+                                <div id="bar-needs" class="h-full bg-blue-500 transition-all duration-500" style="width: 50%" title="Needs"></div>
+                                <div id="bar-wants" class="h-full bg-purple-500 transition-all duration-500" style="width: 30%" title="Wants"></div>
+                                <div id="bar-savings" class="h-full bg-emerald-500 transition-all duration-500" style="width: 20%" title="Savings"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Needs (50%)</span>
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Wants (30%)</span>
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Savings (20%)</span>
+                            </div>
+                        </div>
+
+                        <!-- 3 Cards for Needs, Wants, Savings -->
+                        <div id="rule-buckets-cards" class="space-y-2.5">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Advice Insight -->
+                        <div id="rule-health-note" class="p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-xs text-indigo-900 dark:text-indigo-200">
+                            <!-- Populated dynamically -->
+                        </div>
                     </div>
                 </div>
 
@@ -885,23 +950,79 @@
 
     <!-- Manage Budgets Modal -->
     <div id="budgets-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 w-full max-w-md shadow-2xl">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Set Monthly Budgets</h3>
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">⚙️</span>
+                    <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Set Category Envelopes</h3>
+                </div>
                 <button type="button" id="budgets-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
-            <p class="text-xs text-slate-400 dark:text-slate-500 mb-4">Set maximum spending targets per month. Leave blank or enter 0 to remove a budget limit.</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mb-4">Set maximum spending limits per month. Enter 0 or leave blank to remove limit.</p>
 
             <form id="budgets-form" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
                 <div id="budget-input-rows" class="space-y-2.5">
-                    <!-- Populated dynamically -->
+                    <!-- Populated dynamically with category buckets -->
                 </div>
 
                 <div class="flex gap-2.5 pt-3 sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
                     <button type="button" id="budgets-cancel" class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Close</button>
                     <button type="submit" class="flex-1 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer">Save Budgets</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auto 50/30/20 Budgeting Modal -->
+    <div id="auto-503020-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">⚡</span>
+                    <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Auto 50/30/20 Allocation</h3>
+                </div>
+                <button type="button" id="auto-503020-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Spendly calculates optimal category spending caps adhering to the balanced 50/30/20 principle based on your income.
+            </p>
+
+            <form id="auto-503020-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Baseline Monthly Income</label>
+                    <div class="relative">
+                        <span id="auto-currency-prefix" class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₦</span>
+                        <input type="number" id="auto-income-input" step="any" min="1000" required class="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-indigo-500" placeholder="e.g. 500000">
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Adjust or confirm your expected monthly earnings.</p>
+                </div>
+
+                <!-- Preview Allocation Grid -->
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900/50">
+                        <span class="block text-[10px] font-bold text-blue-600 dark:text-blue-400">50% Needs</span>
+                        <span id="preview-needs-val" class="block font-bold text-slate-800 dark:text-slate-200 mt-0.5">₦0</span>
+                        <span class="block text-[9px] text-slate-400 mt-0.5">Food, Rent, Transit</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/50 border border-purple-100 dark:border-purple-900/50">
+                        <span class="block text-[10px] font-bold text-purple-600 dark:text-purple-400">30% Wants</span>
+                        <span id="preview-wants-val" class="block font-bold text-slate-800 dark:text-slate-200 mt-0.5">₦0</span>
+                        <span class="block text-[9px] text-slate-400 mt-0.5">Dining, Shopping, Fun</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50">
+                        <span class="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400">20% Savings</span>
+                        <span id="preview-savings-val" class="block font-bold text-slate-800 dark:text-slate-200 mt-0.5">₦0</span>
+                        <span class="block text-[9px] text-slate-400 mt-0.5">Vaults, Debt Payoff</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2.5 pt-2">
+                    <button type="button" id="auto-503020-cancel" class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                    <button type="submit" id="auto-503020-submit" class="flex-1 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors cursor-pointer">Apply Allocations</button>
                 </div>
             </form>
         </div>
@@ -2521,19 +2642,317 @@
             }
         });
 
-        // Budgets Logic & Modal
+        // Smart Budgets Logic & Modal
         let activeBudgets = {};
         let activeSpending = {};
+        let activeSmartReport = null;
+        let activeBudgetTab = 'envelopes'; // 'envelopes' or '503020'
+
+        // Tab Switching
+        const tabEnvBtn = document.getElementById('budget-tab-envelopes');
+        const tab503020Btn = document.getElementById('budget-tab-503020');
+        const tabEnvContent = document.getElementById('tab-envelopes-content');
+        const tab503020Content = document.getElementById('tab-503020-content');
+
+        function setBudgetTab(tab) {
+            activeBudgetTab = tab;
+            if (tab === 'envelopes') {
+                tabEnvBtn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-700 shadow-xs cursor-pointer';
+                tab503020Btn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer';
+                tabEnvContent.classList.remove('hidden');
+                tab503020Content.classList.add('hidden');
+            } else {
+                tab503020Btn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-700 shadow-xs cursor-pointer';
+                tabEnvBtn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer';
+                tab503020Content.classList.remove('hidden');
+                tabEnvContent.classList.add('hidden');
+            }
+        }
+
+        if (tabEnvBtn && tab503020Btn) {
+            tabEnvBtn.addEventListener('click', () => setBudgetTab('envelopes'));
+            tab503020Btn.addEventListener('click', () => setBudgetTab('503020'));
+        }
 
         async function loadBudgets() {
+            try {
+                const res = await fetch('/api/budgets/smart');
+                if (res.ok) {
+                    activeSmartReport = await res.json();
+                    activeBudgets = {};
+                    if (activeSmartReport.envelopes) {
+                        for (const env of activeSmartReport.envelopes) {
+                            if (env.monthly_limit > 0) {
+                                activeBudgets[env.category] = env.monthly_limit;
+                            }
+                        }
+                    }
+                    renderSmartBudgetsCard();
+                    return;
+                }
+            } catch (e) {
+                console.warn('Smart budgets fetch failed, falling back to legacy /api/budgets', e);
+            }
+
             const res = await fetch('/api/budgets');
             const data = await res.json().catch(() => ({}));
             activeBudgets = data.budgets || {};
             activeSpending = data.spending || {};
-            renderBudgetsCard();
+            activeSmartReport = data.smart_report || null;
+            renderSmartBudgetsCard();
         }
 
-        function renderBudgetsCard() {
+        function renderSmartBudgetsCard() {
+            if (!activeSmartReport) {
+                renderLegacyBudgetsCard();
+                return;
+            }
+
+            const rep = activeSmartReport;
+
+            // Update Pace Pill
+            const pacePill = document.getElementById('budget-pace-pill');
+            if (pacePill) {
+                if (rep.overall_pace_status === 'exceeded') {
+                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400';
+                    pacePill.textContent = 'Budget Exceeded';
+                } else if (rep.overall_pace_status === 'warning') {
+                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400';
+                    pacePill.textContent = 'High Burn Rate';
+                } else if (rep.overall_pace_status === 'caution') {
+                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-50 dark:bg-yellow-950/60 text-yellow-600 dark:text-yellow-400';
+                    pacePill.textContent = 'Near Limit';
+                } else {
+                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400';
+                    pacePill.textContent = 'On Track';
+                }
+            }
+
+            // Month Progress & Overall Burn
+            const mProgEl = document.getElementById('budget-month-progress');
+            const oBurnEl = document.getElementById('budget-overall-burn');
+            if (mProgEl) {
+                mProgEl.textContent = `Day ${rep.day_of_month} of ${rep.days_in_month} (${rep.month_progress_pct}% elapsed)`;
+            }
+            if (oBurnEl) {
+                if (rep.total_budget_limit > 0) {
+                    oBurnEl.textContent = `${fmtMoney(rep.total_budget_spent)} / ${fmtMoney(rep.total_budget_limit)} (${rep.budget_progress_pct}% spent)`;
+                } else {
+                    oBurnEl.textContent = `${fmtMoney(rep.total_expense)} total expenses`;
+                }
+            }
+
+            // Alerts Ribbon
+            const alertsCont = document.getElementById('budget-alerts-container');
+            if (alertsCont) {
+                const urgentAlerts = (rep.alerts || []).filter(a => a.type === 'danger' || a.type === 'warning');
+                if (urgentAlerts.length > 0) {
+                    alertsCont.classList.remove('hidden');
+                    alertsCont.innerHTML = urgentAlerts.map(a => {
+                        const isDanger = a.type === 'danger';
+                        const bg = isDanger ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/40 text-rose-800 dark:text-rose-200' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-200';
+                        const icon = isDanger ? '🚨' : '⚠️';
+                        return `
+                            <div class="flex items-start gap-2 p-2 rounded-xl border text-xs leading-snug ${bg}">
+                                <span class="text-sm shrink-0">${icon}</span>
+                                <div class="flex-1">
+                                    <span class="font-bold">${a.title}:</span> ${a.message}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    alertsCont.classList.add('hidden');
+                    alertsCont.innerHTML = '';
+                }
+            }
+
+            // Render Envelopes List
+            const list = document.getElementById('budgets-list');
+            list.innerHTML = '';
+
+            const budgetedEnvelopes = (rep.envelopes || []).filter(e => e.monthly_limit > 0);
+
+            if (!budgetedEnvelopes.length) {
+                list.innerHTML = `
+                    <div class="py-6 text-center">
+                        <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 mx-auto flex items-center justify-center mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        </div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">No spending envelopes configured</p>
+                        <p class="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">Use 1-click Auto 50/30/20 to balance your income, or set custom category caps.</p>
+                        <div class="flex justify-center gap-2 mt-3.5">
+                            <button type="button" onclick="openAuto503020Modal()" class="px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors cursor-pointer">Auto 50/30/20</button>
+                            <button type="button" onclick="document.getElementById('btn-manage-budgets').click()" class="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">Set Limits</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                for (const env of budgetedEnvelopes) {
+                    const pct = Math.min(Math.round(env.percent_used), 100);
+                    let barColor = 'bg-emerald-500';
+                    let badgeClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
+                    let statusPill = `${pct}% used`;
+
+                    if (env.pace_status === 'exceeded') {
+                        barColor = 'bg-rose-500';
+                        badgeClass = 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400';
+                        statusPill = `🚨 Over by ${fmtMoney(env.spent - env.monthly_limit)}`;
+                    } else if (env.pace_status === 'warning') {
+                        barColor = 'bg-amber-500';
+                        badgeClass = 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400';
+                        statusPill = `⚡ Burn rate +${Math.round(env.pace_percent - 100)}%`;
+                    } else if (env.pace_status === 'caution') {
+                        barColor = 'bg-yellow-500';
+                        badgeClass = 'bg-yellow-50 text-yellow-700 dark:bg-yellow-950/60 dark:text-yellow-400';
+                        statusPill = `⚠️ ${pct}% used`;
+                    } else {
+                        statusPill = `✓ ${fmtMoney(Math.max(0, env.remaining / Math.max(1, rep.days_remaining)))}/day left`;
+                    }
+
+                    // Bucket classification badge
+                    let bucketLabel = 'Needs (50%)';
+                    let bucketClass = 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50';
+                    if (env.bucket === 'wants') {
+                        bucketLabel = 'Wants (30%)';
+                        bucketClass = 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/50';
+                    } else if (env.bucket === 'savings') {
+                        bucketLabel = 'Savings (20%)';
+                        bucketClass = 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50';
+                    }
+
+                    const row = document.createElement('div');
+                    row.className = 'space-y-1.5 p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 transition-colors';
+                    row.innerHTML = `
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
+                                <span class="text-base">${env.icon || '🏷️'}</span>
+                                <span>${env.category_label || env.category}</span>
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md ${bucketClass}">${bucketLabel}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${badgeClass}">${statusPill}</span>
+                            </div>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                            <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
+                            <span>Spent: <strong class="text-slate-700 dark:text-slate-300 font-semibold">${fmtMoney(env.spent)}</strong> of ${fmtMoney(env.monthly_limit)}</span>
+                            <span>Remaining: <strong class="${env.remaining < 0 ? 'text-rose-500 font-bold' : 'text-slate-700 dark:text-slate-300 font-semibold'}">${fmtMoney(env.remaining)}</strong></span>
+                        </div>
+                    `;
+                    list.appendChild(row);
+                }
+            }
+
+            // Render 50/30/20 Rule Tab
+            render503020RuleTab(rep);
+        }
+
+        function render503020RuleTab(rep) {
+            const incomeBadge = document.getElementById('rule-income-badge');
+            if (incomeBadge) {
+                incomeBadge.textContent = `Monthly Income: ${fmtMoney(rep.monthly_income)}`;
+            }
+
+            // Find buckets
+            let needsB = null, wantsB = null, savingsB = null;
+            for (const b of (rep.rule_50_30_20 || [])) {
+                if (b.key === 'needs') needsB = b;
+                if (b.key === 'wants') wantsB = b;
+                if (b.key === 'savings') savingsB = b;
+            }
+
+            // Update tri-color bar widths
+            const barNeeds = document.getElementById('bar-needs');
+            const barWants = document.getElementById('bar-wants');
+            const barSavings = document.getElementById('bar-savings');
+
+            const totalAllocPct = (needsB ? needsB.actual_percent : 0) + (wantsB ? wantsB.actual_percent : 0) + (savingsB ? savingsB.actual_percent : 0);
+            if (barNeeds && needsB) {
+                barNeeds.style.width = `${Math.min(needsB.actual_percent, 100)}%`;
+            }
+            if (barWants && wantsB) {
+                barWants.style.width = `${Math.min(wantsB.actual_percent, 100)}%`;
+            }
+            if (barSavings && savingsB) {
+                barSavings.style.width = `${Math.min(savingsB.actual_percent, 100)}%`;
+            }
+
+            // Render 3 Cards
+            const cardsContainer = document.getElementById('rule-buckets-cards');
+            if (!cardsContainer) return;
+
+            const renderBucketCard = (b, colorTheme, targetPct, desc) => {
+                if (!b) return '';
+                const isOver = b.status === 'over';
+                const isCaution = b.status === 'caution';
+                let statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">Target Met (${b.actual_percent}%)</span>`;
+                if (b.key === 'savings') {
+                    if (b.actual_spent < b.target_amount) {
+                        statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">${fmtMoney(b.target_amount - b.actual_spent)} to reach 20%</span>`;
+                    }
+                } else if (isOver) {
+                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">Over Target by ${fmtMoney(Math.abs(b.variance_amount))}</span>`;
+                } else if (isCaution) {
+                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-50 dark:bg-yellow-950/60 text-yellow-600 dark:text-yellow-400">${b.actual_percent}% of Income</span>`;
+                } else {
+                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">${fmtMoney(b.variance_amount)} Under Budget</span>`;
+                }
+
+                const catChips = (b.categories || []).map(c => {
+                    const meta = getCategoryMeta(c, 'expense');
+                    return `<span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300">${meta.icon} ${meta.label}</span>`;
+                }).join(' ') || '<span class="text-[10px] text-slate-400 italic">No activity yet</span>';
+
+                const progressPct = b.target_amount > 0 ? Math.min(Math.round((b.actual_spent / b.target_amount) * 100), 100) : 0;
+
+                return `
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <div>
+                                <span class="font-bold text-slate-900 dark:text-white">${b.name}</span>
+                                <span class="text-[11px] text-slate-400 ml-1.5">${desc}</span>
+                            </div>
+                            <div>${statusBadge}</div>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                            <div class="${colorTheme} h-2 rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                            <span>Actual: <strong class="text-slate-900 dark:text-white">${fmtMoney(b.actual_spent)}</strong> (${b.actual_percent}%)</span>
+                            <span>Target: <strong class="text-slate-700 dark:text-slate-300 font-semibold">${fmtMoney(b.target_amount)}</strong> (${targetPct}%)</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 pt-1">
+                            ${catChips}
+                        </div>
+                    </div>
+                `;
+            };
+
+            cardsContainer.innerHTML = `
+                ${renderBucketCard(needsB, 'bg-blue-500', 50, 'Housing, Groceries, Transport, Bills')}
+                ${renderBucketCard(wantsB, 'bg-purple-500', 30, 'Entertainment, Dining, Shopping')}
+                ${renderBucketCard(savingsB, 'bg-emerald-500', 20, 'Savings Vaults, Investments, Debt Payoff')}
+            `;
+
+            // Health Note
+            const healthEl = document.getElementById('rule-health-note');
+            if (healthEl) {
+                if (savingsB && savingsB.actual_percent >= 20 && needsB && needsB.actual_percent <= 50) {
+                    healthEl.innerHTML = `🌟 <strong>Financially Stellar!</strong> Your essential needs are strictly under 50% and your savings rate is at <strong>${savingsB.actual_percent}%</strong>, well exceeding the 20% benchmark.`;
+                } else if (wantsB && wantsB.actual_percent > 35) {
+                    healthEl.innerHTML = `💡 <strong>Wants Adjustment:</strong> Non-essential lifestyle spending is consuming <strong>${wantsB.actual_percent}%</strong> of your income (recommended: 30%). Trimming discretionary shopping could boost your monthly savings by ${fmtMoney(wantsB.actual_spent - wantsB.target_amount)}.`;
+                } else if (needsB && needsB.actual_percent > 55) {
+                    healthEl.innerHTML = `⚠️ <strong>High Fixed Living Costs:</strong> Essential living expenses are taking up <strong>${needsB.actual_percent}%</strong> of your income. Consider reviewing recurring bills, housing overhead, or finding secondary income streams.`;
+                } else {
+                    healthEl.innerHTML = `📊 <strong>Balanced Trajectory:</strong> Allocations are aligning well with the 50/30/20 standard. Keep adhering to your category envelopes for optimal surplus.`;
+                }
+            }
+        }
+
+        function renderLegacyBudgetsCard() {
             const list = document.getElementById('budgets-list');
             const keys = Object.keys(activeBudgets).filter(k => activeBudgets[k] > 0);
             list.innerHTML = '';
@@ -2542,7 +2961,7 @@
                 list.innerHTML = `
                     <div class="py-6 text-center">
                         <p class="text-xs text-slate-400">No monthly budgets set yet.</p>
-                        <p class="text-[11px] text-slate-400 mt-1">Click "Set Limits" to define spending caps for food, transport, and more.</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Click "Set Limits" or "Auto 50/30/20" to define spending caps.</p>
                     </div>
                 `;
                 return;
@@ -2572,7 +2991,7 @@
                 const catMeta = getCategoryMeta(catKey, 'expense');
 
                 const row = document.createElement('div');
-                row.className = 'space-y-1.5';
+                row.className = 'space-y-1.5 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800';
                 row.innerHTML = `
                     <div class="flex items-center justify-between text-xs">
                         <div class="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
@@ -2592,20 +3011,109 @@
             }
         }
 
+        // Open Auto 50/30/20 Modal
+        function openAuto503020Modal() {
+            const modal = document.getElementById('auto-503020-modal');
+            const incInput = document.getElementById('auto-income-input');
+            const pfx = document.getElementById('auto-currency-prefix');
+            if (pfx) pfx.textContent = currentCurrency || '₦';
+
+            let baseInc = 250000;
+            if (activeSmartReport && activeSmartReport.monthly_income > 0) {
+                baseInc = activeSmartReport.monthly_income;
+            }
+            incInput.value = baseInc;
+            updateAuto503020Previews(baseInc);
+
+            modal.classList.remove('hidden');
+        }
+
+        function updateAuto503020Previews(val) {
+            const inc = parseFloat(val) || 0;
+            const needs = Math.round(inc * 0.50);
+            const wants = Math.round(inc * 0.30);
+            const savings = Math.round(inc * 0.20);
+
+            document.getElementById('preview-needs-val').textContent = fmtMoney(needs);
+            document.getElementById('preview-wants-val').textContent = fmtMoney(wants);
+            document.getElementById('preview-savings-val').textContent = fmtMoney(savings);
+        }
+
+        document.getElementById('auto-income-input').addEventListener('input', function() {
+            updateAuto503020Previews(this.value);
+        });
+
+        document.getElementById('btn-auto-503020').addEventListener('click', openAuto503020Modal);
+        document.getElementById('auto-503020-modal-close').addEventListener('click', () => {
+            document.getElementById('auto-503020-modal').classList.add('hidden');
+        });
+        document.getElementById('auto-503020-cancel').addEventListener('click', () => {
+            document.getElementById('auto-503020-modal').classList.add('hidden');
+        });
+
+        document.getElementById('auto-503020-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const income = parseFloat(document.getElementById('auto-income-input').value) || 0;
+            const submitBtn = document.getElementById('auto-503020-submit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Applying...';
+
+            const fd = new FormData();
+            fd.set('base_income', income);
+
+            try {
+                const res = await fetch('/api/budgets/auto-503020', { method: 'POST', body: fd });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    document.getElementById('auto-503020-modal').classList.add('hidden');
+                    showToast('50/30/20 budget allocations applied!');
+                    await loadBudgets();
+                } else {
+                    showToast(data.error || 'Failed to apply allocations', 'error');
+                }
+            } catch (err) {
+                showToast('Network error applying budgets', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Apply Allocations';
+            }
+        });
+
         // Open Budgets Modal
         document.getElementById('btn-manage-budgets').addEventListener('click', () => {
             const container = document.getElementById('budget-input-rows');
             container.innerHTML = '';
-            for (const item of EXPENSE_CATEGORIES) {
-                const key = item.key;
+
+            // Use all expense categories from cache or presets
+            const categories = CATEGORIES_CACHE.filter(c => c.type === 'expense').length ?
+                               CATEGORIES_CACHE.filter(c => c.type === 'expense') : EXPENSE_CATEGORIES;
+
+            for (const item of categories) {
+                const key = item.slug || item.key;
                 const meta = item;
                 const currentVal = activeBudgets[key] || '';
+
+                // Classification label
+                const kLower = (key || '').toLowerCase();
+                let bucketTag = 'Needs';
+                let bClass = 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400';
+                if (kLower.includes('sav') || kLower.includes('invest') || kLower.includes('debt')) {
+                    bucketTag = 'Savings';
+                    bClass = 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400';
+                } else if (kLower.includes('entertain') || kLower.includes('shop') || kLower.includes('person') || kLower.includes('other')) {
+                    bucketTag = 'Wants';
+                    bClass = 'bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400';
+                }
+
                 const row = document.createElement('div');
                 row.className = 'flex items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 transition-colors';
                 row.innerHTML = `
                     <div class="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
-                        <span class="text-base">${meta.icon}</span>
-                        <span>${meta.label}</span>
+                        <span class="text-base">${meta.emoji || meta.icon || '🏷️'}</span>
+                        <div class="flex flex-col">
+                            <span>${meta.name || meta.label}</span>
+                            <span class="text-[9px] font-bold px-1.5 py-0.2 rounded w-fit ${bClass}">${bucketTag}</span>
+                        </div>
                     </div>
                     <div class="w-36">
                         <input type="number" step="any" min="0" data-cat="${key}" value="${currentVal}" placeholder="Limit (${currentCurrency})" class="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 font-semibold text-right transition-colors">
@@ -2632,7 +3140,7 @@
                 await fetch('/api/budgets', { method: 'POST', body: fd });
             }
             document.getElementById('budgets-modal').classList.add('hidden');
-            showToast('Budgets saved!');
+            showToast('Envelopes saved!');
             await loadBudgets();
         });
 

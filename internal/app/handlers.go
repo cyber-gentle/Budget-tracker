@@ -107,6 +107,8 @@ func (app *App) routes() {
 
 	// Budgets, Analytics, Reports, Export, Currency APIs
 	app.Mux.HandleFunc("/api/budgets", app.HandleBudgets)
+	app.Mux.HandleFunc("/api/budgets/smart", app.HandleSmartBudgetsAPI)
+	app.Mux.HandleFunc("/api/budgets/auto-503020", app.HandleAuto503020API)
 	app.Mux.HandleFunc("/api/analytics", app.HandleAnalytics)
 	app.Mux.HandleFunc("/api/reports", app.HandleReportsAPI)
 	app.Mux.HandleFunc("/api/export", app.HandleExportCSV)
@@ -426,10 +428,12 @@ func (app *App) HandleBudgets(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		budgets, _ := app.DB.GetBudgets(username)
 		spending, _ := app.DB.GetCurrentMonthSpending(username)
+		smartRep, _ := app.DB.GetSmartBudgetReport(username)
 		jsonOK(w, map[string]any{
-			"budgets":  budgets,
-			"spending": spending,
-			"currency": app.DB.GetCurrency(username),
+			"budgets":      budgets,
+			"spending":     spending,
+			"currency":     app.DB.GetCurrency(username),
+			"smart_report": smartRep,
 		})
 	case http.MethodPost:
 		r.ParseMultipartForm(1 << 20)
@@ -450,14 +454,71 @@ func (app *App) HandleBudgets(w http.ResponseWriter, r *http.Request) {
 		}
 		budgets, _ := app.DB.GetBudgets(username)
 		spending, _ := app.DB.GetCurrentMonthSpending(username)
+		smartRep, _ := app.DB.GetSmartBudgetReport(username)
 		jsonOK(w, map[string]any{
-			"status":   "ok",
-			"budgets":  budgets,
-			"spending": spending,
+			"status":       "ok",
+			"budgets":      budgets,
+			"spending":     spending,
+			"smart_report": smartRep,
 		})
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+func (app *App) HandleSmartBudgetsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	report, err := app.DB.GetSmartBudgetReport(username)
+	if err != nil {
+		jsonError(w, "failed to compute smart budget report: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, report)
+}
+
+func (app *App) HandleAuto503020API(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	r.ParseMultipartForm(1 << 20)
+	var baseIncome float64
+	incomeStr := strings.TrimSpace(r.FormValue("base_income"))
+	if incomeStr != "" {
+		baseIncome, _ = strconv.ParseFloat(incomeStr, 64)
+	}
+
+	budgets, err := app.DB.Apply503020AutoBudget(username, baseIncome)
+	if err != nil {
+		jsonError(w, "failed to apply auto 50/30/20 budget: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	report, _ := app.DB.GetSmartBudgetReport(username)
+	jsonOK(w, map[string]any{
+		"status":  "ok",
+		"message": "50/30/20 budget allocations successfully configured!",
+		"budgets": budgets,
+		"report":  report,
+	})
 }
 
 // ─── Analytics API Handlers ─────────────────────────────────────────────────
