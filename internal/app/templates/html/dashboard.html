@@ -69,18 +69,19 @@
                     <span class="font-heading font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">Spendly</span>
                 </a>
 
-                <nav class="hidden sm:flex items-center gap-1.5">
-                    <a href="/dashboard" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors">
-                        Dashboard
+                <nav class="hidden sm:flex items-center gap-1 sm:gap-2">
+                    <a href="/dashboard" class="px-3 py-1.5 text-xs font-bold rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 transition-all flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>Dashboard</span>
                     </a>
                     <a href="/debts" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        Debts & IOUs
+                        Debts
                     </a>
                     <a href="/subscriptions" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                         Subscriptions
                     </a>
                     <a href="/goals" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        Savings Goals
+                        Goals
                     </a>
                     <a href="/reports" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                         Reports
@@ -270,55 +271,95 @@
     <main class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-8 space-y-4 sm:space-y-6 pb-12 sm:pb-8">
 
         <!-- Executive KPI Cards -->
-        <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 xl:gap-5">
             <!-- Balance Card -->
-            <div class="order-1 lg:order-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm relative overflow-hidden transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5 gap-1">
-                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">Total Balance</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" class="sm:w-[15px] sm:h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                    </span>
+            <div class="bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm relative overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700/80 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 gap-1">
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Total Balance</span>
+                        <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">+2.4%</span>
+                    </div>
+                    <p class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate" id="kpi-balance">{{.BalanceFmt}}</p>
                 </div>
-                <p class="font-heading text-lg sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white truncate" id="kpi-balance">{{.BalanceFmt}}</p>
-                <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 truncate">Net accumulated balance</p>
-            </div>
-
-            <!-- Savings Rate Card -->
-            <div class="order-2 lg:order-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5 gap-1">
-                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">Savings Rate</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-[11px] sm:text-xs">%</span>
+                <!-- Sparkline curve -->
+                <div class="mt-3 h-8 w-full">
+                    <svg class="w-full h-full overflow-visible" viewBox="0 0 100 24" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="balanceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#10B981" stop-opacity="0.3"/>
+                                <stop offset="100%" stop-color="#10B981" stop-opacity="0.0"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M0,20 Q15,8 30,16 T60,6 T85,12 T100,4 L100,24 L0,24 Z" fill="url(#balanceGrad)" />
+                        <path d="M0,20 Q15,8 30,16 T60,6 T85,12 T100,4" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
                 </div>
-                <p class="font-heading text-lg sm:text-2xl lg:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 truncate" id="kpi-savings-rate">{{.SavingsRate}}%</p>
-                <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 truncate">Of current month income</p>
             </div>
 
             <!-- Monthly Income Card -->
-            <div class="order-3 lg:order-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5 gap-1">
-                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">This Month Income</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" class="sm:w-[15px] sm:h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
-                    </span>
+            <div class="bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm relative overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700/80 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 gap-1">
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Monthly Income</span>
+                        <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">+0.8%</span>
+                    </div>
+                    <p class="font-heading text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight truncate" id="kpi-income">{{.IncomeFmt}}</p>
                 </div>
-                <p class="font-heading text-lg sm:text-2xl lg:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 truncate" id="kpi-income">{{.IncomeFmt}}</p>
-                <p class="text-[11px] sm:text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-0.5 sm:mt-1 font-medium flex items-center gap-1 truncate">
-                    <span>●</span> Current period
-                </p>
+                <!-- Sparkline vertical bars -->
+                <div class="mt-3 flex items-end gap-1.5 h-8">
+                    <div class="flex-1 bg-emerald-500/25 rounded-t-sm h-[35%]"></div>
+                    <div class="flex-1 bg-emerald-500/40 rounded-t-sm h-[55%]"></div>
+                    <div class="flex-1 bg-emerald-500/30 rounded-t-sm h-[40%]"></div>
+                    <div class="flex-1 bg-emerald-500/70 rounded-t-sm h-[85%]"></div>
+                    <div class="flex-1 bg-emerald-500/50 rounded-t-sm h-[65%]"></div>
+                    <div class="flex-1 bg-emerald-500/80 rounded-t-sm h-[80%]"></div>
+                    <div class="flex-1 bg-emerald-500 rounded-t-sm h-[100%] shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+                </div>
             </div>
 
             <!-- Monthly Expenses Card -->
-            <div class="order-4 lg:order-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
-                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5 gap-1">
-                    <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">This Month Expenses</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" class="sm:w-[15px] sm:h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
-                    </span>
+            <div class="bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm relative overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700/80 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 gap-1">
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Monthly Expenses</span>
+                        <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20">-1.2%</span>
+                    </div>
+                    <p class="font-heading text-2xl sm:text-3xl font-extrabold text-rose-500 dark:text-rose-400 tracking-tight truncate" id="kpi-expense">{{.ExpensesFmt}}</p>
                 </div>
-                <p class="font-heading text-lg sm:text-2xl lg:text-3xl font-extrabold text-rose-500 dark:text-rose-400 truncate" id="kpi-expense">{{.ExpensesFmt}}</p>
-                <p class="text-[11px] sm:text-xs text-rose-500/80 dark:text-rose-400/80 mt-0.5 sm:mt-1 font-medium flex items-center gap-1 truncate">
-                    <span>●</span> Current period
-                </p>
+                <!-- Sparkline vertical bars -->
+                <div class="mt-3 flex items-end gap-1.5 h-8">
+                    <div class="flex-1 bg-rose-500/30 rounded-t-sm h-[70%]"></div>
+                    <div class="flex-1 bg-rose-500/40 rounded-t-sm h-[50%]"></div>
+                    <div class="flex-1 bg-rose-500/25 rounded-t-sm h-[85%]"></div>
+                    <div class="flex-1 bg-rose-500/60 rounded-t-sm h-[40%]"></div>
+                    <div class="flex-1 bg-rose-500/45 rounded-t-sm h-[60%]"></div>
+                    <div class="flex-1 bg-rose-500/75 rounded-t-sm h-[35%]"></div>
+                    <div class="flex-1 bg-rose-500 rounded-t-sm h-[55%]"></div>
+                </div>
+            </div>
+
+            <!-- Savings Rate Card -->
+            <div class="bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm relative overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700/80 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 gap-1">
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Savings Rate</span>
+                        <span class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">Target: 20%+</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <p class="font-heading text-2xl sm:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 tracking-tight truncate" id="kpi-savings-rate">{{.SavingsRate}}%</p>
+                        <!-- Circular progress ring -->
+                        <div class="w-9 h-9 relative flex items-center justify-center">
+                            <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-slate-100 dark:text-slate-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="text-emerald-500 transition-all duration-1000" stroke-dasharray="{{.SavingsRate}}, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <!-- Progress bar -->
+                <div class="mt-3 w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-2.5 overflow-hidden">
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500" style="width: {{if gt .SavingsRate 100}}100{{else if lt .SavingsRate 0}}0{{else}}{{.SavingsRate}}{{end}}%;"></div>
+                </div>
             </div>
         </section>
 
@@ -331,7 +372,7 @@
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h2 class="font-heading text-sm sm:text-base font-bold text-slate-900 dark:text-white">Wallets & Accounts</h2>
+                            <h2 class="font-heading text-sm sm:text-base font-bold text-slate-900 dark:text-white">Wallets & Accounts rail</h2>
                             <span id="accounts-total-pill" class="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
                                 Total: ₦0.00
                             </span>
@@ -371,329 +412,204 @@
             </div>
         </section>
 
-        <!-- Main 2-Column Section -->
-        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
-            <!-- LEFT COLUMN: Analytics & Budgets (5 cols) -->
-            <div class="lg:col-span-5 space-y-6">
-                
-                <!-- Category Expense Breakdown (Donut Chart) -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Spending Breakdown</h2>
-                            <p class="text-xs text-slate-400 dark:text-slate-500">Expense distribution by category</p>
+                <!-- ─── Showcase 3-Column Grid: Spending Breakdown + Quick Add + Trends ─── -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-5 xl:gap-6 items-stretch">
+            <!-- Col 1: Spending Breakdown Donut Chart -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Spending Breakdown</h2>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] sm:text-[11px] px-2 py-0.5 font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md">This Month</span>
+                            <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-md" title="Category options">···</button>
                         </div>
-                        <span class="text-xs px-2 py-0.5 font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md">This Month</span>
                     </div>
 
-                    <div class="relative flex items-center justify-center min-h-[220px]">
-                        <canvas id="categoryChart" class="max-h-[210px]"></canvas>
-                        <div id="chart-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 hidden">
-                            <span class="text-3xl mb-1">📊</span>
+                    <!-- Donut Chart with Total in Center Hole -->
+                    <div class="relative flex items-center justify-center min-h-[200px] my-2">
+                        <canvas id="categoryChart" class="max-h-[195px]"></canvas>
+                        <!-- Center Amount -->
+                        <div id="donut-center-total" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Total Spent</span>
+                            <span id="donut-total-val" class="font-heading font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">₦0.00</span>
+                        </div>
+                        <div id="chart-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-white/95 dark:bg-slate-900/95 hidden">
+                            <span class="text-2xl mb-1">📊</span>
                             <p class="text-xs text-slate-400 dark:text-slate-500 font-medium">No expenses logged yet this month</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Monthly Cash Flow (Trends Bar Chart) -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-4">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Cash Flow Trends</h2>
-                                <span id="trends-net-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 transition-all">Net: +₦0</span>
-                            </div>
-                            <p id="trends-subtitle" class="text-xs text-slate-400 dark:text-slate-500">Income vs. Expenses (Last 6 Months)</p>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <select id="trends-timeframe-select" class="px-2.5 py-1 text-xs font-semibold bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-colors cursor-pointer">
-                                <option value="3m" class="bg-white dark:bg-slate-900">Last 3 Months</option>
-                                <option value="6m" selected class="bg-white dark:bg-slate-900">Last 6 Months</option>
-                                <option value="12m" class="bg-white dark:bg-slate-900">Last 12 Months</option>
-                                <option value="ytd" class="bg-white dark:bg-slate-900">Year to Date (YTD)</option>
-                                <option value="all" class="bg-white dark:bg-slate-900">All Time</option>
-                                <option value="custom" class="bg-white dark:bg-slate-900">Custom Range...</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Custom Date Range Form (collapsible) -->
-                    <div id="trends-custom-range" class="hidden mb-3.5 p-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-xl space-y-2">
-                        <div class="flex flex-wrap items-center gap-2 text-xs">
-                            <div class="flex items-center gap-1.5">
-                                <label for="trends-start-date" class="text-slate-500 dark:text-slate-400 font-medium">From:</label>
-                                <input type="date" id="trends-start-date" class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <label for="trends-end-date" class="text-slate-500 dark:text-slate-400 font-medium">To:</label>
-                                <input type="date" id="trends-end-date" class="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
-                            </div>
-                            <button type="button" id="trends-apply-custom" class="px-3 py-1 bg-slate-900 dark:bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-black dark:hover:bg-emerald-500 transition-colors cursor-pointer">Apply</button>
-                            <button type="button" id="trends-cancel-custom" class="px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs transition-colors cursor-pointer">Cancel</button>
-                        </div>
-                        <p id="trends-custom-error" class="text-rose-500 text-[11px] font-medium hidden"></p>
-                    </div>
-
-                    <!-- Cash Flow Period Metrics Bar -->
-                    <div id="trends-summary-bar" class="flex items-center justify-between text-xs py-1.5 px-3 mb-3 bg-slate-50/80 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-800">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-slate-400 dark:text-slate-500 font-medium">In:</span>
-                            <span id="trends-total-income" class="font-bold text-emerald-600 dark:text-emerald-400">₦0</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-slate-400 dark:text-slate-500 font-medium">Out:</span>
-                            <span id="trends-total-expense" class="font-bold text-rose-500 dark:text-rose-400">₦0</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-slate-400 dark:text-slate-500 font-medium">Net:</span>
-                            <span id="trends-total-net" class="font-bold text-slate-900 dark:text-white">₦0</span>
-                        </div>
-                    </div>
-
-                    <div class="relative min-h-[190px]">
-                        <canvas id="trendsChart" class="max-h-[190px]"></canvas>
-                        <!-- Empty State -->
-                        <div id="trends-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-white/90 dark:bg-slate-900/90 hidden">
-                            <span class="text-2xl mb-1">📉</span>
-                            <p class="text-xs text-slate-400 dark:text-slate-500 font-medium">No cash flow recorded for this time frame</p>
-                        </div>
-                    </div>
+                <!-- Custom 2-Column Percentage Legend List -->
+                <div id="category-legend-list" class="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+                    <!-- Populated dynamically by renderCategoryChart -->
                 </div>
-
-                <!-- Smart Category Budgets & 50/30/20 Rules -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
-                    <div class="flex items-center justify-between mb-3.5">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Smart Budgets</h2>
-                                <span id="budget-pace-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">On Track</span>
-                            </div>
-                            <p class="text-xs text-slate-400 dark:text-slate-500">Virtual envelopes & 50/30/20 rule</p>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <button type="button" id="btn-auto-503020" title="Apply 50/30/20 Rule based on your income" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-white bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                                <span>Auto 50/30/20</span>
-                            </button>
-                            <button type="button" id="btn-manage-budgets" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                                <span>Set Limits</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Mode Switcher Tabs -->
-                    <div class="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl mb-3.5 text-xs font-semibold">
-                        <button type="button" id="budget-tab-envelopes" class="flex-1 py-1.5 text-center rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-700 shadow-xs cursor-pointer">
-                            Envelopes
-                        </button>
-                        <button type="button" id="budget-tab-503020" class="flex-1 py-1.5 text-center rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
-                            50/30/20 Rule
-                        </button>
-                    </div>
-
-                    <!-- Spending Pace Alerts Ribbon (conditionally visible) -->
-                    <div id="budget-alerts-container" class="space-y-2 mb-3.5 hidden">
-                        <!-- Populated dynamically -->
-                    </div>
-
-                    <!-- Tab Content: Envelopes -->
-                    <div id="tab-envelopes-content">
-                        <!-- Month Progress / Budget Burn Summary -->
-                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 mb-3 flex items-center justify-between text-[11px]">
-                            <span id="budget-month-progress" class="text-slate-500 dark:text-slate-400 font-medium">Month is 0% elapsed</span>
-                            <span id="budget-overall-burn" class="font-bold text-slate-700 dark:text-slate-300">0% spent</span>
-                        </div>
-
-                        <!-- Envelopes List -->
-                        <div id="budgets-list" class="space-y-3">
-                            <div class="text-center py-6 text-xs text-slate-400 dark:text-slate-500">Loading envelopes...</div>
-                        </div>
-                    </div>
-
-                    <!-- Tab Content: 50/30/20 Rule -->
-                    <div id="tab-503020-content" class="hidden space-y-3.5">
-                        <!-- Visual Tri-color Gauge -->
-                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-bold text-slate-900 dark:text-white">Income Allocation</span>
-                                <span id="rule-income-badge" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Income: ₦0</span>
-                            </div>
-                            <!-- Tri-color Segmented Bar -->
-                            <div class="w-full h-3 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex">
-                                <div id="bar-needs" class="h-full bg-blue-500 transition-all duration-500" style="width: 50%" title="Needs"></div>
-                                <div id="bar-wants" class="h-full bg-purple-500 transition-all duration-500" style="width: 30%" title="Wants"></div>
-                                <div id="bar-savings" class="h-full bg-emerald-500 transition-all duration-500" style="width: 20%" title="Savings"></div>
-                            </div>
-                            <div class="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Needs (50%)</span>
-                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Wants (30%)</span>
-                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Savings (20%)</span>
-                            </div>
-                        </div>
-
-                        <!-- 3 Cards for Needs, Wants, Savings -->
-                        <div id="rule-buckets-cards" class="space-y-2.5">
-                            <!-- Populated dynamically -->
-                        </div>
-
-                        <!-- Advice Insight -->
-                        <div id="rule-health-note" class="p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-xs text-indigo-900 dark:text-indigo-200">
-                            <!-- Populated dynamically -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recurring Bills & Subscriptions Quick Card -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
-                    <div class="flex items-center justify-between mb-3.5">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Recurring Bills</h2>
-                                <span id="dash-subs-pill" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">0 / mo</span>
-                            </div>
-                            <p class="text-xs text-slate-400 dark:text-slate-500">Upcoming subscriptions & commitments</p>
-                        </div>
-                        <a href="/subscriptions" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
-                            <span>Manage</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                        </a>
-                    </div>
-
-                    <!-- Upcoming Subscriptions List -->
-                    <div id="dash-subs-list" class="space-y-2.5">
-                        <div class="text-center py-4 text-xs text-slate-400">Loading recurring bills...</div>
-                    </div>
-                </div>
-
-                <!-- Savings Goals & Virtual Pots Quick Card -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
-                    <div class="flex items-center justify-between mb-3.5">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Savings Goals</h2>
-                                <span id="dash-goals-pill" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">0%</span>
-                            </div>
-                            <p class="text-xs text-slate-400 dark:text-slate-500">Virtual pockets & target milestones</p>
-                        </div>
-                        <a href="/goals" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
-                            <span>View All</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                        </a>
-                    </div>
-
-                    <!-- Active Savings Goals List -->
-                    <div id="dash-goals-list" class="space-y-2.5">
-                        <div class="text-center py-4 text-xs text-slate-400">Loading savings goals...</div>
-                    </div>
-                </div>
-
             </div>
 
-            <!-- RIGHT COLUMN: Quick Add & Transactions (7 cols) -->
-            <div class="lg:col-span-7 space-y-6">
-
-                <!-- Quick Add Transaction Card -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
-                    <div class="flex items-center justify-between mb-4">
+            <!-- Col 2: Quick Add Transaction Card -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Quick Add Transaction</h2>
-                            <a href="/receipts" class="px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 rounded-lg border border-emerald-200/60 dark:border-emerald-800/60 flex items-center gap-1 transition-colors" title="Scan receipt with OCR">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-                                <span>Scan Receipt</span>
+                            <a href="/receipts" class="px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 rounded-lg border border-emerald-200/60 dark:border-emerald-800/60 flex items-center gap-1 transition-colors" title="Scan receipt with OCR">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                                <span>Scan</span>
                             </a>
-                        </div>
-                        <!-- Expense / Income Toggle -->
-                        <div class="flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold">
-                            <button type="button" id="type-expense-btn" class="px-3 py-1 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer">Expense</button>
-                            <button type="button" id="type-income-btn" class="px-3 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">Income</button>
                         </div>
                     </div>
 
-                    <form id="add-tx-form" class="space-y-3">
+                    <form id="add-tx-form" class="space-y-2.5">
                         <input type="hidden" name="type" id="add-tx-type" value="expense">
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <!-- Category -->
+                        <!-- Row 1: Title & Date -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Title / Merchant</label>
+                                <input type="text" name="note" placeholder="e.g. Whole Foods" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Date</label>
+                                <input type="date" id="date-input" name="date" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Category & Account -->
+                        <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <div class="flex items-center justify-between mb-1">
-                                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">Category</label>
-                                    <button type="button" id="btn-quick-manage-cat" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 cursor-pointer transition-colors" title="Manage custom categories">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                                        <span>Manage</span>
-                                    </button>
+                                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Category</label>
+                                    <button type="button" id="btn-quick-manage-cat" class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">Manage</button>
                                 </div>
-                                <select name="category" id="add-category" required class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all cursor-pointer">
-                                    <option value="food">🍔 Food & Groceries</option>
-                                    <option value="transport">🚗 Transportation</option>
-                                    <option value="housing">🏠 Housing & Utilities</option>
+                                <select name="category" id="add-category" required class="w-full px-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                                    <option value="food">🍔 Food</option>
+                                    <option value="transport">🚗 Transport</option>
+                                    <option value="housing">🏠 Housing</option>
                                     <option value="entertainment">🎬 Entertainment</option>
                                     <option value="shopping">🛍️ Shopping</option>
                                     <option value="healthcare">💊 Healthcare</option>
-                                    <option value="education">📚 Education & Learning</option>
-                                    <option value="bills">💡 Bills & Subscriptions</option>
-                                    <option value="personal">✨ Personal Care</option>
-                                    <option value="other">📦 Other Expense</option>
+                                    <option value="education">📚 Education</option>
+                                    <option value="bills">💡 Bills</option>
+                                    <option value="personal">✨ Personal</option>
+                                    <option value="other">📦 Other</option>
                                 </select>
                             </div>
 
-                            <!-- Account / Wallet -->
                             <div>
                                 <div class="flex items-center justify-between mb-1">
-                                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">Wallet / Account</label>
-                                    <button type="button" id="btn-quick-manage-accounts" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 cursor-pointer transition-colors" title="Manage wallets">
-                                        <span>+ Add</span>
-                                    </button>
+                                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Account</label>
+                                    <button type="button" id="btn-quick-manage-accounts" class="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">+ Add</button>
                                 </div>
-                                <select name="account_id" id="add-account" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all cursor-pointer">
+                                <select name="account_id" id="add-account" class="w-full px-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
                                     <option value="0">🏦 Main Bank</option>
                                 </select>
                             </div>
-
-                            <!-- Amount -->
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Amount (<span class="currency-label">₦</span>)</label>
-                                <input type="text" id="amount-input" name="amount" placeholder="0" required inputmode="numeric" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 font-medium transition-all">
-                            </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <!-- Custom Date -->
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Date</label>
-                                <input type="date" id="date-input" name="date" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all">
-                            </div>
-
-                            <!-- Note -->
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Note / Merchant</label>
-                                <input type="text" name="note" placeholder="e.g. Lunch with team, Supermarket" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all">
-                            </div>
-                        </div>
-
-                        <!-- Tags Field & Popular Suggestions -->
+                        <!-- Row 3: Amount -->
                         <div>
-                            <div class="flex items-center justify-between mb-1">
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">Tags <span class="font-normal text-[11px] text-slate-400">(optional, comma-separated or #tag)</span></label>
-                                <span class="text-[10px] text-slate-400 hidden sm:inline">e.g. food, team-lunch, tax</span>
-                            </div>
-                            <input type="text" id="add-tags" name="tags" placeholder="e.g. lunch, groceries, tax" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all">
-                            <div id="quick-add-tag-suggestions" class="flex flex-wrap items-center gap-1.5 mt-2 hidden">
-                                <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500">Popular tags:</span>
-                                <div id="quick-add-tags-list" class="flex flex-wrap gap-1"></div>
-                            </div>
+                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Amount (<span class="currency-label">₦</span>)</label>
+                            <input type="text" id="amount-input" name="amount" placeholder="0.00" required inputmode="numeric" class="w-full px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-bold transition-all">
                         </div>
 
+                        <!-- Row 4: Type Selection Pills [Income] [Expense] [Transfer] -->
+                        <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs font-semibold">
+                            <button type="button" id="type-income-btn" class="flex-1 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer text-center">Income</button>
+                            <button type="button" id="type-expense-btn" class="flex-1 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold shadow-xs transition-all cursor-pointer text-center">Expense</button>
+                            <button type="button" id="type-transfer-btn" class="flex-1 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer text-center">Transfer</button>
+                        </div>
+
+                        <input type="hidden" id="add-tags" name="tags" value="">
                         <p class="text-xs text-rose-500 font-medium hidden" id="tx-error"></p>
 
-                        <button type="submit" id="btn-submit-tx" class="w-full mt-1 bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white text-sm font-semibold py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                        <!-- Glowing Emerald CTA Button -->
+                        <button type="submit" id="btn-submit-tx" class="w-full mt-2 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-bold text-xs sm:text-sm py-2.5 rounded-xl transition-all shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
                             <span>Add Transaction</span>
                         </button>
                     </form>
                 </div>
+            </div>
 
-                <!-- Recent Activity & Filterable List Card -->
+            <!-- Col 3: Cash Flow Trends Card -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-2">
+                            <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Cash Flow Trends</h2>
+                            <span id="trends-net-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Net: +₦0</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <select id="trends-timeframe-select" class="px-2 py-0.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
+                                <option value="3m" class="bg-white dark:bg-slate-900">3 Months</option>
+                                <option value="6m" selected class="bg-white dark:bg-slate-900">6 Months</option>
+                                <option value="12m" class="bg-white dark:bg-slate-900">12 Months</option>
+                                <option value="ytd" class="bg-white dark:bg-slate-900">YTD</option>
+                                <option value="all" class="bg-white dark:bg-slate-900">All Time</option>
+                                <option value="custom" class="bg-white dark:bg-slate-900">Custom...</option>
+                            </select>
+                            <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md" title="More options">···</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-2 text-xs">
+                        <p id="trends-subtitle" class="text-[11px] text-slate-400 dark:text-slate-500">Monthly Cash Flow</p>
+                        <!-- Legend Indicator -->
+                        <div class="flex items-center gap-3 text-[11px] font-semibold">
+                            <span class="flex items-center gap-1 text-emerald-500">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]"></span>
+                                <span>Income</span>
+                            </span>
+                            <span class="flex items-center gap-1 text-slate-400 dark:text-slate-300">
+                                <span class="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-300"></span>
+                                <span>Expenses</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Custom Date Range Form (collapsible) -->
+                    <div id="trends-custom-range" class="hidden mb-2 p-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-xl space-y-1.5">
+                        <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                            <input type="date" id="trends-start-date" class="px-2 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs">
+                            <input type="date" id="trends-end-date" class="px-2 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs">
+                            <button type="button" id="trends-apply-custom" class="px-2.5 py-0.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold">Apply</button>
+                            <button type="button" id="trends-cancel-custom" class="px-1.5 py-0.5 text-slate-500 text-xs">✕</button>
+                        </div>
+                        <p id="trends-custom-error" class="text-rose-500 text-[10px] font-medium hidden"></p>
+                    </div>
+
+                    <!-- Cash Flow Period Metrics Bar -->
+                    <div id="trends-summary-bar" class="flex items-center justify-between text-xs py-1 px-2.5 mb-2 bg-slate-50/80 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-1">
+                            <span class="text-slate-400 text-[10px]">In:</span>
+                            <span id="trends-total-income" class="font-bold text-emerald-600 dark:text-emerald-400 text-[11px]">₦0</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-slate-400 text-[10px]">Out:</span>
+                            <span id="trends-total-expense" class="font-bold text-rose-500 dark:text-rose-400 text-[11px]">₦0</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-slate-400 text-[10px]">Net:</span>
+                            <span id="trends-total-net" class="font-bold text-slate-900 dark:text-white text-[11px]">₦0</span>
+                        </div>
+                    </div>
+
+                    <div class="relative min-h-[185px]">
+                        <canvas id="trendsChart" class="max-h-[185px]"></canvas>
+                        <div id="trends-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-white/90 dark:bg-slate-900/90 hidden">
+                            <span class="text-2xl mb-1">📉</span>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 font-medium">No cash flow recorded</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── Lower Activity & Wealth Section ───────────────────────────── -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
+            
+            <!-- LEFT (8 cols): Recent Transactions Ledger -->
+            <div class="lg:col-span-7 xl:col-span-8 space-y-6">
+<!-- Recent Activity & Filterable List Card -->
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-colors">
                     
                     <!-- Search & Filter Controls -->
@@ -856,10 +772,135 @@
                         </div>
                         <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">No transactions found</p>
                         <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-xs mx-auto">Try adjusting your search query or filters, or add a new transaction above.</p>
+            </div>
+
+            <!-- RIGHT (4 cols): Smart Category Budgets, Recurring Bills & Savings Goals -->
+            <div class="lg:col-span-5 xl:col-span-4 space-y-6">
+<!-- Smart Category Budgets & 50/30/20 Rules -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
+                    <div class="flex items-center justify-between mb-3.5">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Smart Budgets</h2>
+                                <span id="budget-pace-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">On Track</span>
+                            </div>
+                            <p class="text-xs text-slate-400 dark:text-slate-500">Virtual envelopes & 50/30/20 rule</p>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" id="btn-auto-503020" title="Apply 50/30/20 Rule based on your income" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-white bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                <span>Auto 50/30/20</span>
+                            </button>
+                            <button type="button" id="btn-manage-budgets" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                <span>Set Limits</span>
+                            </button>
+                        </div>
                     </div>
 
+                    <!-- Mode Switcher Tabs -->
+                    <div class="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl mb-3.5 text-xs font-semibold">
+                        <button type="button" id="budget-tab-envelopes" class="flex-1 py-1.5 text-center rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-700 shadow-xs cursor-pointer">
+                            Envelopes
+                        </button>
+                        <button type="button" id="budget-tab-503020" class="flex-1 py-1.5 text-center rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                            50/30/20 Rule
+                        </button>
+                    </div>
+
+                    <!-- Spending Pace Alerts Ribbon (conditionally visible) -->
+                    <div id="budget-alerts-container" class="space-y-2 mb-3.5 hidden">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Tab Content: Envelopes -->
+                    <div id="tab-envelopes-content">
+                        <!-- Month Progress / Budget Burn Summary -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 mb-3 flex items-center justify-between text-[11px]">
+                            <span id="budget-month-progress" class="text-slate-500 dark:text-slate-400 font-medium">Month is 0% elapsed</span>
+                            <span id="budget-overall-burn" class="font-bold text-slate-700 dark:text-slate-300">0% spent</span>
+                        </div>
+
+                        <!-- Envelopes List -->
+                        <div id="budgets-list" class="space-y-3">
+                            <div class="text-center py-6 text-xs text-slate-400 dark:text-slate-500">Loading envelopes...</div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content: 50/30/20 Rule -->
+                    <div id="tab-503020-content" class="hidden space-y-3.5">
+                        <!-- Visual Tri-color Gauge -->
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-slate-900 dark:text-white">Income Allocation</span>
+                                <span id="rule-income-badge" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Income: ₦0</span>
+                            </div>
+                            <!-- Tri-color Segmented Bar -->
+                            <div class="w-full h-3 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex">
+                                <div id="bar-needs" class="h-full bg-blue-500 transition-all duration-500" style="width: 50%" title="Needs"></div>
+                                <div id="bar-wants" class="h-full bg-purple-500 transition-all duration-500" style="width: 30%" title="Wants"></div>
+                                <div id="bar-savings" class="h-full bg-emerald-500 transition-all duration-500" style="width: 20%" title="Savings"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Needs (50%)</span>
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Wants (30%)</span>
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Savings (20%)</span>
+                            </div>
+                        </div>
+
+                        <!-- 3 Cards for Needs, Wants, Savings -->
+                        <div id="rule-buckets-cards" class="space-y-2.5">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Advice Insight -->
+                        <div id="rule-health-note" class="p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-xs text-indigo-900 dark:text-indigo-200">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Recurring Bills & Subscriptions Quick Card -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
+                    <div class="flex items-center justify-between mb-3.5">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Recurring Bills</h2>
+                                <span id="dash-subs-pill" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">0 / mo</span>
+                            </div>
+                            <p class="text-xs text-slate-400 dark:text-slate-500">Upcoming subscriptions & commitments</p>
+                        </div>
+                        <a href="/subscriptions" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
+                            <span>Manage</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                        </a>
+                    </div>
+
+                    <!-- Upcoming Subscriptions List -->
+                    <div id="dash-subs-list" class="space-y-2.5">
+                        <div class="text-center py-4 text-xs text-slate-400">Loading recurring bills...</div>
+                    </div>
+                </div>
+
+                <!-- Savings Goals & Virtual Pots Quick Card -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
+                    <div class="flex items-center justify-between mb-3.5">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Savings Goals</h2>
+                                <span id="dash-goals-pill" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">0%</span>
+                            </div>
+                            <p class="text-xs text-slate-400 dark:text-slate-500">Virtual pockets & target milestones</p>
+                        </div>
+                        <a href="/goals" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer">
+                            <span>View All</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                        </a>
+                    </div>
+
+                    <!-- Active Savings Goals List -->
+                    <div id="dash-goals-list" class="space-y-2.5">
+                        <div class="text-center py-4 text-xs text-slate-400">Loading savings goals...
             </div>
 
         </section>
@@ -3379,22 +3420,48 @@
 
             const ctxTrends = document.getElementById('trendsChart').getContext('2d');
             if (trendsChartInstance) trendsChartInstance.destroy();
+
+            // Gradients for Option A Line Chart
+            const incomeGrad = ctxTrends.createLinearGradient(0, 0, 0, 180);
+            incomeGrad.addColorStop(0, 'rgba(16, 185, 129, 0.28)');
+            incomeGrad.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+            const expenseGrad = ctxTrends.createLinearGradient(0, 0, 0, 180);
+            expenseGrad.addColorStop(0, isDark ? 'rgba(148, 163, 184, 0.18)' : 'rgba(100, 116, 139, 0.12)');
+            expenseGrad.addColorStop(1, 'rgba(148, 163, 184, 0.0)');
+
             trendsChartInstance = new Chart(ctxTrends, {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: monthLabels,
                     datasets: [
                         {
                             label: 'Income',
                             data: incomes,
-                            backgroundColor: '#10B981',
-                            borderRadius: 6,
+                            borderColor: '#10B981',
+                            backgroundColor: incomeGrad,
+                            borderWidth: 2.5,
+                            tension: 0.38,
+                            fill: true,
+                            pointBackgroundColor: '#10B981',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 1.5,
+                            pointRadius: 3.5,
+                            pointHoverRadius: 6,
                         },
                         {
-                            label: 'Expense',
+                            label: 'Expenses',
                             data: expenses,
-                            backgroundColor: '#F43F5E',
-                            borderRadius: 6,
+                            borderColor: isDark ? '#94A3B8' : '#64748B',
+                            backgroundColor: expenseGrad,
+                            borderWidth: 2,
+                            tension: 0.38,
+                            fill: true,
+                            pointBackgroundColor: isDark ? '#94A3B8' : '#64748B',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 1.5,
+                            pointRadius: 3.5,
+                            pointHoverRadius: 6,
                         }
                     ]
                 },
@@ -3423,13 +3490,7 @@
                     },
                     plugins: {
                         legend: {
-                            position: 'top',
-                            align: 'end',
-                            labels: {
-                                color: legendColor,
-                                boxWidth: 10,
-                                font: { size: 11, family: 'Inter' }
-                            }
+                            display: false
                         },
                         tooltip: {
                             callbacks: {
@@ -3503,6 +3564,29 @@
                 const donutBorder = isDark ? '#0F172A' : '#ffffff';
                 const donutLegendColor = isDark ? '#E2E8F0' : '#475569';
 
+                // Update Donut Center Total & Custom 2-Col Legend (Option A)
+                const totalDonutExpense = catValues.reduce((a, b) => a + b, 0);
+                const donutTotalEl = document.getElementById('donut-total-val');
+                if (donutTotalEl) donutTotalEl.textContent = fmtMoney(totalDonutExpense);
+
+                const legendListEl = document.getElementById('category-legend-list');
+                if (legendListEl) {
+                    let legendHtml = '';
+                    for (let i = 0; i < catValues.length; i++) {
+                        const pct = totalDonutExpense > 0 ? Math.round((catValues[i] / totalDonutExpense) * 100) : 0;
+                        legendHtml += `
+                            <div class="flex items-center justify-between py-0.5">
+                                <span class="flex items-center gap-1.5 truncate">
+                                    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${catColors[i]}"></span>
+                                    <span class="truncate text-slate-700 dark:text-slate-300 font-medium">${catLabels[i]}</span>
+                                </span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200 ml-1 shrink-0">${pct}%</span>
+                            </div>
+                        `;
+                    }
+                    legendListEl.innerHTML = legendHtml;
+                }
+
                 categoryChartInstance = new Chart(ctxCategory, {
                     type: 'doughnut',
                     data: {
@@ -3517,16 +3601,10 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '72%',
+                        cutout: '74%',
                         plugins: {
                             legend: {
-                                position: 'bottom',
-                                labels: {
-                                    color: donutLegendColor,
-                                    boxWidth: 10,
-                                    font: { size: 11, family: 'Inter' },
-                                    padding: 12
-                                }
+                                display: false
                             },
                             tooltip: {
                                 callbacks: {
@@ -4004,14 +4082,37 @@
                             <div class="text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-800 dark:text-slate-200'}">${esc(acc.name)}</div>
                             <span class="text-[10px] font-medium opacity-70 shrink-0">${acc.tx_count || 0} txs</span>
                         </div>
-                        <div class="text-base sm:text-lg font-black tracking-tight mt-0.5 truncate ${
-                            isActive ? 'text-white' : (acc.current_balance < 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white')
-                        }">${acc.formatted_balance || fmtMoney(acc.current_balance)}</div>
+                        <div class="flex items-center justify-between mt-1">
+                            <div class="text-base sm:text-lg font-black tracking-tight truncate ${
+                                isActive ? 'text-white' : (acc.current_balance < 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white')
+                            }">${acc.formatted_balance || fmtMoney(acc.current_balance)}</div>
+                            <div class="w-12 h-5 opacity-80 shrink-0">
+                                <svg class="w-full h-full" viewBox="0 0 40 16">
+                                    <path d="M0,12 Q10,3 20,7 T40,2" fill="none" stroke="${isActive ? '#ffffff' : (acc.current_balance >= 0 ? '#10B981' : '#F43F5E')}" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                 `;
             }
 
+            html += `
+                <div id="btn-rail-add-account" class="shrink-0 snap-start w-36 sm:w-40 p-3 sm:p-3.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/80 hover:border-emerald-500 dark:hover:border-emerald-500/80 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-emerald-50/20 dark:hover:bg-emerald-950/20 transition-all flex flex-col items-center justify-center text-center cursor-pointer group">
+                    <div class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-emerald-500 group-hover:text-white flex items-center justify-center text-xs font-bold transition-colors">
+                        +
+                    </div>
+                    <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 mt-1.5 transition-colors">Add Account</span>
+                </div>
+            `;
             carousel.innerHTML = html;
+
+            const railAddBtn = document.getElementById('btn-rail-add-account');
+            if (railAddBtn) {
+                railAddBtn.addEventListener('click', () => {
+                    const btnOpen = document.getElementById('btn-open-accounts');
+                    if (btnOpen) btnOpen.click();
+                });
+            }
 
             const filterIndicator = document.getElementById('account-filter-indicator');
             const filterText = document.getElementById('account-filter-text');
