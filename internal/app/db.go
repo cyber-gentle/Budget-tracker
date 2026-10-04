@@ -265,6 +265,26 @@ func (s *DBStore) migrate() error {
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	CREATE INDEX IF NOT EXISTS idx_receipts_username ON receipts(username);
+
+	CREATE TABLE IF NOT EXISTS recurring_incomes (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL,
+		name TEXT NOT NULL,
+		amount REAL NOT NULL,
+		frequency TEXT NOT NULL DEFAULT 'monthly',
+		next_pay_date DATETIME NOT NULL,
+		category TEXT NOT NULL DEFAULT 'salary',
+		status TEXT NOT NULL DEFAULT 'active',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	CREATE INDEX IF NOT EXISTS idx_recurring_incomes_user ON recurring_incomes(username);
+
+	CREATE TABLE IF NOT EXISTS cash_flow_settings (
+		username TEXT PRIMARY KEY,
+		safety_buffer REAL NOT NULL DEFAULT 1000,
+		discretionary_daily_burn REAL NOT NULL DEFAULT 0,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
@@ -5278,3 +5298,670 @@ func (s *DBStore) DeleteReceipt(id int, username string) error {
 	return nil
 }
 
+// ─── Step 11: Cash Flow Forecasting & Runway Predictor ─────────────────────────
+
+type RecurringIncome struct {
+	ID          int       `json:"id"`
+	Username    string    `json:"username"`
+	Name        string    `json:"name"`
+	Amount      float64   `json:"amount"`
+	Frequency   string    `json:"frequency"` // "weekly", "biweekly", "semi_monthly", "monthly"
+	NextPayDate time.Time `json:"next_pay_date"`
+	NextPayFmt  string    `json:"next_pay_fmt"`
+	Category    string    `json:"category"`
+	Status      string    `json:"status"` // "active", "paused"
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type CashFlowSettings struct {
+	Username               string  `json:"username"`
+	SafetyBuffer           float64 `json:"safety_buffer"`
+	DiscretionaryDailyBurn float64 `json:"discretionary_daily_burn"`
+}
+
+type ForecastEvent struct {
+	Date            string  `json:"date"` // YYYY-MM-DD
+	DisplayDate     string  `json:"display_date"` // "Oct 15"
+	Title           string  `json:"title"`
+	Type            string  `json:"type"` // "income", "subscription", "debt_payment", "debt_collection", "planned_expense"
+	Amount          float64 `json:"amount"`
+	Category        string  `json:"category"`
+	Icon            string  `json:"icon"`
+	Color           string  `json:"color"`
+	IsDiscretionary bool    `json:"is_discretionary"`
+	SourceID        int     `json:"source_id,omitempty"`
+}
+
+type ForecastDayPoint struct {
+	Date           string          `json:"date"` // YYYY-MM-DD
+	DisplayDate    string          `json:"display_date"` // "Oct 03"
+	DayIndex       int             `json:"day_index"`
+	DayOfWeek      string          `json:"day_of_week"` // "Fri"
+	OpeningBalance float64         `json:"opening_balance"`
+	ClosingBalance float64         `json:"closing_balance"`
+	Inflows        float64         `json:"inflows"`
+	Outflows       float64         `json:"outflows"`
+	NetChange      float64         `json:"net_change"`
+	Events         []ForecastEvent `json:"events"`
+	IsBelowSafety  bool            `json:"is_below_safety"`
+	IsDangerLowest bool            `json:"is_danger_lowest"`
+}
+
+type CashFlowForecast struct {
+	Currency               string             `json:"currency"`
+	CurrentLiquidCash      float64            `json:"current_liquid_cash"`
+	SafetyBuffer           float64            `json:"safety_buffer"`
+	TimeframeDays          int                `json:"timeframe_days"` // 30, 60, 90
+	HistoricalDailyBurn    float64            `json:"historical_daily_burn"`
+	DailyDiscretionaryBurn float64            `json:"daily_discretionary_burn"`
+	MonthlyRecurringIncome float64            `json:"monthly_recurring_income"`
+	MonthlyRecurringSpend  float64            `json:"monthly_recurring_spend"`
+	NetMonthlyBurn         float64            `json:"net_monthly_burn"` // total monthly expenses - total monthly income
+	NetMonthlyBurnAbs      float64            `json:"net_monthly_burn_abs"`
+	NetMonthlySurplus      float64            `json:"net_monthly_surplus"`
+	RunwayDays             int                `json:"runway_days"`      // -1 for infinite / net positive
+	RunwayMonths           float64            `json:"runway_months"`
+	RunwayStatus           string             `json:"runway_status"`    // "infinite", "healthy", "caution", "warning", "critical"
+	RunwayBadgeText        string             `json:"runway_badge_text"`
+	StartingDate           string             `json:"starting_date"`
+	EndingDate             string             `json:"ending_date"`
+	LowestProjectedBalance float64            `json:"lowest_projected_balance"`
+	LowestBalanceDate      string             `json:"lowest_balance_date"`
+	DaysUntilSafetyBreach  int                `json:"days_until_safety_breach"` // -1 if safe throughout
+	EndingProjectedBalance float64            `json:"ending_projected_balance"`
+	TotalProjectedInflows  float64            `json:"total_projected_inflows"`
+	TotalProjectedOutflows float64            `json:"total_projected_outflows"`
+	NetProjectedChange     float64            `json:"net_projected_change"`
+	Days                   []ForecastDayPoint `json:"days"`
+	UpcomingEvents         []ForecastEvent    `json:"upcoming_events"`
+	RecurringIncomes       []RecurringIncome  `json:"recurring_incomes"`
+	ActiveSubscriptions    []Subscription     `json:"active_subscriptions"`
+}
+
+type WhatIfSimulationParams struct {
+	TimeframeDays         int     `json:"timeframe_days"` // 30, 60, 90
+	DiscretionarySpendPct float64 `json:"discretionary_spend_pct"` // e.g. -20% or +30%
+	IncomeChangeMonthly   float64 `json:"income_change_monthly"`   // e.g. +500 or -300
+	PlannedExpenseAmount  float64 `json:"planned_expense_amount"`
+	PlannedExpenseDate    string  `json:"planned_expense_date"` // YYYY-MM-DD
+	PlannedExpenseTitle   string  `json:"planned_expense_title"`
+	SafetyBufferOverride  float64 `json:"safety_buffer_override"`
+	ExcludedSubIDs        []int   `json:"excluded_sub_ids"`
+}
+
+func (s *DBStore) GetCashFlowSettings(username string) (*CashFlowSettings, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var safetyBuffer, dailyBurn float64
+	err := s.db.QueryRow(
+		"SELECT safety_buffer, discretionary_daily_burn FROM cash_flow_settings WHERE username = ?",
+		username,
+	).Scan(&safetyBuffer, &dailyBurn)
+
+	if err != nil {
+		return &CashFlowSettings{
+			Username:               username,
+			SafetyBuffer:           1000.0,
+			DiscretionaryDailyBurn: 0.0,
+		}, nil
+	}
+
+	return &CashFlowSettings{
+		Username:               username,
+		SafetyBuffer:           safetyBuffer,
+		DiscretionaryDailyBurn: dailyBurn,
+	}, nil
+}
+
+func (s *DBStore) SaveCashFlowSettings(username string, safetyBuffer, dailyBurn float64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if safetyBuffer <= 0 {
+		safetyBuffer = 1000.0
+	}
+	if dailyBurn < 0 {
+		dailyBurn = 0.0
+	}
+
+	_, err := s.db.Exec(`
+		INSERT INTO cash_flow_settings (username, safety_buffer, discretionary_daily_burn, updated_at)
+		VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+		ON CONFLICT(username) DO UPDATE SET
+			safety_buffer = excluded.safety_buffer,
+			discretionary_daily_burn = excluded.discretionary_daily_burn,
+			updated_at = CURRENT_TIMESTAMP
+	`, username, safetyBuffer, dailyBurn)
+
+	return err
+}
+
+func (s *DBStore) CreateRecurringIncome(username, name, frequency, category string, amount float64, nextPayDate time.Time) (*RecurringIncome, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("income source name is required")
+	}
+	if amount <= 0 {
+		return nil, fmt.Errorf("amount must be greater than zero")
+	}
+
+	frequency = strings.ToLower(strings.TrimSpace(frequency))
+	switch frequency {
+	case "weekly", "biweekly", "semi_monthly", "monthly":
+	default:
+		frequency = "monthly"
+	}
+
+	category = strings.TrimSpace(category)
+	if category == "" {
+		category = "salary"
+	}
+
+	if nextPayDate.IsZero() {
+		nextPayDate = time.Now()
+	}
+
+	res, err := s.db.Exec(
+		"INSERT INTO recurring_incomes (username, name, amount, frequency, next_pay_date, category, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)",
+		username, name, amount, frequency, nextPayDate, category,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := res.LastInsertId()
+	return &RecurringIncome{
+		ID:          int(id),
+		Username:    username,
+		Name:        name,
+		Amount:      amount,
+		Frequency:   frequency,
+		NextPayDate: nextPayDate,
+		NextPayFmt:  nextPayDate.Format("2006-01-02"),
+		Category:    category,
+		Status:      "active",
+		CreatedAt:   time.Now(),
+	}, nil
+}
+
+func (s *DBStore) GetRecurringIncomes(username string) ([]RecurringIncome, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		"SELECT id, username, name, amount, frequency, next_pay_date, category, status, created_at FROM recurring_incomes WHERE username = ? ORDER BY next_pay_date ASC",
+		username,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var incomes []RecurringIncome
+	for rows.Next() {
+		var inc RecurringIncome
+		if err := rows.Scan(&inc.ID, &inc.Username, &inc.Name, &inc.Amount, &inc.Frequency, &inc.NextPayDate, &inc.Category, &inc.Status, &inc.CreatedAt); err != nil {
+			return nil, err
+		}
+		inc.NextPayFmt = inc.NextPayDate.Format("2006-01-02")
+		incomes = append(incomes, inc)
+	}
+
+	if incomes == nil {
+		incomes = []RecurringIncome{}
+	}
+	return incomes, nil
+}
+
+func (s *DBStore) UpdateRecurringIncome(id int, username, name, frequency, category, status string, amount float64, nextPayDate time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return fmt.Errorf("income source name is required")
+	}
+	if amount <= 0 {
+		return fmt.Errorf("amount must be greater than zero")
+	}
+
+	frequency = strings.ToLower(strings.TrimSpace(frequency))
+	switch frequency {
+	case "weekly", "biweekly", "semi_monthly", "monthly":
+	default:
+		frequency = "monthly"
+	}
+
+	category = strings.TrimSpace(category)
+	if category == "" {
+		category = "salary"
+	}
+
+	status = strings.ToLower(strings.TrimSpace(status))
+	if status != "paused" {
+		status = "active"
+	}
+
+	_, err := s.db.Exec(
+		"UPDATE recurring_incomes SET name = ?, amount = ?, frequency = ?, next_pay_date = ?, category = ?, status = ? WHERE id = ? AND username = ?",
+		name, amount, frequency, nextPayDate, category, status, id, username,
+	)
+	return err
+}
+
+func (s *DBStore) DeleteRecurringIncome(id int, username string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, err := s.db.Exec("DELETE FROM recurring_incomes WHERE id = ? AND username = ?", id, username)
+	return err
+}
+
+func (s *DBStore) GenerateCashFlowForecast(username string, params WhatIfSimulationParams) (*CashFlowForecast, error) {
+	currency := "₦"
+	prof, _ := s.GetProfile(username)
+	if prof != nil && prof.Currency != "" {
+		currency = prof.Currency
+	}
+
+	timeframe := params.TimeframeDays
+	if timeframe != 30 && timeframe != 60 && timeframe != 90 {
+		timeframe = 30
+	}
+
+	// 1. Current Liquid Cash
+	liquidCash := 0.0
+	accounts, _ := s.GetAccounts(username)
+	for _, acc := range accounts {
+		if strings.ToLower(acc.Type) != "credit" {
+			liquidCash += acc.CurrentBalance
+		}
+	}
+	if len(accounts) == 0 || liquidCash <= 0 {
+		var inc, exp float64
+		_ = s.db.QueryRow("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE username = ? AND type = 'income'", username).Scan(&inc)
+		_ = s.db.QueryRow("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE username = ? AND type = 'expense'", username).Scan(&exp)
+		if (inc - exp) > 0 {
+			liquidCash = inc - exp
+		}
+	}
+
+	// 2. Settings & Safety Buffer
+	cfg, _ := s.GetCashFlowSettings(username)
+	safetyBuffer := cfg.SafetyBuffer
+	if params.SafetyBufferOverride > 0 {
+		safetyBuffer = params.SafetyBufferOverride
+	}
+	if safetyBuffer <= 0 {
+		safetyBuffer = 1000.0
+	}
+
+	// 3. Historical Daily Discretionary Burn
+	baseDailyBurn := 0.0
+	if cfg.DiscretionaryDailyBurn > 0 {
+		baseDailyBurn = cfg.DiscretionaryDailyBurn
+	} else {
+		now := time.Now()
+		thirtyDaysAgo := now.AddDate(0, 0, -30)
+		var past30Spent float64
+		_ = s.db.QueryRow("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE username = ? AND type = 'expense' AND date >= ?", username, thirtyDaysAgo).Scan(&past30Spent)
+		baseDailyBurn = past30Spent / 30.0
+	}
+
+	dailyDiscretionaryBurn := baseDailyBurn * (1.0 + params.DiscretionarySpendPct/100.0)
+	if dailyDiscretionaryBurn < 0 {
+		dailyDiscretionaryBurn = 0
+	}
+
+	// 4. Setup Simulation Timeline Bounds
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	endDate := today.AddDate(0, 0, timeframe)
+
+	excludedSubs := make(map[int]bool)
+	for _, id := range params.ExcludedSubIDs {
+		excludedSubs[id] = true
+	}
+
+	var allEvents []ForecastEvent
+
+	// 5. Project Recurring Incomes
+	incomes, _ := s.GetRecurringIncomes(username)
+	monthlyRecurringIncome := 0.0
+	for _, inc := range incomes {
+		if inc.Status != "active" {
+			continue
+		}
+
+		// Calculate monthly equivalent
+		switch inc.Frequency {
+		case "weekly":
+			monthlyRecurringIncome += inc.Amount * 52.0 / 12.0
+		case "biweekly":
+			monthlyRecurringIncome += inc.Amount * 26.0 / 12.0
+		case "semi_monthly":
+			monthlyRecurringIncome += inc.Amount * 2.0
+		default: // "monthly"
+			monthlyRecurringIncome += inc.Amount
+		}
+
+		payDate := time.Date(inc.NextPayDate.Year(), inc.NextPayDate.Month(), inc.NextPayDate.Day(), 0, 0, 0, 0, time.Local)
+		for payDate.Before(today) {
+			switch inc.Frequency {
+			case "weekly":
+				payDate = payDate.AddDate(0, 0, 7)
+			case "biweekly":
+				payDate = payDate.AddDate(0, 0, 14)
+			case "semi_monthly":
+				payDate = payDate.AddDate(0, 0, 15)
+			default:
+				payDate = payDate.AddDate(0, 1, 0)
+			}
+		}
+
+		for !payDate.After(endDate) {
+			allEvents = append(allEvents, ForecastEvent{
+				Date:        payDate.Format("2006-01-02"),
+				DisplayDate: payDate.Format("Jan 02"),
+				Title:       inc.Name,
+				Type:        "income",
+				Amount:      inc.Amount,
+				Category:    inc.Category,
+				Icon:        "💰",
+				Color:       "#10B981",
+				SourceID:    inc.ID,
+			})
+
+			switch inc.Frequency {
+			case "weekly":
+				payDate = payDate.AddDate(0, 0, 7)
+			case "biweekly":
+				payDate = payDate.AddDate(0, 0, 14)
+			case "semi_monthly":
+				payDate = payDate.AddDate(0, 0, 15)
+			default:
+				payDate = payDate.AddDate(0, 1, 0)
+			}
+		}
+	}
+	monthlyRecurringIncome += params.IncomeChangeMonthly
+	if monthlyRecurringIncome < 0 {
+		monthlyRecurringIncome = 0
+	}
+
+	// 6. Project Subscriptions
+	subs, _ := s.GetSubscriptions(username)
+	monthlyRecurringSpend := 0.0
+	var activeSubs []Subscription
+	for _, sub := range subs {
+		if sub.Status != "active" {
+			continue
+		}
+		activeSubs = append(activeSubs, sub)
+		if excludedSubs[sub.ID] {
+			continue
+		}
+
+		switch strings.ToLower(sub.BillingCycle) {
+		case "weekly":
+			monthlyRecurringSpend += sub.Amount * 52.0 / 12.0
+		case "yearly":
+			monthlyRecurringSpend += sub.Amount / 12.0
+		default: // "monthly"
+			monthlyRecurringSpend += sub.Amount
+		}
+
+		dueDate := time.Date(sub.NextDueDate.Year(), sub.NextDueDate.Month(), sub.NextDueDate.Day(), 0, 0, 0, 0, time.Local)
+		for dueDate.Before(today) {
+			switch strings.ToLower(sub.BillingCycle) {
+			case "weekly":
+				dueDate = dueDate.AddDate(0, 0, 7)
+			case "yearly":
+				dueDate = dueDate.AddDate(1, 0, 0)
+			default:
+				dueDate = dueDate.AddDate(0, 1, 0)
+			}
+		}
+
+		for !dueDate.After(endDate) {
+			allEvents = append(allEvents, ForecastEvent{
+				Date:        dueDate.Format("2006-01-02"),
+				DisplayDate: dueDate.Format("Jan 02"),
+				Title:       sub.Name,
+				Type:        "subscription",
+				Amount:      sub.Amount,
+				Category:    sub.Category,
+				Icon:        "🔄",
+				Color:       "#8B5CF6",
+				SourceID:    sub.ID,
+			})
+
+			switch strings.ToLower(sub.BillingCycle) {
+			case "weekly":
+				dueDate = dueDate.AddDate(0, 0, 7)
+			case "yearly":
+				dueDate = dueDate.AddDate(1, 0, 0)
+			default:
+				dueDate = dueDate.AddDate(0, 1, 0)
+			}
+		}
+	}
+	totalMonthlyExpenses := monthlyRecurringSpend + (dailyDiscretionaryBurn * 30.0)
+
+	// 7. Project Debts & Loans
+	debts, _, _ := s.GetDebts(username)
+	for _, d := range debts {
+		if d.Status == "paid" || d.DueDate == nil {
+			continue
+		}
+		due := time.Date(d.DueDate.Year(), d.DueDate.Month(), d.DueDate.Day(), 0, 0, 0, 0, time.Local)
+		remaining := d.Amount - d.AmountPaid
+		if remaining <= 0 {
+			continue
+		}
+
+		if (due.Equal(today) || due.After(today)) && !due.After(endDate) {
+			if d.Type == "debt" {
+				allEvents = append(allEvents, ForecastEvent{
+					Date:        due.Format("2006-01-02"),
+					DisplayDate: due.Format("Jan 02"),
+					Title:       "Debt Due: " + d.PersonName,
+					Type:        "debt_payment",
+					Amount:      remaining,
+					Category:    "Debt Repayment",
+					Icon:        "💸",
+					Color:       "#EF4444",
+					SourceID:    d.ID,
+				})
+			} else {
+				allEvents = append(allEvents, ForecastEvent{
+					Date:        due.Format("2006-01-02"),
+					DisplayDate: due.Format("Jan 02"),
+					Title:       "Loan Due: " + d.PersonName,
+					Type:        "debt_collection",
+					Amount:      remaining,
+					Category:    "Loan Receivable",
+					Icon:        "🤝",
+					Color:       "#3B82F6",
+					SourceID:    d.ID,
+				})
+			}
+		}
+	}
+
+	// 8. What-If Planned Expense
+	if params.PlannedExpenseAmount > 0 && params.PlannedExpenseDate != "" {
+		if pDate, err := time.Parse("2006-01-02", params.PlannedExpenseDate); err == nil {
+			if (pDate.Equal(today) || pDate.After(today)) && !pDate.After(endDate) {
+				title := params.PlannedExpenseTitle
+				if title == "" {
+					title = "Planned Purchase"
+				}
+				allEvents = append(allEvents, ForecastEvent{
+					Date:        params.PlannedExpenseDate,
+					DisplayDate: pDate.Format("Jan 02"),
+					Title:       title,
+					Type:        "planned_expense",
+					Amount:      params.PlannedExpenseAmount,
+					Category:    "What-If Simulation",
+					Icon:        "🎯",
+					Color:       "#F59E0B",
+				})
+			}
+		}
+	}
+
+	// Sort events chronologically
+	sort.Slice(allEvents, func(i, j int) bool {
+		if allEvents[i].Date != allEvents[j].Date {
+			return allEvents[i].Date < allEvents[j].Date
+		}
+		return allEvents[i].Type < allEvents[j].Type
+	})
+
+	eventsByDate := make(map[string][]ForecastEvent)
+	for _, ev := range allEvents {
+		eventsByDate[ev.Date] = append(eventsByDate[ev.Date], ev)
+	}
+
+	// 9. Day-by-Day Balance Simulation
+	dayPoints := make([]ForecastDayPoint, timeframe)
+	curBal := liquidCash
+	lowestBal := liquidCash
+	lowestDate := today.Format("2006-01-02")
+	daysUntilBreach := -1
+	totalInflows := 0.0
+	totalOutflows := 0.0
+
+	for i := 0; i < timeframe; i++ {
+		date := today.AddDate(0, 0, i)
+		dateStr := date.Format("2006-01-02")
+		evs := eventsByDate[dateStr]
+
+		dayIn := 0.0
+		dayOut := 0.0
+		for _, ev := range evs {
+			if ev.Type == "income" || ev.Type == "debt_collection" {
+				dayIn += ev.Amount
+			} else {
+				dayOut += ev.Amount
+			}
+		}
+
+		// Add daily discretionary spending
+		dayOut += dailyDiscretionaryBurn
+
+		// Apply monthly income adjustment daily
+		if params.IncomeChangeMonthly > 0 {
+			dayIn += (params.IncomeChangeMonthly / 30.0)
+		} else if params.IncomeChangeMonthly < 0 {
+			dayOut += (-params.IncomeChangeMonthly / 30.0)
+		}
+
+		openBal := curBal
+		net := dayIn - dayOut
+		closeBal := openBal + net
+		curBal = closeBal
+
+		totalInflows += dayIn
+		totalOutflows += dayOut
+
+		isBelow := closeBal < safetyBuffer
+		if isBelow && daysUntilBreach == -1 {
+			daysUntilBreach = i
+		}
+		if closeBal < lowestBal {
+			lowestBal = closeBal
+			lowestDate = dateStr
+		}
+
+		dayPoints[i] = ForecastDayPoint{
+			Date:           dateStr,
+			DisplayDate:    date.Format("Jan 02"),
+			DayIndex:       i,
+			DayOfWeek:      date.Format("Mon"),
+			OpeningBalance: openBal,
+			ClosingBalance: closeBal,
+			Inflows:        dayIn,
+			Outflows:       dayOut,
+			NetChange:      net,
+			Events:         evs,
+			IsBelowSafety:  isBelow,
+		}
+	}
+
+	for i := range dayPoints {
+		if dayPoints[i].Date == lowestDate {
+			dayPoints[i].IsDangerLowest = true
+		}
+	}
+
+	// 10. Cash Runway Calculation
+	netMonthlyBurn := totalMonthlyExpenses - monthlyRecurringIncome
+	runwayDays := -1
+	runwayMonths := 999.0
+	runwayStatus := "infinite"
+	runwayBadge := "Safe / Net Positive"
+
+	if netMonthlyBurn > 0 {
+		dailyBurn := netMonthlyBurn / 30.0
+		if dailyBurn > 0 {
+			if liquidCash > 0 {
+				runwayDays = int(liquidCash / dailyBurn)
+			} else {
+				runwayDays = 0
+			}
+		}
+		runwayMonths = float64(runwayDays) / 30.0
+		if runwayDays > 180 {
+			runwayStatus = "healthy"
+			runwayBadge = fmt.Sprintf("%d Days (%.1f Mos)", runwayDays, runwayMonths)
+		} else if runwayDays >= 90 {
+			runwayStatus = "caution"
+			runwayBadge = fmt.Sprintf("%d Days Runway", runwayDays)
+		} else if runwayDays >= 30 {
+			runwayStatus = "warning"
+			runwayBadge = fmt.Sprintf("%d Days Runway", runwayDays)
+		} else {
+			runwayStatus = "critical"
+			runwayBadge = fmt.Sprintf("Critical: %d Days", runwayDays)
+		}
+	}
+
+	forecast := &CashFlowForecast{
+		Currency:               currency,
+		CurrentLiquidCash:      liquidCash,
+		SafetyBuffer:           safetyBuffer,
+		TimeframeDays:          timeframe,
+		HistoricalDailyBurn:    baseDailyBurn,
+		DailyDiscretionaryBurn: dailyDiscretionaryBurn,
+		MonthlyRecurringIncome: monthlyRecurringIncome,
+		MonthlyRecurringSpend:  totalMonthlyExpenses,
+		NetMonthlyBurn:         netMonthlyBurn,
+		NetMonthlyBurnAbs:      math.Abs(netMonthlyBurn),
+		NetMonthlySurplus:      math.Max(0, -netMonthlyBurn),
+		RunwayDays:             runwayDays,
+		RunwayMonths:           runwayMonths,
+		RunwayStatus:           runwayStatus,
+		RunwayBadgeText:        runwayBadge,
+		StartingDate:           today.Format("2006-01-02"),
+		EndingDate:             endDate.Format("2006-01-02"),
+		LowestProjectedBalance: lowestBal,
+		LowestBalanceDate:      lowestDate,
+		DaysUntilSafetyBreach:  daysUntilBreach,
+		EndingProjectedBalance: curBal,
+		TotalProjectedInflows:  totalInflows,
+		TotalProjectedOutflows: totalOutflows,
+		NetProjectedChange:     curBal - liquidCash,
+		Days:                   dayPoints,
+		UpcomingEvents:         allEvents,
+		RecurringIncomes:       incomes,
+		ActiveSubscriptions:    activeSubs,
+	}
+
+	return forecast, nil
+}

@@ -1866,4 +1866,205 @@ DATE: 2026-10-01`
 	}
 }
 
+func TestCashFlowForecastingAndRunwayPredictorFlow(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := "file:" + filepath.Join(tmpDir, "forecast_test.db")
+
+	store, err := app.NewDBStore(dbPath, "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	username := "forecast_user"
+	password := "Secret123!"
+	email := "forecast@test.com"
+
+	if err := store.Signup(username, email, password, "Forecast Tester"); err != nil {
+		t.Fatalf("signup failed: %v", err)
+	}
+
+	sessionID, err := store.Login(username, password)
+	if err != nil {
+		t.Fatalf("login failed: %v", err)
+	}
+
+	// 1. Create a bank account with initial liquid balance
+	_, err = store.CreateAccount(username, "Primary Checking", "bank", "₦", "#10B981", "🏦", 15000, true)
+	if err != nil {
+		t.Fatalf("failed to create account: %v", err)
+	}
+
+	// 2. Test Settings: Save and Get
+	if err := store.SaveCashFlowSettings(username, 2500, 45); err != nil {
+		t.Fatalf("failed to save cash flow settings: %v", err)
+	}
+	cfg, err := store.GetCashFlowSettings(username)
+	if err != nil || cfg.SafetyBuffer != 2500 || cfg.DiscretionaryDailyBurn != 45 {
+		t.Fatalf("unexpected settings: %+v, err: %v", cfg, err)
+	}
+
+	// 3. Test Recurring Incomes: Create, Get, Update, Delete
+	now := time.Now()
+	nextPay := now.AddDate(0, 0, 5)
+	inc1, err := store.CreateRecurringIncome(username, "Tech Job Salary", "monthly", "salary", 6000, nextPay)
+	if err != nil || inc1.ID == 0 || inc1.Amount != 6000 {
+		t.Fatalf("failed to create recurring income: %v", err)
+	}
+
+	inc2, err := store.CreateRecurringIncome(username, "Freelance Retainer", "biweekly", "freelance", 1200, now.AddDate(0, 0, 3))
+	if err != nil {
+		t.Fatalf("failed to create second income: %v", err)
+	}
+
+	incomes, err := store.GetRecurringIncomes(username)
+	if err != nil || len(incomes) != 2 {
+		t.Fatalf("expected 2 incomes, got %d, err: %v", len(incomes), err)
+	}
+
+	// Update inc2
+	if err := store.UpdateRecurringIncome(inc2.ID, username, "Updated Retainer", "biweekly", "freelance", "paused", 1500, now.AddDate(0, 0, 4)); err != nil {
+		t.Fatalf("failed to update income: %v", err)
+	}
+
+	// Add an active subscription
+	_, err = store.AddSubscription(username, "Cloud Server VPS", 80, "hosting", "monthly", now.AddDate(0, 0, 10))
+	if err != nil {
+		t.Fatalf("failed to add subscription: %v", err)
+	}
+
+	// Add a debt payment due
+	dueDebt := now.AddDate(0, 0, 12)
+	_, err = store.CreateDebt(username, "Landlord Deposit", "i_owe", 1200, &dueDebt, "Deposit payment")
+	if err != nil {
+		t.Fatalf("failed to create debt: %v", err)
+	}
+
+	// 4. Test GenerateCashFlowForecast default 30 days
+	forecast30, err := store.GenerateCashFlowForecast(username, app.WhatIfSimulationParams{TimeframeDays: 30})
+	if err != nil {
+		t.Fatalf("failed to generate 30-day forecast: %v", err)
+	}
+
+	if forecast30.CurrentLiquidCash != 15000 {
+		t.Fatalf("expected current liquid cash 15000, got %f", forecast30.CurrentLiquidCash)
+	}
+	if len(forecast30.Days) != 30 {
+		t.Fatalf("expected 30 forecast days, got %d", len(forecast30.Days))
+	}
+	if forecast30.SafetyBuffer != 2500 {
+		t.Fatalf("expected safety buffer 2500, got %f", forecast30.SafetyBuffer)
+	}
+	if forecast30.RunwayStatus != "infinite" {
+		t.Fatalf("expected infinite runway status since monthly salary 6000 > expenses, got %s", forecast30.RunwayStatus)
+	}
+
+	// 5. Test What-If Simulation: Major planned purchase + Reduced income resulting in finite runway
+	whatIfParams := app.WhatIfSimulationParams{
+		TimeframeDays:         60,
+		DiscretionarySpendPct: 50, // +50% discretionary spend
+		IncomeChangeMonthly:   -6000, // loss of salary
+		PlannedExpenseAmount:  20000,
+		PlannedExpenseDate:    now.AddDate(0, 0, 7).Format("2006-01-02"),
+		PlannedExpenseTitle:   "Emergency Vehicle Repair",
+	}
+	whatIfForecast, err := store.GenerateCashFlowForecast(username, whatIfParams)
+	if err != nil {
+		t.Fatalf("failed to generate what-if forecast: %v", err)
+	}
+	if len(whatIfForecast.Days) != 60 {
+		t.Fatalf("expected 60 forecast days, got %d", len(whatIfForecast.Days))
+	}
+	if whatIfForecast.RunwayDays == -1 {
+		t.Fatalf("expected finite runway days with income removed, got %d", whatIfForecast.RunwayDays)
+	}
+	if whatIfForecast.DaysUntilSafetyBreach == -1 {
+		t.Fatalf("expected safety buffer breach due to 20000 planned expense and 0 income")
+	}
+
+	// 6. Test HTTP Endpoints
+	application := app.NewApp(store)
+
+	// GET /forecast HTML Page
+	reqPage := httptest.NewRequest(http.MethodGet, "/forecast", nil)
+	reqPage.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recPage := httptest.NewRecorder()
+	application.ServeHTTP(recPage, reqPage)
+	if recPage.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from GET /forecast, got %d", recPage.Code)
+	}
+
+	// GET /api/forecast?timeframe=60
+	reqAPI := httptest.NewRequest(http.MethodGet, "/api/forecast?timeframe=60", nil)
+	reqAPI.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recAPI := httptest.NewRecorder()
+	application.ServeHTTP(recAPI, reqAPI)
+	if recAPI.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from GET /api/forecast, got %d", recAPI.Code)
+	}
+	var apiForecast app.CashFlowForecast
+	if err := json.Unmarshal(recAPI.Body.Bytes(), &apiForecast); err != nil {
+		t.Fatalf("failed to unmarshal api forecast: %v", err)
+	}
+	if len(apiForecast.Days) != 60 {
+		t.Fatalf("expected 60 days in API forecast, got %d", len(apiForecast.Days))
+	}
+
+	// POST /api/forecast/simulate
+	simJSON := `{
+		"timeframe_days": 90,
+		"discretionary_spend_pct": -20,
+		"income_change_monthly": 1000
+	}`
+	reqSim := httptest.NewRequest(http.MethodPost, "/api/forecast/simulate", strings.NewReader(simJSON))
+	reqSim.Header.Set("Content-Type", "application/json")
+	reqSim.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recSim := httptest.NewRecorder()
+	application.ServeHTTP(recSim, reqSim)
+	if recSim.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from POST /api/forecast/simulate, got %d", recSim.Code)
+	}
+	var simForecast app.CashFlowForecast
+	if err := json.Unmarshal(recSim.Body.Bytes(), &simForecast); err != nil {
+		t.Fatalf("failed to unmarshal sim forecast: %v", err)
+	}
+	if len(simForecast.Days) != 90 {
+		t.Fatalf("expected 90 days in simulated forecast, got %d", len(simForecast.Days))
+	}
+
+	// POST /api/forecast/settings
+	setJSON := `{
+		"safety_buffer": 3000,
+		"discretionary_daily_burn": 60
+	}`
+	reqSet := httptest.NewRequest(http.MethodPost, "/api/forecast/settings", strings.NewReader(setJSON))
+	reqSet.Header.Set("Content-Type", "application/json")
+	reqSet.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recSet := httptest.NewRecorder()
+	application.ServeHTTP(recSet, reqSet)
+	if recSet.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from POST /api/forecast/settings, got %d", recSet.Code)
+	}
+
+	// POST /api/forecast/incomes
+	incJSON := `{
+		"name": "Side Hustle Consultancy",
+		"amount": 2000,
+		"frequency": "monthly",
+		"category": "freelance"
+	}`
+	reqIncPost := httptest.NewRequest(http.MethodPost, "/api/forecast/incomes", strings.NewReader(incJSON))
+	reqIncPost.Header.Set("Content-Type", "application/json")
+	reqIncPost.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	recIncPost := httptest.NewRecorder()
+	application.ServeHTTP(recIncPost, reqIncPost)
+	if recIncPost.Code != http.StatusCreated {
+		t.Fatalf("expected 201 Created from POST /api/forecast/incomes, got %d: %s", recIncPost.Code, recIncPost.Body.String())
+	}
+
+	// Clean up income
+	if err := store.DeleteRecurringIncome(inc1.ID, username); err != nil {
+		t.Fatalf("failed to delete recurring income: %v", err)
+	}
+}
+
 

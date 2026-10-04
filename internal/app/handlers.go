@@ -82,6 +82,7 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/reports", app.HandleReportsPage)
 	app.Mux.HandleFunc("/net-worth", app.HandleNetWorthPage)
 	app.Mux.HandleFunc("/receipts", app.HandleReceiptsPage)
+	app.Mux.HandleFunc("/forecast", app.HandleForecastPage)
 
 	// Auth APIs
 	app.Mux.HandleFunc("/api/signup", app.HandleSignupAPI)
@@ -143,6 +144,13 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/receipts/scan", app.HandleReceiptScanAPI)
 	app.Mux.HandleFunc("/api/receipts/parse-text", app.HandleParseReceiptTextAPI)
 	app.Mux.HandleFunc("/api/receipts/", app.HandleReceiptByIDAPI)
+
+	// Cash Flow Forecasting & Runway Predictor APIs
+	app.Mux.HandleFunc("/api/forecast", app.HandleForecastAPI)
+	app.Mux.HandleFunc("/api/forecast/simulate", app.HandleForecastSimulateAPI)
+	app.Mux.HandleFunc("/api/forecast/settings", app.HandleForecastSettingsAPI)
+	app.Mux.HandleFunc("/api/forecast/incomes", app.HandleForecastIncomesAPI)
+	app.Mux.HandleFunc("/api/forecast/incomes/", app.HandleForecastIncomeByIDAPI)
 
 	// Health check
 	app.Mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -2844,4 +2852,303 @@ func (app *App) HandleReceiptByIDAPI(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ─── Step 11: Cash Flow Forecasting & Runway Predictor Handlers ─────────────────
+
+func (app *App) HandleForecastPage(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	curr := "₦"
+	fullName := ""
+	email := ""
+	if prof, err := app.DB.GetProfile(username); err == nil && prof != nil {
+		if prof.Currency != "" {
+			curr = prof.Currency
+		}
+		fullName = prof.FullName
+		email = prof.Email
+	}
+
+	forecast, err := app.DB.GenerateCashFlowForecast(username, WhatIfSimulationParams{TimeframeDays: 30})
+	if err != nil {
+		log.Printf("error generating forecast: %v", err)
+	}
+
+	incomes, _ := app.DB.GetRecurringIncomes(username)
+	subs, _ := app.DB.GetSubscriptions(username)
+	accounts, _ := app.DB.GetAccounts(username)
+	settings, _ := app.DB.GetCashFlowSettings(username)
+
+	data := map[string]any{
+		"Username":      username,
+		"FullName":      fullName,
+		"Email":         email,
+		"Currency":      curr,
+		"Forecast":      forecast,
+		"Incomes":       incomes,
+		"Subscriptions": subs,
+		"Accounts":      accounts,
+		"Settings":      settings,
+	}
+
+	app.renderTemplate(w, "forecast.html", data)
+}
+
+func (app *App) HandleForecastAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	q := r.URL.Query()
+	timeframe := 30
+	if tf, err := strconv.Atoi(q.Get("timeframe")); err == nil && (tf == 30 || tf == 60 || tf == 90) {
+		timeframe = tf
+	}
+
+	discretionaryPct := 0.0
+	if pct, err := strconv.ParseFloat(q.Get("discretionary_pct"), 64); err == nil {
+		discretionaryPct = pct
+	}
+
+	incomeChange := 0.0
+	if inc, err := strconv.ParseFloat(q.Get("income_change"), 64); err == nil {
+		incomeChange = inc
+	}
+
+	plannedAmt := 0.0
+	if pa, err := strconv.ParseFloat(q.Get("planned_expense_amount"), 64); err == nil {
+		plannedAmt = pa
+	}
+	plannedDate := q.Get("planned_expense_date")
+	plannedTitle := q.Get("planned_expense_title")
+
+	safetyOverride := 0.0
+	if so, err := strconv.ParseFloat(q.Get("safety_buffer"), 64); err == nil {
+		safetyOverride = so
+	}
+
+	var excludedSubs []int
+	if ex := q.Get("excluded_subs"); ex != "" {
+		for _, part := range strings.Split(ex, ",") {
+			if id, err := strconv.Atoi(strings.TrimSpace(part)); err == nil {
+				excludedSubs = append(excludedSubs, id)
+			}
+		}
+	}
+
+	params := WhatIfSimulationParams{
+		TimeframeDays:         timeframe,
+		DiscretionarySpendPct: discretionaryPct,
+		IncomeChangeMonthly:   incomeChange,
+		PlannedExpenseAmount:  plannedAmt,
+		PlannedExpenseDate:    plannedDate,
+		PlannedExpenseTitle:   plannedTitle,
+		SafetyBufferOverride:  safetyOverride,
+		ExcludedSubIDs:        excludedSubs,
+	}
+
+	forecast, err := app.DB.GenerateCashFlowForecast(username, params)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, forecast)
+}
+
+func (app *App) HandleForecastSimulateAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var params WhatIfSimulationParams
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+		jsonError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	forecast, err := app.DB.GenerateCashFlowForecast(username, params)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, forecast)
+}
+
+func (app *App) HandleForecastSettingsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		settings, err := app.DB.GetCashFlowSettings(username)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, settings)
+
+	case http.MethodPost, http.MethodPut:
+		var req struct {
+			SafetyBuffer           float64 `json:"safety_buffer"`
+			DiscretionaryDailyBurn float64 `json:"discretionary_daily_burn"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, "invalid json payload", http.StatusBadRequest)
+			return
+		}
+
+		if err := app.DB.SaveCashFlowSettings(username, req.SafetyBuffer, req.DiscretionaryDailyBurn); err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, map[string]any{"success": true, "safety_buffer": req.SafetyBuffer, "discretionary_daily_burn": req.DiscretionaryDailyBurn})
+
+	default:
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleForecastIncomesAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		incomes, err := app.DB.GetRecurringIncomes(username)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, incomes)
+
+	case http.MethodPost:
+		var req struct {
+			Name        string  `json:"name"`
+			Amount      float64 `json:"amount"`
+			Frequency   string  `json:"frequency"`
+			NextPayDate string  `json:"next_pay_date"`
+			Category    string  `json:"category"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			req.Name = r.FormValue("name")
+			req.Amount, _ = strconv.ParseFloat(r.FormValue("amount"), 64)
+			req.Frequency = r.FormValue("frequency")
+			req.NextPayDate = r.FormValue("next_pay_date")
+			req.Category = r.FormValue("category")
+		}
+
+		if strings.TrimSpace(req.Name) == "" {
+			jsonError(w, "income stream name is required", http.StatusBadRequest)
+			return
+		}
+		if req.Amount <= 0 {
+			jsonError(w, "amount must be greater than zero", http.StatusBadRequest)
+			return
+		}
+
+		payDate := time.Now()
+		if req.NextPayDate != "" {
+			if parsed, err := time.Parse("2006-01-02", req.NextPayDate); err == nil {
+				payDate = parsed
+			}
+		}
+
+		income, err := app.DB.CreateRecurringIncome(username, req.Name, req.Frequency, req.Category, req.Amount, payDate)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		jsonOK(w, income)
+
+	default:
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleForecastIncomeByIDAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/api/forecast/incomes/")
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[0])
+	if err != nil {
+		jsonError(w, "invalid income id", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPut:
+		var req struct {
+			Name        string  `json:"name"`
+			Amount      float64 `json:"amount"`
+			Frequency   string  `json:"frequency"`
+			NextPayDate string  `json:"next_pay_date"`
+			Category    string  `json:"category"`
+			Status      string  `json:"status"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, "invalid json payload", http.StatusBadRequest)
+			return
+		}
+
+		payDate := time.Now()
+		if req.NextPayDate != "" {
+			if parsed, err := time.Parse("2006-01-02", req.NextPayDate); err == nil {
+				payDate = parsed
+			}
+		}
+
+		if err := app.DB.UpdateRecurringIncome(id, username, req.Name, req.Frequency, req.Category, req.Status, req.Amount, payDate); err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, map[string]any{"success": true})
+
+	case http.MethodDelete:
+		if err := app.DB.DeleteRecurringIncome(id, username); err != nil {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, map[string]any{"success": true})
+
+	default:
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
 

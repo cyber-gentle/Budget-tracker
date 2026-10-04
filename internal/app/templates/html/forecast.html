@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Flow Forecasting & Runway Predictor — Spendly</title>
+    
+    <link rel="icon" type="image/svg+xml" href="/static/assets/imgs/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/globals.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        offwhite: '#F8FAFC',
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Anti-flash theme script
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('spendly-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #10B981;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+            border: 2px solid #ffffff;
+        }
+        .range-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #10B981;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+            border: 2px solid #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-offwhite dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Main Navigation Header -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Brand Logo & Title -->
+            <div class="flex items-center gap-3">
+                <a href="/dashboard" class="flex items-center gap-2.5 group">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <span class="font-heading font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">Spendly</span>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center gap-1 ml-6 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    <a href="/dashboard" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Dashboard</a>
+                    <a href="/debts" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Debts & IOUs</a>
+                    <a href="/subscriptions" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Subscriptions</a>
+                    <a href="/goals" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Savings Goals</a>
+                    <a href="/reports" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Reports & Analytics</a>
+                    <a href="/net-worth" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Net Worth</a>
+                    <a href="/receipts" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Receipts</a>
+                    <a href="/forecast" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">Forecast</a>
+                </nav>
+            </div>
+
+            <!-- Right Toolbar & Profile Dropdown -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                
+                <!-- Quick Add Income Button -->
+                <button type="button" id="btn-header-add-income" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl transition-all shadow-sm cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>Add Income Stream</span>
+                </button>
+
+                <!-- Settings Button -->
+                <button type="button" id="btn-open-settings" class="p-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer" title="Cash flow settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button type="button" id="theme-toggle-btn" class="p-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer" title="Toggle theme">
+                    <svg id="theme-icon-sun" class="hidden text-amber-400" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg id="theme-icon-moon" class="block text-slate-600 dark:text-slate-300" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+
+                <!-- Currency Selector -->
+                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <select id="currency-select" class="bg-transparent focus:outline-none cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <option value="₦" {{if eq .Currency "₦"}}selected{{end}} class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">₦ (NGN)</option>
+                        <option value="$" {{if eq .Currency "$"}}selected{{end}} class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">$ (USD)</option>
+                        <option value="€" {{if eq .Currency "€"}}selected{{end}} class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">€ (EUR)</option>
+                        <option value="£" {{if eq .Currency "£"}}selected{{end}} class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">£ (GBP)</option>
+                    </select>
+                </div>
+
+                <!-- User Profile Dropdown Button -->
+                <div class="relative">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Account settings">
+                        <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-heading font-bold text-xs flex items-center justify-center uppercase shadow-sm">
+                            {{if .FullName}}{{printf "%.1s" .FullName}}{{else}}{{printf "%.1s" .Username}}{{end}}
+                        </span>
+                        <div class="hidden md:flex flex-col text-left">
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[100px] truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">@{{.Username}}</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <!-- Dropdown Menu Content -->
+                    <div id="user-dropdown-menu" class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 hidden z-50">
+                        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                            <p class="text-xs font-bold text-slate-800 dark:text-white truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">{{if .Email}}{{.Email}}{{else}}@{{.Username}}{{end}}</p>
+                        </div>
+                        <div class="py-1">
+                            <a href="/dashboard" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="/debts" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                <span>Debts & IOUs</span>
+                            </a>
+                            <a href="/subscriptions" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/></svg>
+                                <span>Subscriptions</span>
+                            </a>
+                            <a href="/goals" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                                <span>Savings Goals</span>
+                            </a>
+                            <a href="/reports" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                                <span>Reports & Analytics</span>
+                            </a>
+                            <a href="/net-worth" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                <span>Net Worth & Wealth</span>
+                            </a>
+                            <a href="/receipts" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg>
+                                <span>Receipts & Documents</span>
+                            </a>
+                            <a href="/forecast" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
+                                <span>Cash Flow Forecast</span>
+                            </a>
+                        </div>
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-1">
+                            <form action="/api/logout" method="POST">
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                    <span>Log out</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Horizontal Tab Bar -->
+        <div class="md:hidden flex items-center gap-1 px-4 py-2 border-t border-slate-100 dark:border-slate-800 overflow-x-auto no-scrollbar">
+            <a href="/dashboard" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/debts" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>Debts</span>
+            </a>
+            <a href="/subscriptions" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/></svg>
+                <span>Subscriptions</span>
+            </a>
+            <a href="/goals" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/></svg>
+                <span>Goals</span>
+            </a>
+            <a href="/reports" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                <span>Reports</span>
+            </a>
+            <a href="/net-worth" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <span>Net Worth</span>
+            </a>
+            <a href="/receipts" class="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg>
+                <span>Receipts</span>
+            </a>
+            <a href="/forecast" class="shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
+                <span>Forecast</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 space-y-6">
+
+        <!-- Hero Section -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800">
+            <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div class="space-y-2 max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
+                        <span>Predictive Cash Flow & Runway Engine</span>
+                    </div>
+                    <h1 class="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight">Know Exactly Where Your Cash Stands Ahead of Time</h1>
+                    <p class="text-xs sm:text-sm text-slate-300">
+                        Project your liquid cash runway over the next 30, 60, or 90 days. Factor in recurring paydays, upcoming subscription renewals, debt deadlines, and run live "what-if" purchase simulations.
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <button type="button" id="btn-open-income-modal" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-md shadow-emerald-500/20 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                        <span>+ Add Income Stream</span>
+                    </button>
+                    <button type="button" id="btn-scroll-simulator" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-all cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                        <span>Run "What-If" Scenario</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4 Key Metric Stat Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- Runway Card -->
+            <div class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cash Runway</span>
+                    <span id="runway-badge" class="px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/50 dark:border-emerald-800/60 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="runway-badge-text">{{.Forecast.RunwayBadgeText}}</span>
+                    </span>
+                </div>
+                <div class="mt-3">
+                    <div id="stat-runway-val" class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                        {{if eq .Forecast.RunwayDays -1}}Safe / ∞{{else}}{{.Forecast.RunwayDays}} Days{{end}}
+                    </div>
+                    <p id="stat-runway-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        {{if eq .Forecast.RunwayDays -1}}Income covers all recurring obligations{{else}}Estimated ~{{printf "%.1f" .Forecast.RunwayMonths}} months of operating runway{{end}}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Current Liquid Cash -->
+            <div class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Liquid Cash Base</span>
+                    <span class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                    </span>
+                </div>
+                <div class="mt-3">
+                    <div id="stat-liquid-cash" class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                        {{.Currency}}{{printf "%.2f" .Forecast.CurrentLiquidCash}}
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Available liquid checking & cash wallets
+                    </p>
+                </div>
+            </div>
+
+            <!-- Net Monthly Flow -->
+            <div class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Net Monthly Flow</span>
+                    <span id="stat-net-flow-icon" class="p-1.5 rounded-lg {{if le .Forecast.NetMonthlyBurn 0.0}}bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400{{else}}bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400{{end}}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 16 7-7 4 4 7-7"/><path d="M14 6h7v7"/></svg>
+                    </span>
+                </div>
+                <div class="mt-3">
+                    <div id="stat-net-flow" class="font-heading text-2xl sm:text-3xl font-extrabold {{if le .Forecast.NetMonthlyBurn 0.0}}text-emerald-600 dark:text-emerald-400{{else}}text-rose-600 dark:text-rose-400{{end}}">
+                        {{if le .Forecast.NetMonthlyBurn 0.0}}+{{.Currency}}{{printf "%.2f" .Forecast.NetMonthlySurplus}}{{else}}-{{.Currency}}{{printf "%.2f" .Forecast.NetMonthlyBurnAbs}}{{end}}
+                    </div>
+                    <p id="stat-net-flow-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Recurring income minus bills & daily burn
+                    </p>
+                </div>
+            </div>
+
+            <!-- Safety Buffer & Lowest Dip -->
+            <div class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Lowest Projected Balance</span>
+                    <span id="stat-safety-icon" class="p-1.5 rounded-lg {{if lt .Forecast.LowestProjectedBalance .Forecast.SafetyBuffer}}bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400{{else}}bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400{{end}}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </span>
+                </div>
+                <div class="mt-3">
+                    <div id="stat-lowest-bal" class="font-heading text-2xl sm:text-3xl font-extrabold {{if lt .Forecast.LowestProjectedBalance .Forecast.SafetyBuffer}}text-amber-600 dark:text-amber-400{{else}}text-slate-900 dark:text-white{{end}}">
+                        {{.Currency}}{{printf "%.2f" .Forecast.LowestProjectedBalance}}
+                    </div>
+                    <p id="stat-lowest-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Safety threshold: {{.Currency}}{{printf "%.0f" .Forecast.SafetyBuffer}} (on <span id="stat-lowest-date">{{.Forecast.LowestBalanceDate}}</span>)
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Main Chart & Interactive Forecast Area -->
+        <div class="glass-card rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-heading text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Projected Balance Trajectory</span>
+                        <span id="active-scenario-tag" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300/50">
+                            Simulated Scenario Active
+                        </span>
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Daily cash timeline from <span id="chart-start-date" class="font-semibold text-slate-700 dark:text-slate-300">{{.Forecast.StartingDate}}</span> to <span id="chart-end-date" class="font-semibold text-slate-700 dark:text-slate-300">{{.Forecast.EndingDate}}</span>
+                    </p>
+                </div>
+
+                <!-- Timeframe Selection Tabs -->
+                <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl self-start sm:self-auto">
+                    <button type="button" class="btn-timeframe px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer" data-days="30">
+                        30 Days
+                    </button>
+                    <button type="button" class="btn-timeframe px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer" data-days="60">
+                        60 Days
+                    </button>
+                    <button type="button" class="btn-timeframe px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer" data-days="90">
+                        90 Days
+                    </button>
+                </div>
+            </div>
+
+            <!-- Danger Zone Alert (Rendered dynamically if safety breached) -->
+            <div id="danger-alert-banner" class="hidden p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 flex items-start sm:items-center gap-3">
+                <div class="p-2 rounded-xl bg-rose-500 text-white shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                </div>
+                <div class="text-xs space-y-0.5">
+                    <span class="font-bold">Safety Buffer Warning:</span>
+                    <span id="danger-alert-text">Projected balance will breach your safety buffer threshold in 14 days.</span>
+                </div>
+            </div>
+
+            <!-- Responsive Interactive Canvas Chart Area -->
+            <div class="relative w-full h-64 sm:h-72 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 p-2 overflow-hidden flex flex-col justify-end">
+                <canvas id="forecastChart" class="w-full h-full block cursor-crosshair"></canvas>
+
+                <!-- Floating Canvas Hover Tooltip -->
+                <div id="chartTooltip" class="absolute pointer-events-none hidden bg-slate-900/95 dark:bg-slate-800/95 text-white backdrop-blur-md px-3 py-2 rounded-xl text-xs shadow-xl border border-slate-700 z-30 transition-opacity space-y-1 min-w-[130px]">
+                    <div id="tooltipDate" class="text-[10px] text-slate-400 font-bold uppercase tracking-wider"></div>
+                    <div id="tooltipBal" class="text-sm font-extrabold text-emerald-400"></div>
+                    <div id="tooltipChange" class="text-[11px] text-slate-300"></div>
+                    <div id="tooltipEvents" class="text-[10px] text-slate-400 space-y-0.5 border-t border-slate-700/60 pt-1"></div>
+                </div>
+            </div>
+
+            <!-- Chart Legend -->
+            <div class="flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1 gap-3">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-1 rounded-full bg-emerald-500"></span>
+                        <span>Projected Balance</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-0.5 border-t border-dashed border-amber-500"></span>
+                        <span>Safety Buffer</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                        <span>Danger Point</span>
+                    </div>
+                </div>
+                <div class="text-[11px] text-slate-400">
+                    Hover/Tap points along the line to inspect daily cash events
+                </div>
+            </div>
+        </div>
+
+        <!-- 2 Columns: "What-If" Interactive Simulator & Timeline Feed -->
+        <div id="simulator-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- "What-If" Scenario Simulator (5 Cols on LG) -->
+            <div class="lg:col-span-5 space-y-5">
+                <div class="glass-card rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-heading text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <span>"What-If" Scenario Simulator</span>
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400">Live</span>
+                            </h3>
+                            <p class="text-xs text-slate-400">Test hypothetical spending & income shifts in real time</p>
+                        </div>
+                        <button type="button" id="btn-reset-simulator" class="text-xs font-semibold text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors cursor-pointer" title="Reset to live defaults">
+                            Reset
+                        </button>
+                    </div>
+
+                    <!-- Slider 1: Discretionary Spend Modifier -->
+                    <div class="space-y-2 bg-slate-50/70 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-700 dark:text-slate-300">Discretionary Spending</span>
+                            <span id="slider-spend-val" class="font-heading font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">Baseline (0%)</span>
+                        </div>
+                        <input type="range" id="slider-discretionary" min="-50" max="100" step="5" value="0" class="range-slider w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+                            <span>-50% (Extreme Thrift)</span>
+                            <span>Normal (0%)</span>
+                            <span>+100% (High Spend)</span>
+                        </div>
+                    </div>
+
+                    <!-- Slider 2: Monthly Income Adjustment -->
+                    <div class="space-y-2 bg-slate-50/70 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-700 dark:text-slate-300">Income Adjustment (Monthly)</span>
+                            <span id="slider-income-val" class="font-heading font-extrabold text-slate-700 dark:text-slate-300 text-sm">{{.Currency}}0</span>
+                        </div>
+                        <input type="range" id="slider-income" min="-5000" max="5000" step="100" value="0" class="range-slider w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+                            <span>-{{.Currency}}5,000 (Job Loss)</span>
+                            <span>{{.Currency}}0</span>
+                            <span>+{{.Currency}}5,000 (Promotion)</span>
+                        </div>
+                    </div>
+
+                    <!-- Planned Major Purchase Input -->
+                    <div class="space-y-3 bg-slate-50/70 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <span class="block text-xs font-bold text-slate-700 dark:text-slate-300">Simulate Major One-Off Purchase</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-400 mb-1">Expense Amount</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2.5 text-xs text-slate-400">{{.Currency}}</span>
+                                    <input type="number" id="input-planned-amt" placeholder="0" min="0" step="50" class="w-full pl-7 pr-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-bold">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-400 mb-1">Target Date</label>
+                                <input type="date" id="input-planned-date" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-semibold">
+                            </div>
+                        </div>
+                        <input type="text" id="input-planned-title" placeholder="Purchase title (e.g. Vacation, MacBook, Car fix)" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <!-- Subscription Cut Simulator -->
+                    {{if .Subscriptions}}
+                    <div class="space-y-3 bg-slate-50/70 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-700 dark:text-slate-300">Test Cancelling Subscriptions</span>
+                            <span class="text-[10px] text-slate-400">Toggle off to see runway gain</span>
+                        </div>
+                        <div class="space-y-2 max-h-40 overflow-y-auto no-scrollbar pr-1">
+                            {{range .Subscriptions}}
+                            {{if eq .Status "active"}}
+                            <label class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" class="sub-toggle-checkbox w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500" value="{{.ID}}" checked>
+                                    <div class="text-xs">
+                                        <div class="font-bold text-slate-800 dark:text-slate-200">{{.Name}}</div>
+                                        <div class="text-[10px] text-slate-400 capitalize">{{.BillingCycle}}</div>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{$.Currency}}{{printf "%.2f" .Amount}}</span>
+                            </label>
+                            {{end}}
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+
+                </div>
+            </div>
+
+            <!-- Timeline Feed of Upcoming Cash Flow Events (7 Cols on LG) -->
+            <div class="lg:col-span-7 space-y-5">
+                <div class="glass-card rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-heading text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <span>Upcoming Cash Flow Events</span>
+                                <span id="events-count-badge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                    {{len .Forecast.UpcomingEvents}} Events
+                                </span>
+                            </h3>
+                            <p class="text-xs text-slate-400">Chronological schedule of paydays, bills & loan payments</p>
+                        </div>
+
+                        <!-- Filter Tabs -->
+                        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl self-start sm:self-auto text-xs font-semibold">
+                            <button type="button" class="btn-event-filter px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer" data-filter="all">
+                                All
+                            </button>
+                            <button type="button" class="btn-event-filter px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer" data-filter="income">
+                                Inflows
+                            </button>
+                            <button type="button" class="btn-event-filter px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer" data-filter="outflow">
+                                Outflows
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Events Timeline Feed Container -->
+                    <div id="events-timeline-container" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1 no-scrollbar">
+                        {{if .Forecast.UpcomingEvents}}
+                        {{range .Forecast.UpcomingEvents}}
+                        <div class="event-feed-card flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs" data-type="{{.Type}}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg {{if or (eq .Type "income") (eq .Type "debt_collection")}}bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600{{else if eq .Type "planned_expense"}}bg-amber-50 dark:bg-amber-950/60 text-amber-500{{else}}bg-purple-50 dark:bg-purple-950/60 text-purple-600{{end}}">
+                                    {{.Icon}}
+                                </div>
+                                <div class="space-y-0.5">
+                                    <div class="text-xs font-bold text-slate-900 dark:text-white">{{.Title}}</div>
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                                        <span class="font-semibold text-slate-600 dark:text-slate-400">{{.DisplayDate}}</span>
+                                        <span>•</span>
+                                        <span class="capitalize">{{.Category}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs font-heading font-extrabold {{if or (eq .Type "income") (eq .Type "debt_collection")}}text-emerald-600 dark:text-emerald-400{{else}}text-rose-600 dark:text-rose-400{{end}}">
+                                    {{if or (eq .Type "income") (eq .Type "debt_collection")}}+{{else}}-{{end}}{{$.Currency}}{{printf "%.2f" .Amount}}
+                                </div>
+                                <span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md {{if or (eq .Type "income") (eq .Type "debt_collection")}}bg-emerald-50 dark:bg-emerald-950 text-emerald-600{{else}}bg-slate-100 dark:bg-slate-800 text-slate-500{{end}}">
+                                    {{.Type}}
+                                </span>
+                            </div>
+                        </div>
+                        {{end}}
+                        {{else}}
+                        <div class="text-center py-12 text-slate-400 text-xs">
+                            No upcoming scheduled events found for this timeframe. Add recurring income or subscriptions!
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+
+                <!-- Active Recurring Income Streams Management Section -->
+                <div class="glass-card rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-heading text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <span>Recurring Incomes</span>
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400">
+                                    {{len .Incomes}} Active
+                                </span>
+                            </h3>
+                            <p class="text-xs text-slate-400">Primary salaries, freelance retainers, and scheduled deposits</p>
+                        </div>
+                        <button type="button" id="btn-card-add-income" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-black text-white transition-colors cursor-pointer">
+                            + Add
+                        </button>
+                    </div>
+
+                    <div id="incomes-list-container" class="space-y-2">
+                        {{if .Incomes}}
+                        {{range .Incomes}}
+                        <div class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800" data-income-id="{{.ID}}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-sm text-emerald-600">
+                                    💰
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200">{{.Name}}</div>
+                                    <div class="text-[10px] text-slate-400 capitalize">
+                                        {{.Frequency}} • Next: {{.NextPayFmt}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-heading font-extrabold text-emerald-600 dark:text-emerald-400">
+                                    {{$.Currency}}{{printf "%.2f" .Amount}}
+                                </span>
+                                <button type="button" class="btn-delete-income text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer" data-id="{{.ID}}" title="Delete income stream">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        {{end}}
+                        {{else}}
+                        <div class="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400 space-y-1">
+                            <p>No recurring incomes configured yet.</p>
+                            <button type="button" class="btn-trigger-add-income text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">
+                                Add your primary salary or retainer
+                            </button>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ─── Modal 1: Add Recurring Income ────────────────────────────────────── -->
+    <div id="modal-income" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden p-6 space-y-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 text-lg">
+                        💰
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Add Recurring Income</h3>
+                        <p class="text-[11px] text-slate-400">Schedule automatic paydays in your cash forecast</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-income-modal p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="form-income" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Income Stream Title *</label>
+                    <input type="text" id="inc-name" required placeholder="e.g. Primary Job Salary, Freelance Retainer" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-semibold">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Amount *</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-xs text-slate-400">{{.Currency}}</span>
+                            <input type="number" id="inc-amount" required step="0.01" min="1" placeholder="4500" class="w-full pl-7 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-bold">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Frequency *</label>
+                        <select id="inc-frequency" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-semibold">
+                            <option value="monthly">Monthly</option>
+                            <option value="biweekly">Bi-Weekly (Every 2 Wks)</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="semi_monthly">Twice a Month (1st & 15th)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Next Payday Date *</label>
+                        <input type="date" id="inc-next-date" required class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Category</label>
+                        <select id="inc-category" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-semibold">
+                            <option value="salary">Salary / Wages</option>
+                            <option value="freelance">Freelance / Consulting</option>
+                            <option value="dividends">Dividends / Investments</option>
+                            <option value="rental">Rental Income</option>
+                            <option value="other">Other Inflow</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button type="button" class="btn-close-income-modal px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-slate-950 bg-emerald-500 hover:bg-emerald-400 rounded-xl shadow-md shadow-emerald-500/20 cursor-pointer">
+                        Save Income Stream
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── Modal 2: Cash Flow Settings & Safety Threshold ────────────────────── -->
+    <div id="modal-settings" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden p-6 space-y-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-600 text-lg">
+                        ⚙️
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Cash Flow Settings</h3>
+                        <p class="text-[11px] text-slate-400">Configure safety buffers & daily burn baseline</p>
+                    </div>
+                </div>
+                <button type="button" id="btn-close-settings-modal" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="form-settings" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Minimum Safety Buffer (Threshold)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-xs text-slate-400">{{.Currency}}</span>
+                        <input type="number" id="setting-safety" min="0" step="50" value="{{.Settings.SafetyBuffer}}" class="w-full pl-7 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-bold">
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">
+                        You'll receive a danger warning if your projected balance breaches this emergency reserve.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Custom Daily Discretionary Burn (Optional)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-xs text-slate-400">{{.Currency}}</span>
+                        <input type="number" id="setting-daily-burn" min="0" step="1" value="{{.Settings.DiscretionaryDailyBurn}}" placeholder="0 (Auto calculate from past 30 days)" class="w-full pl-7 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-bold">
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">
+                        Leave at 0 to automatically extrapolate from your past 30-day non-recurring transaction history.
+                    </p>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button type="button" id="btn-cancel-settings" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl shadow-md cursor-pointer">
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-12 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="flex items-center gap-2.5 px-4 py-3 bg-slate-900/95 dark:bg-slate-800/95 text-white backdrop-blur-md border border-slate-700 rounded-2xl shadow-xl text-xs font-semibold">
+            <span id="toast-icon">✨</span>
+            <span id="toast-message">Action successful</span>
+        </div>
+    </div>
+
+    <!-- Frontend Interactive Forecast & Chart Script -->
+    <script>
+        // ─── Global State & Baseline Data ──────────────────────────────────────
+        let activeTimeframe = 30;
+        let currencySymbol = {{if .Currency}}"{{.Currency}}"{{else}}"₦"{{end}};
+        let currentForecast = null;
+        let simulationDebounceTimer = null;
+
+        // Toast feedback
+        function showToast(msg, icon = '✨') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            document.getElementById('toast-icon').textContent = icon;
+            toast.classList.remove('translate-y-12', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-12', 'opacity-0');
+            }, 3000);
+        }
+
+        // Setup defaults
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        const nextPayInput = document.getElementById('inc-next-date');
+        if (nextPayInput) nextPayInput.value = tomorrowStr;
+        const plannedDateInput = document.getElementById('input-planned-date');
+        if (plannedDateInput) plannedDateInput.value = tomorrowStr;
+
+        // ─── User Profile Menu & Theme Toggles ─────────────────────────────────
+        const btnUserMenu = document.getElementById('btn-user-menu');
+        const userDropdown = document.getElementById('user-dropdown-menu');
+        if (btnUserMenu && userDropdown) {
+            btnUserMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                if (!userDropdown.contains(e.target) && !btnUserMenu.contains(e.target)) {
+                    userDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        const moonIcon = document.getElementById('theme-icon-moon');
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        }
+        updateThemeIcons();
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('spendly-theme', isDark ? 'dark' : 'light');
+                updateThemeIcons();
+                if (currentForecast) drawChart(currentForecast);
+            });
+        }
+
+        const currSelect = document.getElementById('currency-select');
+        if (currSelect) {
+            currSelect.addEventListener('change', async () => {
+                const newCurr = currSelect.value;
+                try {
+                    await fetch('/api/currency', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ currency: newCurr })
+                    });
+                    location.reload();
+                } catch (e) {
+                    console.error('Failed to change currency:', e);
+                }
+            });
+        }
+
+        // ─── Canvas Chart Drawing Engine ───────────────────────────────────────
+        const canvas = document.getElementById('forecastChart');
+        const ctx = canvas.getContext('2d');
+        const tooltip = document.getElementById('chartTooltip');
+
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+
+        let chartPoints = [];
+
+        function drawChart(forecast) {
+            if (!forecast || !forecast.days || !forecast.days.length) return;
+            resizeCanvas();
+
+            const rect = canvas.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+            ctx.clearRect(0, 0, width, height);
+
+            const days = forecast.days;
+            const n = days.length;
+            const padding = { top: 25, bottom: 30, left: 15, right: 15 };
+            const plotW = width - padding.left - padding.right;
+            const plotH = height - padding.top - padding.bottom;
+
+            let minVal = forecast.lowest_projected_balance;
+            let maxVal = forecast.current_liquid_cash;
+            days.forEach(d => {
+                if (d.closing_balance < minVal) minVal = d.closing_balance;
+                if (d.closing_balance > maxVal) maxVal = d.closing_balance;
+            });
+            if (forecast.safety_buffer > maxVal) maxVal = forecast.safety_buffer;
+            if (forecast.safety_buffer < minVal) minVal = forecast.safety_buffer;
+
+            // Give 10% breathing room
+            const range = (maxVal - minVal) || 1;
+            const yMin = minVal - range * 0.1;
+            const yMax = maxVal + range * 0.1;
+            const yRange = yMax - yMin;
+
+            function getY(val) {
+                return padding.top + plotH - ((val - yMin) / yRange) * plotH;
+            }
+
+            // Draw Safety Buffer Horizontal Line
+            const safetyY = getY(forecast.safety_buffer);
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = '#F59E0B';
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(padding.left, safetyY);
+            ctx.lineTo(width - padding.right, safetyY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Label safety buffer
+            ctx.fillStyle = '#F59E0B';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.fillText(`Safety ${currencySymbol}${Math.round(forecast.safety_buffer)}`, width - padding.right - 95, safetyY - 5);
+
+            // Compute Points
+            chartPoints = [];
+            for (let i = 0; i < n; i++) {
+                const x = padding.left + (i / (n - 1)) * plotW;
+                const y = getY(days[i].closing_balance);
+                chartPoints.push({ x, y, day: days[i], index: i });
+            }
+
+            // Draw Area Gradient Fill
+            const grad = ctx.createLinearGradient(0, padding.top, 0, height);
+            const isDark = document.documentElement.classList.contains('dark');
+            if (forecast.lowest_projected_balance < forecast.safety_buffer) {
+                grad.addColorStop(0, 'rgba(239, 68, 68, 0.35)');
+                grad.addColorStop(1, isDark ? 'rgba(239, 68, 68, 0.0)' : 'rgba(239, 68, 68, 0.02)');
+            } else {
+                grad.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+                grad.addColorStop(1, isDark ? 'rgba(16, 185, 129, 0.0)' : 'rgba(16, 185, 129, 0.02)');
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(chartPoints[0].x, chartPoints[0].y);
+            for (let i = 0; i < chartPoints.length - 1; i++) {
+                const xc = (chartPoints[i].x + chartPoints[i + 1].x) / 2;
+                const yc = (chartPoints[i].y + chartPoints[i + 1].y) / 2;
+                ctx.quadraticCurveTo(chartPoints[i].x, chartPoints[i].y, xc, yc);
+            }
+            ctx.lineTo(chartPoints[chartPoints.length - 1].x, chartPoints[chartPoints.length - 1].y);
+            ctx.lineTo(chartPoints[chartPoints.length - 1].x, height - padding.bottom);
+            ctx.lineTo(chartPoints[0].x, height - padding.bottom);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Draw Trajectory Stroke Line
+            ctx.beginPath();
+            ctx.moveTo(chartPoints[0].x, chartPoints[0].y);
+            for (let i = 0; i < chartPoints.length - 1; i++) {
+                const xc = (chartPoints[i].x + chartPoints[i + 1].x) / 2;
+                const yc = (chartPoints[i].y + chartPoints[i + 1].y) / 2;
+                ctx.quadraticCurveTo(chartPoints[i].x, chartPoints[i].y, xc, yc);
+            }
+            ctx.lineTo(chartPoints[chartPoints.length - 1].x, chartPoints[chartPoints.length - 1].y);
+            ctx.strokeStyle = (forecast.lowest_projected_balance < forecast.safety_buffer) ? '#EF4444' : '#10B981';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Highlight Lowest / Danger point
+            chartPoints.forEach(p => {
+                if (p.day.is_danger_lowest) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#EF4444';
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.stroke();
+                } else if (p.day.events && p.day.events.length > 0) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+                    ctx.fillStyle = p.day.events.some(e => e.type === 'income') ? '#10B981' : '#8B5CF6';
+                    ctx.fill();
+                }
+            });
+
+            // Date Axis labels
+            ctx.fillStyle = isDark ? '#94A3B8' : '#64748B';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            const step = Math.floor(n / 5);
+            for (let i = 0; i < n; i += step) {
+                if (i >= chartPoints.length) break;
+                ctx.fillText(days[i].display_date, chartPoints[i].x, height - 10);
+            }
+        }
+
+        // Canvas Tooltip Interaction
+        canvas.addEventListener('mousemove', (e) => {
+            if (!chartPoints.length) return;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+
+            let closest = chartPoints[0];
+            let minDist = Math.abs(mouseX - closest.x);
+            for (let i = 1; i < chartPoints.length; i++) {
+                const dist = Math.abs(mouseX - chartPoints[i].x);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = chartPoints[i];
+                }
+            }
+
+            if (minDist < 40) {
+                const d = closest.day;
+                document.getElementById('tooltipDate').textContent = `${d.display_date} (${d.day_of_week})`;
+                document.getElementById('tooltipBal').textContent = `${currencySymbol}${d.closing_balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
+                const netSign = d.net_change >= 0 ? '+' : '';
+                document.getElementById('tooltipChange').textContent = `Day Net: ${netSign}${currencySymbol}${d.net_change.toFixed(2)}`;
+
+                const evsDiv = document.getElementById('tooltipEvents');
+                if (d.events && d.events.length > 0) {
+                    evsDiv.innerHTML = d.events.map(ev => `
+                        <div class="truncate">${ev.icon} ${ev.title}: ${currencySymbol}${ev.amount}</div>
+                    `).join('');
+                    evsDiv.classList.remove('hidden');
+                } else {
+                    evsDiv.innerHTML = '<span class="text-slate-400">Regular daily spend</span>';
+                    evsDiv.classList.remove('hidden');
+                }
+
+                tooltip.style.left = `${Math.min(rect.width - 150, Math.max(10, closest.x - 70))}px`;
+                tooltip.style.top = `${Math.max(10, closest.y - 75)}px`;
+                tooltip.classList.remove('hidden');
+            } else {
+                tooltip.classList.add('hidden');
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            tooltip.classList.add('hidden');
+        });
+
+        window.addEventListener('resize', () => {
+            if (currentForecast) drawChart(currentForecast);
+        });
+
+        // ─── UI Refresh & Sync Engine ──────────────────────────────────────────
+        function updateUI(forecast) {
+            currentForecast = forecast;
+            currencySymbol = forecast.currency || currencySymbol;
+
+            // Stat 1: Runway
+            const statRunwayVal = document.getElementById('stat-runway-val');
+            const statRunwaySub = document.getElementById('stat-runway-sub');
+            const runwayBadgeText = document.getElementById('runway-badge-text');
+            const runwayBadge = document.getElementById('runway-badge');
+
+            if (forecast.runway_days === -1) {
+                statRunwayVal.textContent = 'Safe / ∞';
+                statRunwaySub.textContent = 'Income covers all recurring obligations';
+                runwayBadge.className = 'px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/50 flex items-center gap-1';
+            } else {
+                statRunwayVal.textContent = `${forecast.runway_days} Days`;
+                statRunwaySub.textContent = `Estimated ~${forecast.runway_months.toFixed(1)} months operating runway`;
+                if (forecast.runway_days < 30) {
+                    runwayBadge.className = 'px-2 py-0.5 text-[11px] font-bold rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300/50 flex items-center gap-1';
+                } else if (forecast.runway_days < 90) {
+                    runwayBadge.className = 'px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300/50 flex items-center gap-1';
+                } else {
+                    runwayBadge.className = 'px-2 py-0.5 text-[11px] font-bold rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300/50 flex items-center gap-1';
+                }
+            }
+            runwayBadgeText.textContent = forecast.runway_badge_text;
+
+            // Stat 2: Liquid Cash
+            document.getElementById('stat-liquid-cash').textContent = `${currencySymbol}${forecast.current_liquid_cash.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            // Stat 3: Net Monthly Flow
+            const statNet = document.getElementById('stat-net-flow');
+            const statNetIcon = document.getElementById('stat-net-flow-icon');
+            if (forecast.net_monthly_burn <= 0) {
+                const surplus = Math.abs(forecast.net_monthly_burn);
+                statNet.textContent = `+${currencySymbol}${surplus.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                statNet.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400';
+                statNetIcon.className = 'p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400';
+            } else {
+                statNet.textContent = `-${currencySymbol}${forecast.net_monthly_burn.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                statNet.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400';
+                statNetIcon.className = 'p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400';
+            }
+
+            // Stat 4: Lowest projected dip
+            const statLowest = document.getElementById('stat-lowest-bal');
+            statLowest.textContent = `${currencySymbol}${forecast.lowest_projected_balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('stat-lowest-date').textContent = forecast.lowest_balance_date;
+            if (forecast.lowest_projected_balance < forecast.safety_buffer) {
+                statLowest.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400';
+            } else {
+                statLowest.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white';
+            }
+
+            // Danger Alert Banner
+            const dangerBanner = document.getElementById('danger-alert-banner');
+            const dangerText = document.getElementById('danger-alert-text');
+            if (forecast.days_until_safety_breach !== -1) {
+                dangerText.textContent = `Projected balance breaches your safety buffer (${currencySymbol}${forecast.safety_buffer}) in ${forecast.days_until_safety_breach} days (on ${forecast.lowest_balance_date}).`;
+                dangerBanner.classList.remove('hidden');
+            } else {
+                dangerBanner.classList.add('hidden');
+            }
+
+            // Date bounds
+            document.getElementById('chart-start-date').textContent = forecast.starting_date;
+            document.getElementById('chart-end-date').textContent = forecast.ending_date;
+
+            // Render Events Feed
+            renderEventsFeed(forecast.upcoming_events);
+
+            // Redraw Chart
+            drawChart(forecast);
+        }
+
+        function renderEventsFeed(events) {
+            const container = document.getElementById('events-timeline-container');
+            const countBadge = document.getElementById('events-count-badge');
+            countBadge.textContent = `${events ? events.length : 0} Events`;
+
+            if (!events || !events.length) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 text-xs">
+                        No upcoming scheduled events found for this timeframe.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = events.map(ev => {
+                const isInflow = (ev.type === 'income' || ev.type === 'debt_collection');
+                const isPlanned = (ev.type === 'planned_expense');
+                const iconBg = isInflow ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600' : (isPlanned ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-500' : 'bg-purple-50 dark:bg-purple-950/60 text-purple-600');
+                const amtColor = isInflow ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
+                const sign = isInflow ? '+' : '-';
+
+                return `
+                    <div class="event-feed-card flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs" data-type="${ev.type}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg ${iconBg}">
+                                ${ev.icon}
+                            </div>
+                            <div class="space-y-0.5">
+                                <div class="text-xs font-bold text-slate-900 dark:text-white">${ev.title}</div>
+                                <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                                    <span class="font-semibold text-slate-600 dark:text-slate-400">${ev.display_date}</span>
+                                    <span>•</span>
+                                    <span class="capitalize">${ev.category}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs font-heading font-extrabold ${amtColor}">
+                                ${sign}${currencySymbol}${ev.amount.toFixed(2)}
+                            </div>
+                            <span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md ${isInflow ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">
+                                ${ev.type.replace('_', ' ')}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ─── Fetch Forecast & Simulation API ───────────────────────────────────
+        async function fetchForecast() {
+            try {
+                const res = await fetch(`/api/forecast?timeframe=${activeTimeframe}`);
+                if (!res.ok) throw new Error('Failed to load forecast');
+                const data = await res.json();
+                updateUI(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function triggerSimulation() {
+            const discVal = parseFloat(document.getElementById('slider-discretionary').value) || 0;
+            const incVal = parseFloat(document.getElementById('slider-income').value) || 0;
+            const plannedAmt = parseFloat(document.getElementById('input-planned-amt').value) || 0;
+            const plannedDate = document.getElementById('input-planned-date').value || '';
+            const plannedTitle = document.getElementById('input-planned-title').value || '';
+
+            // Excluded Subscriptions
+            const checkboxes = document.querySelectorAll('.sub-toggle-checkbox');
+            const excludedSubs = [];
+            checkboxes.forEach(cb => {
+                if (!cb.checked) excludedSubs.push(parseInt(cb.value));
+            });
+
+            const scenarioTag = document.getElementById('active-scenario-tag');
+            const isSimulated = (discVal !== 0 || incVal !== 0 || plannedAmt > 0 || excludedSubs.length > 0);
+            if (isSimulated) {
+                scenarioTag.classList.remove('hidden');
+            } else {
+                scenarioTag.classList.add('hidden');
+            }
+
+            try {
+                const res = await fetch('/api/forecast/simulate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        timeframe_days: activeTimeframe,
+                        discretionary_spend_pct: discVal,
+                        income_change_monthly: incVal,
+                        planned_expense_amount: plannedAmt,
+                        planned_expense_date: plannedDate,
+                        planned_expense_title: plannedTitle,
+                        excluded_sub_ids: excludedSubs
+                    })
+                });
+                if (!res.ok) throw new Error('Simulation failed');
+                const data = await res.json();
+                updateUI(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function queueSimulation() {
+            clearTimeout(simulationDebounceTimer);
+            simulationDebounceTimer = setTimeout(triggerSimulation, 150);
+        }
+
+        // ─── Timeframe Switch Buttons ──────────────────────────────────────────
+        document.querySelectorAll('.btn-timeframe').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-timeframe').forEach(b => {
+                    b.className = 'btn-timeframe px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer';
+                });
+                btn.className = 'btn-timeframe px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer';
+                activeTimeframe = parseInt(btn.dataset.days);
+                triggerSimulation();
+            });
+        });
+
+        // ─── Simulator Slider Input Listeners ──────────────────────────────────
+        const sliderDisc = document.getElementById('slider-discretionary');
+        const sliderSpendVal = document.getElementById('slider-spend-val');
+        sliderDisc.addEventListener('input', () => {
+            const val = parseInt(sliderDisc.value);
+            if (val === 0) {
+                sliderSpendVal.textContent = 'Baseline (0%)';
+                sliderSpendVal.className = 'font-heading font-extrabold text-slate-700 dark:text-slate-300 text-sm';
+            } else if (val < 0) {
+                sliderSpendVal.textContent = `${val}% (Thriftier)`;
+                sliderSpendVal.className = 'font-heading font-extrabold text-emerald-600 dark:text-emerald-400 text-sm';
+            } else {
+                sliderSpendVal.textContent = `+${val}% (Higher Spend)`;
+                sliderSpendVal.className = 'font-heading font-extrabold text-rose-600 dark:text-rose-400 text-sm';
+            }
+            queueSimulation();
+        });
+
+        const sliderInc = document.getElementById('slider-income');
+        const sliderIncVal = document.getElementById('slider-income-val');
+        sliderInc.addEventListener('input', () => {
+            const val = parseInt(sliderInc.value);
+            if (val === 0) {
+                sliderIncVal.textContent = `${currencySymbol}0`;
+                sliderIncVal.className = 'font-heading font-extrabold text-slate-700 dark:text-slate-300 text-sm';
+            } else if (val > 0) {
+                sliderIncVal.textContent = `+${currencySymbol}${val.toLocaleString()}/mo`;
+                sliderIncVal.className = 'font-heading font-extrabold text-emerald-600 dark:text-emerald-400 text-sm';
+            } else {
+                sliderIncVal.textContent = `-${currencySymbol}${Math.abs(val).toLocaleString()}/mo`;
+                sliderIncVal.className = 'font-heading font-extrabold text-rose-600 dark:text-rose-400 text-sm';
+            }
+            queueSimulation();
+        });
+
+        document.getElementById('input-planned-amt').addEventListener('input', queueSimulation);
+        document.getElementById('input-planned-date').addEventListener('change', queueSimulation);
+        document.getElementById('input-planned-title').addEventListener('input', queueSimulation);
+        document.querySelectorAll('.sub-toggle-checkbox').forEach(cb => {
+            cb.addEventListener('change', queueSimulation);
+        });
+
+        // Reset Simulator Button
+        document.getElementById('btn-reset-simulator').addEventListener('click', () => {
+            sliderDisc.value = 0;
+            sliderSpendVal.textContent = 'Baseline (0%)';
+            sliderSpendVal.className = 'font-heading font-extrabold text-slate-700 dark:text-slate-300 text-sm';
+            
+            sliderInc.value = 0;
+            sliderIncVal.textContent = `${currencySymbol}0`;
+            sliderIncVal.className = 'font-heading font-extrabold text-slate-700 dark:text-slate-300 text-sm';
+
+            document.getElementById('input-planned-amt').value = '';
+            document.getElementById('input-planned-title').value = '';
+            document.querySelectorAll('.sub-toggle-checkbox').forEach(cb => cb.checked = true);
+            
+            document.getElementById('active-scenario-tag').classList.add('hidden');
+            fetchForecast();
+            showToast('Simulation reset to baseline', '🔄');
+        });
+
+        // Event timeline filter tabs
+        document.querySelectorAll('.btn-event-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-event-filter').forEach(b => {
+                    b.className = 'btn-event-filter px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer';
+                });
+                btn.className = 'btn-event-filter px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer';
+
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('.event-feed-card').forEach(card => {
+                    const type = card.dataset.type;
+                    if (filter === 'all') {
+                        card.classList.remove('hidden');
+                    } else if (filter === 'income') {
+                        if (type === 'income' || type === 'debt_collection') {
+                            card.classList.remove('hidden');
+                        } else {
+                            card.classList.add('hidden');
+                        }
+                    } else if (filter === 'outflow') {
+                        if (type !== 'income' && type !== 'debt_collection') {
+                            card.classList.remove('hidden');
+                        } else {
+                            card.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+        });
+
+        // Scroll to simulator button
+        const btnScrollSim = document.getElementById('btn-scroll-simulator');
+        if (btnScrollSim) {
+            btnScrollSim.addEventListener('click', () => {
+                document.getElementById('simulator-section').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
+        // ─── Modal 1: Recurring Income Management ──────────────────────────────
+        const modalIncome = document.getElementById('modal-income');
+        const openIncomeBtns = [
+            document.getElementById('btn-header-add-income'),
+            document.getElementById('btn-open-income-modal'),
+            document.getElementById('btn-card-add-income'),
+            ...document.querySelectorAll('.btn-trigger-add-income')
+        ];
+        openIncomeBtns.forEach(b => {
+            if (b) b.addEventListener('click', () => modalIncome.classList.remove('hidden'));
+        });
+
+        document.querySelectorAll('.btn-close-income-modal').forEach(b => {
+            b.addEventListener('click', () => modalIncome.classList.add('hidden'));
+        });
+
+        document.getElementById('form-income').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('inc-name').value.trim();
+            const amount = parseFloat(document.getElementById('inc-amount').value);
+            const frequency = document.getElementById('inc-frequency').value;
+            const nextDate = document.getElementById('inc-next-date').value;
+            const category = document.getElementById('inc-category').value;
+
+            try {
+                const res = await fetch('/api/forecast/incomes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        name, amount, frequency, next_pay_date: nextDate, category
+                    })
+                });
+                if (!res.ok) throw new Error('Failed to save recurring income');
+                modalIncome.classList.add('hidden');
+                document.getElementById('form-income').reset();
+                showToast(`Added ${name} (${currencySymbol}${amount})`, '💰');
+                setTimeout(() => location.reload(), 600);
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        // Delete Recurring Income
+        document.querySelectorAll('.btn-delete-income').forEach(b => {
+            b.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm('Are you sure you want to remove this recurring income stream?')) return;
+                const id = b.dataset.id;
+                try {
+                    const res = await fetch(`/api/forecast/incomes/${id}`, { method: 'DELETE' });
+                    if (!res.ok) throw new Error('Failed to delete income');
+                    showToast('Income stream deleted', '🗑️');
+                    setTimeout(() => location.reload(), 500);
+                } catch (err) {
+                    alert(err.message);
+                }
+            });
+        });
+
+        // ─── Modal 2: Cash Flow Settings ───────────────────────────────────────
+        const modalSettings = document.getElementById('modal-settings');
+        const openSettingsBtn = document.getElementById('btn-open-settings');
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', () => modalSettings.classList.remove('hidden'));
+        }
+        document.getElementById('btn-close-settings-modal').addEventListener('click', () => modalSettings.classList.add('hidden'));
+        document.getElementById('btn-cancel-settings').addEventListener('click', () => modalSettings.classList.add('hidden'));
+
+        document.getElementById('form-settings').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const safety = parseFloat(document.getElementById('setting-safety').value) || 1000;
+            const burn = parseFloat(document.getElementById('setting-daily-burn').value) || 0;
+
+            try {
+                const res = await fetch('/api/forecast/settings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        safety_buffer: safety,
+                        discretionary_daily_burn: burn
+                    })
+                });
+                if (!res.ok) throw new Error('Failed to save settings');
+                modalSettings.classList.add('hidden');
+                showToast('Cash flow settings updated', '⚙️');
+                fetchForecast();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        // ─── Initial Load ──────────────────────────────────────────────────────
+        {{if .Forecast}}
+        currentForecast = {
+            currency: {{if .Forecast.Currency}}"{{.Forecast.Currency}}"{{else}}"₦"{{end}},
+            current_liquid_cash: {{.Forecast.CurrentLiquidCash}},
+            safety_buffer: {{.Forecast.SafetyBuffer}},
+            timeframe_days: {{.Forecast.TimeframeDays}},
+            net_monthly_burn: {{.Forecast.NetMonthlyBurn}},
+            runway_days: {{.Forecast.RunwayDays}},
+            runway_months: {{.Forecast.RunwayMonths}},
+            runway_badge_text: "{{.Forecast.RunwayBadgeText}}",
+            starting_date: "{{.Forecast.StartingDate}}",
+            ending_date: "{{.Forecast.EndingDate}}",
+            lowest_projected_balance: {{.Forecast.LowestProjectedBalance}},
+            lowest_balance_date: "{{.Forecast.LowestBalanceDate}}",
+            days_until_safety_breach: {{.Forecast.DaysUntilSafetyBreach}},
+            days: [
+                {{range .Forecast.Days}}
+                {
+                    date: "{{.Date}}",
+                    display_date: "{{.DisplayDate}}",
+                    day_of_week: "{{.DayOfWeek}}",
+                    closing_balance: {{.ClosingBalance}},
+                    net_change: {{.NetChange}},
+                    is_below_safety: {{.IsBelowSafety}},
+                    is_danger_lowest: {{.IsDangerLowest}},
+                    events: [
+                        {{range .Events}}
+                        {
+                            date: "{{.Date}}",
+                            display_date: "{{.DisplayDate}}",
+                            title: "{{.Title}}",
+                            type: "{{.Type}}",
+                            amount: {{.Amount}},
+                            category: "{{.Category}}",
+                            icon: "{{.Icon}}"
+                        },
+                        {{end}}
+                    ]
+                },
+                {{end}}
+            ],
+            upcoming_events: [
+                {{range .Forecast.UpcomingEvents}}
+                {
+                    date: "{{.Date}}",
+                    display_date: "{{.DisplayDate}}",
+                    title: "{{.Title}}",
+                    type: "{{.Type}}",
+                    amount: {{.Amount}},
+                    category: "{{.Category}}",
+                    icon: "{{.Icon}}"
+                },
+                {{end}}
+            ]
+        };
+        drawChart(currentForecast);
+        {{else}}
+        fetchForecast();
+        {{end}}
+
+    </script>
+</body>
+</html>
