@@ -512,11 +512,11 @@
                             <input type="text" id="amount-input" name="amount" placeholder="0.00" required inputmode="numeric" class="w-full px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-bold transition-all">
                         </div>
 
-                        <!-- Row 4: Type Selection Pills [Income] [Expense] [Transfer] -->
-                        <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs font-semibold">
-                            <button type="button" id="type-income-btn" class="flex-1 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer text-center">Income</button>
-                            <button type="button" id="type-expense-btn" class="flex-1 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold shadow-xs transition-all cursor-pointer text-center">Expense</button>
-                            <button type="button" id="type-transfer-btn" class="flex-1 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer text-center">Transfer</button>
+                        <!-- Row 4: Type Selection Pills [Income] [Expense] [Transfer] (Option A design) -->
+                        <div class="flex items-center gap-2 pt-0.5">
+                            <button type="button" id="type-income-btn" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700">Income</button>
+                            <button type="button" id="type-expense-btn" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold text-center flex-1 transition-all cursor-pointer border border-emerald-500/80 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]">Expense</button>
+                            <button type="button" id="type-transfer-btn" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700">Transfer</button>
                         </div>
 
                         <input type="hidden" id="add-tags" name="tags" value="">
@@ -1982,24 +1982,38 @@
             showToast(`Currency updated to ${currentCurrency}`);
         });
 
-        // Quick Add Type Toggle Buttons
+        // Quick Add Type Toggle Buttons (Option A styling)
         const typeExpenseBtn = document.getElementById('type-expense-btn');
         const typeIncomeBtn = document.getElementById('type-income-btn');
+        const typeTransferBtn = document.getElementById('type-transfer-btn');
         const addTxType = document.getElementById('add-tx-type');
 
-        typeExpenseBtn.addEventListener('click', () => {
-            addTxType.value = 'expense';
-            typeExpenseBtn.className = 'px-3 py-1 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer';
-            typeIncomeBtn.className = 'px-3 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer';
-            populateCategorySelect(document.getElementById('add-category'), 'expense');
-        });
+        const activeTypeClass = 'px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold text-center flex-1 transition-all cursor-pointer border border-emerald-500/80 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]';
+        const inactiveTypeClass = 'px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700';
 
-        typeIncomeBtn.addEventListener('click', () => {
-            addTxType.value = 'income';
-            typeIncomeBtn.className = 'px-3 py-1 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer';
-            typeExpenseBtn.className = 'px-3 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer';
-            populateCategorySelect(document.getElementById('add-category'), 'income');
-        });
+        function updateTypeSelector(selectedType) {
+            addTxType.value = selectedType;
+            if (selectedType === 'income') {
+                typeIncomeBtn.className = activeTypeClass;
+                typeExpenseBtn.className = inactiveTypeClass;
+                if (typeTransferBtn) typeTransferBtn.className = inactiveTypeClass;
+                populateCategorySelect(document.getElementById('add-category'), 'income');
+            } else if (selectedType === 'expense') {
+                typeExpenseBtn.className = activeTypeClass;
+                typeIncomeBtn.className = inactiveTypeClass;
+                if (typeTransferBtn) typeTransferBtn.className = inactiveTypeClass;
+                populateCategorySelect(document.getElementById('add-category'), 'expense');
+            }
+        }
+
+        typeExpenseBtn.addEventListener('click', () => updateTypeSelector('expense'));
+        typeIncomeBtn.addEventListener('click', () => updateTypeSelector('income'));
+        if (typeTransferBtn) {
+            typeTransferBtn.addEventListener('click', () => {
+                const btnOpenTransfer = document.getElementById('btn-open-transfer');
+                if (btnOpenTransfer) btnOpenTransfer.click();
+            });
+        }
 
         // Initialize Quick Add and Filter categories
         populateCategorySelect(document.getElementById('add-category'), 'expense');
