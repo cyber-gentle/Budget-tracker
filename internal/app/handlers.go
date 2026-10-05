@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -232,29 +233,41 @@ func (app *App) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 	prof, _ := app.DB.GetProfile(username)
 	fullName := ""
 	email := ""
+	firstName := username
 	if prof != nil {
 		fullName = prof.FullName
 		email = prof.Email
+		if strings.TrimSpace(prof.FullName) != "" {
+			parts := strings.Fields(prof.FullName)
+			if len(parts) > 0 {
+				firstName = parts[0]
+			}
+		}
 	}
+	dateGreeting := time.Now().Format("Monday, Jan 2")
 
 	data := struct {
-		Username    string
-		FullName    string
-		Email       string
-		Currency    string
-		IncomeFmt   string
-		ExpensesFmt string
-		BalanceFmt  string
-		SavingsRate int
+		Username     string
+		FirstName    string
+		DateGreeting string
+		FullName     string
+		Email        string
+		Currency     string
+		IncomeFmt    string
+		ExpensesFmt  string
+		BalanceFmt   string
+		SavingsRate  int
 	}{
-		Username:    username,
-		FullName:    fullName,
-		Email:       email,
-		Currency:    curr,
-		IncomeFmt:   formatMoney(income, curr),
-		ExpensesFmt: formatMoney(expenses, curr),
-		BalanceFmt:  formatMoney(balance, curr),
-		SavingsRate: savingsRate,
+		Username:     username,
+		FirstName:    firstName,
+		DateGreeting: dateGreeting,
+		FullName:     fullName,
+		Email:        email,
+		Currency:     curr,
+		IncomeFmt:    formatMoney(income, curr),
+		ExpensesFmt:  formatMoney(expenses, curr),
+		BalanceFmt:   formatMoney(balance, curr),
+		SavingsRate:  savingsRate,
 	}
 
 	app.renderTemplate(w, "dashboard.html", data)
@@ -610,6 +623,75 @@ func (app *App) HandleAnalytics(w http.ResponseWriter, r *http.Request) {
 		trendExpense += tr.Expense
 	}
 
+	// Mobile monthly overview calculations
+	thisMonthSavings := thisMonthIncome - thisMonthExpense
+	day := now.Day()
+	if day < 1 {
+		day = 1
+	}
+	dailyAvg := thisMonthExpense / float64(day)
+
+	// Previous month calculations for Month-over-Month deltas
+	prevMonth := now.AddDate(0, -1, 0)
+	var prevMonthIncome, prevMonthExpense float64
+	for _, t := range txs {
+		if t.Date.Year() == prevMonth.Year() && t.Date.Month() == prevMonth.Month() {
+			if t.Type == "income" {
+				prevMonthIncome += t.Amount
+			} else {
+				prevMonthExpense += t.Amount
+			}
+		}
+	}
+	prevMonthSavings := prevMonthIncome - prevMonthExpense
+	daysInPrevMonth := time.Date(prevMonth.Year(), prevMonth.Month()+1, 0, 0, 0, 0, 0, time.UTC).Day()
+	prevDailyAvg := 0.0
+	if daysInPrevMonth > 0 {
+		prevDailyAvg = prevMonthExpense / float64(daysInPrevMonth)
+	}
+
+	savingsMomPct := 0.0
+	savingsMomDir := "up"
+	if prevMonthSavings != 0 {
+		diff := ((thisMonthSavings - prevMonthSavings) / math.Abs(prevMonthSavings)) * 100
+		if diff >= 0 {
+			savingsMomDir = "up"
+			savingsMomPct = diff
+		} else {
+			savingsMomDir = "down"
+			savingsMomPct = math.Abs(diff)
+		}
+	} else if thisMonthSavings > 0 {
+		savingsMomDir = "up"
+		savingsMomPct = 100
+	}
+
+	dailyAvgMomPct := 0.0
+	dailyAvgMomDir := "down"
+	if prevDailyAvg != 0 {
+		diff := ((dailyAvg - prevDailyAvg) / prevDailyAvg) * 100
+		if diff >= 0 {
+			dailyAvgMomDir = "up"
+			dailyAvgMomPct = diff
+		} else {
+			dailyAvgMomDir = "down"
+			dailyAvgMomPct = math.Abs(diff)
+		}
+	}
+
+	budgets, _ := app.DB.GetBudgets(username)
+	var totalBudgetLimit float64
+	for _, limit := range budgets {
+		totalBudgetLimit += limit
+	}
+	budgetUsedPct := 0
+	if totalBudgetLimit > 0 {
+		budgetUsedPct = int((thisMonthExpense / totalBudgetLimit) * 100)
+		if budgetUsedPct > 100 {
+			budgetUsedPct = 100
+		}
+	}
+
 	jsonOK(w, map[string]any{
 		"category_breakdown": breakdown,
 		"trends":             trends,
@@ -625,6 +707,14 @@ func (app *App) HandleAnalytics(w http.ResponseWriter, r *http.Request) {
 			"balance":            balance,
 			"this_month_income":  thisMonthIncome,
 			"this_month_expense": thisMonthExpense,
+			"this_month_savings": thisMonthSavings,
+			"daily_average":      dailyAvg,
+			"savings_mom_pct":    savingsMomPct,
+			"savings_mom_dir":    savingsMomDir,
+			"daily_avg_mom_pct":  dailyAvgMomPct,
+			"daily_avg_mom_dir":  dailyAvgMomDir,
+			"prev_month_name":    prevMonth.Format("Jan"),
+			"budget_used_pct":    budgetUsedPct,
 			"savings_rate":       savingsRate,
 			"currency":           app.DB.GetCurrency(username),
 		},

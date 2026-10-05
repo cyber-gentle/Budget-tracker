@@ -268,10 +268,94 @@
     <div class="h-28 sm:h-20" aria-hidden="true"></div>
 
     <!-- Main Container -->
-    <main class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-8 space-y-4 sm:space-y-6 pb-12 sm:pb-8">
+    <main class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-8 space-y-4 sm:space-y-6 pb-24 lg:pb-8">
 
-        <!-- Executive KPI Cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 xl:gap-5">
+        <!-- ─── Mobile Hero & Monthly Overview (Phone Viewports < 1024px) ─── -->
+        <div class="block lg:hidden space-y-3.5 mb-2">
+            <!-- Personalized Greeting -->
+            <div class="px-0.5">
+                <p class="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider" id="mobile-greeting-date">{{if .DateGreeting}}{{.DateGreeting}}{{else}}Today{{end}}</p>
+                <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5" id="mobile-greeting-text" data-firstname="{{if .FirstName}}{{.FirstName}}{{else}}{{.Username}}{{end}}">
+                    Good morning, {{if .FirstName}}{{.FirstName}}{{else}}{{.Username}}{{end}} 👋
+                </h1>
+            </div>
+
+            <!-- Mobile Hero Balance Card (Dark surface with nested mini cards) -->
+            <div class="bg-slate-900 dark:bg-[#111923] text-white rounded-3xl p-4 sm:p-5 shadow-lg border border-slate-800 relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full border border-white/10 pointer-events-none" aria-hidden="true"></div>
+                <div class="relative z-10">
+                    <span class="text-xs font-medium text-slate-400">Total balance</span>
+                    <p class="font-heading text-2xl sm:text-3xl font-black tracking-tight text-white mt-1 mb-3.5" id="mobile-kpi-balance">{{.BalanceFmt}}</p>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div class="bg-white/5 dark:bg-white/[0.04] p-2.5 sm:p-3 rounded-2xl border border-white/10 backdrop-blur-xs">
+                            <span class="block text-[10px] font-medium text-slate-400">Income this month</span>
+                            <strong class="block text-xs sm:text-sm font-bold text-emerald-400 mt-0.5 truncate" id="mobile-kpi-income">+{{.IncomeFmt}}</strong>
+                        </div>
+                        <div class="bg-white/5 dark:bg-white/[0.04] p-2.5 sm:p-3 rounded-2xl border border-white/10 backdrop-blur-xs">
+                            <span class="block text-[10px] font-medium text-slate-400">Expenses this month</span>
+                            <strong class="block text-xs sm:text-sm font-bold text-rose-400 mt-0.5 truncate" id="mobile-kpi-expense">−{{.ExpensesFmt}}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Overview 2x2 Cards Grid -->
+            <div class="space-y-2 pt-1">
+                <div class="flex items-center justify-between px-0.5">
+                    <h2 class="font-heading text-base font-bold text-slate-900 dark:text-white">Monthly overview</h2>
+                    <a href="/reports" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">See details</a>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
+                    <!-- Card 1: Savings -->
+                    <div class="bg-white dark:bg-[#111923] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Savings</span>
+                            <p class="font-heading text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1 tracking-tight truncate" id="mob-savings-val">₦0</p>
+                        </div>
+                        <div class="mt-1 flex items-center gap-1 text-[11px] font-semibold text-emerald-500 truncate" id="mob-savings-badge">
+                            <span>↑ 0% vs last mo</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Daily Average -->
+                    <div class="bg-white dark:bg-[#111923] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Daily Average</span>
+                            <p class="font-heading text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1 tracking-tight truncate" id="mob-daily-val">₦0</p>
+                        </div>
+                        <div class="mt-1 flex items-center gap-1 text-[11px] font-semibold text-rose-500 truncate" id="mob-daily-badge">
+                            <span>↓ 0% vs last mo</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Savings rate -->
+                    <div class="bg-white dark:bg-[#111923] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Savings rate</span>
+                            <p class="font-heading text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate" id="mob-savings-rate-val">{{.SavingsRate}}%</p>
+                        </div>
+                        <div class="mt-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                            <div id="mob-savings-rate-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500" style="width: {{if gt .SavingsRate 100}}100{{else if lt .SavingsRate 0}}0{{else}}{{.SavingsRate}}{{end}}%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Budget used -->
+                    <div class="bg-white dark:bg-[#111923] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Budget used</span>
+                            <p class="font-heading text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 tracking-tight truncate" id="mob-budget-used-val">0%</p>
+                        </div>
+                        <div class="mt-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                            <div id="mob-budget-used-bar" class="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Executive KPI Cards (Desktop Viewports >= 1024px) -->
+        <section class="hidden lg:grid grid-cols-4 gap-4 xl:gap-5">
             <!-- Balance Card -->
             <div class="bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-sm relative overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700/80 flex flex-col justify-between">
                 <div>
@@ -609,6 +693,7 @@
             
             <!-- LEFT (8 cols): Recent Transactions Ledger -->
             <div class="lg:col-span-7 xl:col-span-8 space-y-6">
+<div id="recent-tx-anchor" class="scroll-mt-24"></div>
 <!-- Recent Activity & Filterable List Card -->
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-colors">
                     
@@ -900,12 +985,43 @@
 
                     <!-- Active Savings Goals List -->
                     <div id="dash-goals-list" class="space-y-2.5">
-                        <div class="text-center py-4 text-xs text-slate-400">Loading savings goals...
+                        <div class="text-center py-4 text-xs text-slate-400">Loading savings goals...</div>
+                    </div>
+                </div>
             </div>
 
         </section>
 
     </main>
+
+    <!-- ─── Fixed Mobile Bottom Navigation Bar ────────────────────────────── -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 h-16 px-2 flex items-center justify-around shadow-lg transition-colors">
+        <a href="/dashboard" class="flex flex-col items-center justify-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 py-1 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Home</span>
+        </a>
+        <a href="#recent-tx-anchor" id="btn-nav-mobile-tx" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+            <span>Activity</span>
+        </a>
+        <a href="/reports" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            <span>Budgets</span>
+        </a>
+        <a href="/goals" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
+            <span>Goals</span>
+        </a>
+        <button type="button" id="btn-nav-mobile-more" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            <span>More</span>
+        </button>
+    </nav>
+
+    <!-- Mobile Floating Action Button (FAB) -->
+    <button type="button" id="btn-mobile-fab" class="lg:hidden fixed right-4 bottom-20 z-40 w-13 h-13 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30 active:scale-95 transition-all cursor-pointer" title="Add Transaction" aria-label="Add Transaction">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+    </button>
 
     <!-- ─── Modals ──────────────────────────────────────────────────────────── -->
 
@@ -3543,12 +3659,84 @@
             const data = await res.json().catch(() => ({}));
             if (!data.summary) return;
 
-            // Update KPI Cards
+            // Update KPI Cards (Desktop & Mobile)
             const s = data.summary;
             document.getElementById('kpi-balance').textContent = fmtMoney(s.balance);
             document.getElementById('kpi-income').textContent = fmtMoney(s.this_month_income);
             document.getElementById('kpi-expense').textContent = fmtMoney(s.this_month_expense);
             document.getElementById('kpi-savings-rate').textContent = `${s.savings_rate}%`;
+
+            // Mobile Hero Balance Card
+            const mobBal = document.getElementById('mobile-kpi-balance');
+            if (mobBal) mobBal.textContent = fmtMoney(s.balance);
+            const mobInc = document.getElementById('mobile-kpi-income');
+            if (mobInc) mobInc.textContent = `+${fmtMoney(s.this_month_income)}`;
+            const mobExp = document.getElementById('mobile-kpi-expense');
+            if (mobExp) mobExp.textContent = `−${fmtMoney(s.this_month_expense)}`;
+
+            // Dynamic Time-of-Day Greeting
+            const hr = new Date().getHours();
+            let greetingWord = 'Good morning';
+            if (hr >= 12 && hr < 17) greetingWord = 'Good afternoon';
+            else if (hr >= 17 || hr < 4) greetingWord = 'Good evening';
+            const greetingEl = document.getElementById('mobile-greeting-text');
+            if (greetingEl) {
+                const fName = greetingEl.dataset.firstname || 'there';
+                greetingEl.textContent = `${greetingWord}, ${fName} 👋`;
+            }
+
+            // Compact money formatter for mobile cards (e.g. ₦428.5k)
+            function fmtCompact(val) {
+                const absVal = Math.abs(val);
+                if (absVal >= 1000000) return `${currentCurrency}${(val / 1000000).toFixed(1)}M`;
+                if (absVal >= 1000) return `${currentCurrency}${(val / 1000).toFixed(1)}k`;
+                return fmtMoney(val);
+            }
+
+            // Mobile Overview Card 1: Savings
+            const mobSavVal = document.getElementById('mob-savings-val');
+            if (mobSavVal) mobSavVal.textContent = fmtCompact(s.this_month_savings || 0);
+            const mobSavBadge = document.getElementById('mob-savings-badge');
+            if (mobSavBadge) {
+                const dir = s.savings_mom_dir === 'up' ? '↑' : '↓';
+                const color = s.savings_mom_dir === 'up' ? 'text-emerald-500' : 'text-rose-500';
+                mobSavBadge.className = `mt-1 flex items-center gap-1 text-[11px] font-semibold truncate ${color}`;
+                mobSavBadge.innerHTML = `<span>${dir} ${(s.savings_mom_pct || 0).toFixed(1)}% vs ${s.prev_month_name || 'last mo'}</span>`;
+            }
+
+            // Mobile Overview Card 2: Daily Average
+            const mobDailyVal = document.getElementById('mob-daily-val');
+            if (mobDailyVal) mobDailyVal.textContent = fmtCompact(s.daily_average || 0);
+            const mobDailyBadge = document.getElementById('mob-daily-badge');
+            if (mobDailyBadge) {
+                const dir = s.daily_avg_mom_dir === 'up' ? '↑' : '↓';
+                const color = s.daily_avg_mom_dir === 'down' ? 'text-rose-500' : 'text-emerald-500';
+                mobDailyBadge.className = `mt-1 flex items-center gap-1 text-[11px] font-semibold truncate ${color}`;
+                mobDailyBadge.innerHTML = `<span>${dir} ${(s.daily_avg_mom_pct || 0).toFixed(1)}% vs ${s.prev_month_name || 'last mo'}</span>`;
+            }
+
+            // Mobile Overview Card 3: Savings Rate
+            const mobSavRateVal = document.getElementById('mob-savings-rate-val');
+            if (mobSavRateVal) mobSavRateVal.textContent = `${s.savings_rate}%`;
+            const mobSavRateBar = document.getElementById('mob-savings-rate-bar');
+            if (mobSavRateBar) {
+                const pct = Math.max(0, Math.min(100, s.savings_rate));
+                mobSavRateBar.style.width = `${pct}%`;
+            }
+
+            // Mobile Overview Card 4: Budget Used
+            const mobBudVal = document.getElementById('mob-budget-used-val');
+            if (mobBudVal) mobBudVal.textContent = `${s.budget_used_pct || 0}%`;
+            const mobBudBar = document.getElementById('mob-budget-used-bar');
+            if (mobBudBar) {
+                const pct = Math.max(0, Math.min(100, s.budget_used_pct || 0));
+                mobBudBar.style.width = `${pct}%`;
+                if (pct > 90) {
+                    mobBudBar.className = 'bg-gradient-to-r from-rose-500 to-amber-500 h-full rounded-full transition-all duration-500';
+                } else {
+                    mobBudBar.className = 'bg-gradient-to-r from-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-500';
+                }
+            }
 
             // Category Expense Breakdown Chart
             const breakdown = data.category_breakdown || {};
@@ -4688,6 +4876,29 @@
 
         // Initial Load
         loadAll();
+        // Mobile FAB & Navigation Handlers
+        const fabBtn = document.getElementById('btn-mobile-fab');
+        if (fabBtn) {
+            fabBtn.addEventListener('click', () => {
+                const addForm = document.getElementById('add-tx-form');
+                if (addForm) {
+                    addForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const amtInput = document.getElementById('amount-input');
+                    if (amtInput) {
+                        setTimeout(() => amtInput.focus(), 300);
+                    }
+                }
+            });
+        }
+
+        const navMobileMore = document.getElementById('btn-nav-mobile-more');
+        if (navMobileMore) {
+            navMobileMore.addEventListener('click', () => {
+                const profileModal = document.getElementById('profile-modal');
+                if (profileModal) profileModal.classList.remove('hidden');
+            });
+        }
+
     </script>
 </body>
 </html>
