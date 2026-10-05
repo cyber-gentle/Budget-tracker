@@ -48,6 +48,14 @@
                     document.documentElement.classList.remove('dark');
                 }
             } catch (e) {}
+            // Security: strip session token from URL bar immediately to prevent history/referer leakage
+            if (window.location.search.includes('session=')) {
+                try {
+                    const u = new URL(window.location.href);
+                    u.searchParams.delete('session');
+                    window.history.replaceState({}, document.title, u.pathname + (u.search ? u.search : ''));
+                } catch (e) {}
+            }
         })();
     </script>
     <!-- Chart.js -->
@@ -443,13 +451,27 @@
                 </div>
             </div>
 
-            <!-- Account Cards Horizontal Carousel (Touch & Snap Optimized) -->
-            <div id="accounts-cards-carousel" class="flex items-stretch gap-3 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar snap-x">
-                <div class="p-4 text-center text-xs text-slate-400 w-full">Loading wallets...</div>
+            <!-- Primary Fitted Wallets (Total Balance + Main Bank) -->
+            <div id="primary-accounts-grid" class="grid grid-cols-2 gap-2.5 sm:gap-4">
+                <div class="p-4 text-center text-xs text-slate-400 col-span-2">Loading wallets...</div>
             </div>
+
+            <!-- Expandable Tray for Other Wallets -->
+            <div id="secondary-accounts-wrapper" class="hidden mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 transition-all duration-300">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Other Wallets & Accounts</span>
+                </div>
+                <div id="secondary-accounts-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5"></div>
+            </div>
+
+            <!-- Toggle Button: View more wallets / Collapse -->
+            <button type="button" id="btn-toggle-more-wallets" class="hidden mt-3 w-full py-2.5 px-3 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 items-center justify-center gap-1.5 transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
+                <span id="toggle-wallets-text">View more wallets</span>
+                <svg id="toggle-wallets-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="transition-transform duration-200"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
         </section>
 
-                <!-- ─── Showcase 3-Column Grid: Spending Breakdown + Quick Add + Trends ─── -->
+        <!-- ─── Showcase Grid: Spending Breakdown + Quick Add (Desktop) + Trends ─── -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-5 xl:gap-6 items-stretch">
             <!-- Col 1: Spending Breakdown Donut Chart -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex flex-col justify-between">
@@ -483,8 +505,8 @@
                 </div>
             </div>
 
-            <!-- Col 2: Quick Add Transaction Card -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex flex-col justify-between">
+            <!-- Col 2: Quick Add Transaction Card (Desktop Only: hidden on mobile to eliminate excess scroll) -->
+            <div class="hidden lg:flex bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
@@ -549,7 +571,7 @@
                             <input type="text" id="amount-input" name="amount" placeholder="0.00" required inputmode="numeric" class="w-full px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-bold transition-all">
                         </div>
 
-                        <!-- Row 4: Type Selection Pills [Income] [Expense] [Transfer] (Option A design) -->
+                        <!-- Row 4: Type Selection Pills [Income] [Expense] [Transfer] -->
                         <div class="flex items-center gap-2 pt-0.5">
                             <button type="button" id="type-income-btn" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700">Income</button>
                             <button type="button" id="type-expense-btn" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold text-center flex-1 transition-all cursor-pointer border border-emerald-500/80 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]">Expense</button>
@@ -654,10 +676,16 @@
                                 <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Recent Transactions</h2>
                                 <span id="tx-count" class="text-xs font-semibold text-slate-400 dark:text-slate-500">0 transactions</span>
                             </div>
-                            <button type="button" id="btn-tx-export" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer" title="Export transactions ledger (CSV / JSON)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                                <span>Export</span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="btn-open-add-tx" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 px-3 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer" title="Add a transaction">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                    <span>+ Add</span>
+                                </button>
+                                <button type="button" id="btn-tx-export" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-black dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer" title="Export transactions ledger (CSV / JSON)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                    <span>Export</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Search input + Filters -->
@@ -800,6 +828,13 @@
                     <!-- Transaction List -->
                     <div id="tx-list" class="divide-y divide-slate-100 dark:divide-slate-800 max-h-[500px] overflow-y-auto" style="display:none"></div>
 
+                    <!-- View All Transactions Toggle Button (Mobile Only) -->
+                    <div id="tx-view-more-container" class="hidden lg:hidden border-t border-slate-100 dark:border-slate-800/80 p-3 sm:p-3.5 bg-slate-50/70 dark:bg-slate-800/40 text-center transition-colors">
+                        <button type="button" id="btn-toggle-view-all-tx" class="inline-flex items-center justify-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 px-4 py-2 rounded-xl transition-all cursor-pointer">
+                            <span id="tx-view-more-text">View all transactions →</span>
+                        </button>
+                    </div>
+
                     <!-- Empty State -->
                     <div id="tx-empty" class="py-14 text-center px-4 hidden">
                         <div class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto mb-3 text-slate-400 dark:text-slate-500">
@@ -832,7 +867,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
             <span>Goals</span>
         </a>
-        <button type="button" id="btn-nav-mobile-more" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3 cursor-pointer">
+        <button type="button" id="btn-nav-mobile-more" onclick="const s = document.getElementById('mobile-more-sheet'); if (s) s.classList.remove('hidden');" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
             <span>More</span>
         </button>
@@ -844,7 +879,7 @@
     </button>
 
     <!-- ─── Mobile More Navigation Drawer / Sheet ───────────────────────────── -->
-    <div id="mobile-more-sheet" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden transition-opacity">
+    <div id="mobile-more-sheet" onclick="if(event.target===this)this.classList.add('hidden')" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden transition-opacity">
         <div class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto">
             <!-- Drag handle -->
             <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4"></div>
@@ -854,7 +889,7 @@
                     <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-white">All Features</h3>
                     <p class="text-xs text-slate-400 dark:text-slate-500">Dedicated financial management sections</p>
                 </div>
-                <button type="button" id="btn-close-more-sheet" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">✕</button>
+                <button type="button" id="btn-close-more-sheet" onclick="const s = document.getElementById('mobile-more-sheet'); if (s) s.classList.add('hidden');" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">✕</button>
             </div>
 
             <!-- Features Navigation Grid -->
@@ -984,6 +1019,106 @@
                 <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
                     <button type="button" id="profile-cancel-btn" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">Cancel</button>
                     <button type="submit" id="profile-submit-btn" class="px-4 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors shadow-sm cursor-pointer">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal (Mobile Only) -->
+    <div id="add-tx-modal" class="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
+                        +
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Add Transaction</h3>
+                        <p class="text-xs text-slate-400 dark:text-slate-500">Record a new income, expense, or transfer</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="/receipts" class="px-2 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-lg border border-emerald-200/60 dark:border-emerald-800/60 flex items-center gap-1 transition-colors" title="Scan receipt with OCR">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                        <span>Scan</span>
+                    </a>
+                    <button type="button" id="add-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <form id="modal-add-tx-form" class="space-y-3.5">
+                <input type="hidden" name="type" id="modal-add-tx-type" value="expense">
+
+                <!-- Type Selection Pills [Income] [Expense] [Transfer] -->
+                <div class="flex items-center gap-2 pt-0.5">
+                    <button type="button" id="modal-type-income-btn" class="px-3 sm:px-4 py-2 rounded-xl text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700">Income</button>
+                    <button type="button" id="modal-type-expense-btn" class="px-3 sm:px-4 py-2 rounded-xl text-xs font-bold text-center flex-1 transition-all cursor-pointer border border-emerald-500/80 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]">Expense</button>
+                    <button type="button" id="modal-type-transfer-btn" class="px-3 sm:px-4 py-2 rounded-xl text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700">Transfer</button>
+                </div>
+
+                <!-- Row: Note / Description & Date -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1" id="modal-tx-note-label">Note / Description</label>
+                        <input type="text" id="modal-tx-note-input" name="note" placeholder="e.g. Lunch at Cafe, Groceries..." required class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Date</label>
+                        <input type="date" id="modal-date-input" name="date" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all font-medium">
+                    </div>
+                </div>
+
+                <!-- Row: Category & Account -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Category</label>
+                            <button type="button" id="modal-btn-quick-manage-cat" class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">Manage</button>
+                        </div>
+                        <select name="category" id="modal-add-category" required class="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                            <option value="food">🍔 Food</option>
+                            <option value="transport">🚗 Transport</option>
+                            <option value="housing">🏠 Housing</option>
+                            <option value="entertainment">🎬 Entertainment</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="healthcare">💊 Healthcare</option>
+                            <option value="education">📚 Education</option>
+                            <option value="bills">💡 Bills</option>
+                            <option value="personal">✨ Personal</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Account</label>
+                            <button type="button" id="modal-btn-quick-manage-accounts" class="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">+ Add</button>
+                        </div>
+                        <select name="account_id" id="modal-add-account" class="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
+                            <option value="0">🏦 Main Bank</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row: Amount -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Amount (<span class="currency-label">₦</span>)</label>
+                    <input type="text" id="modal-amount-input" name="amount" placeholder="0.00" required inputmode="numeric" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-bold transition-all">
+                </div>
+
+                <input type="hidden" id="modal-add-tags" name="tags" value="">
+                <p class="text-xs text-rose-500 font-medium hidden" id="modal-tx-error"></p>
+
+                <!-- Glowing Emerald CTA Button & Cancel -->
+                <div class="pt-1 flex items-center gap-2">
+                    <button type="button" id="add-modal-cancel" class="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" id="modal-btn-submit-tx" class="flex-[2] bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-bold text-xs sm:text-sm py-2.5 rounded-xl transition-all shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
+                        <span>Add Transaction</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -2108,12 +2243,16 @@
             return el.value.replace(/,/g, '');
         }
 
+        let isShowingAllTx = false;
+
         // Render Transaction List
         function renderTransactions(txs) {
             const list = document.getElementById('tx-list');
             const empty = document.getElementById('tx-empty');
             const loading = document.getElementById('tx-loading');
             const countEl = document.getElementById('tx-count');
+            const viewMoreContainer = document.getElementById('tx-view-more-container');
+            const viewMoreText = document.getElementById('tx-view-more-text');
 
             loading.style.display = 'none';
             countEl.textContent = `${txs.length} transaction${txs.length === 1 ? '' : 's'}`;
@@ -2121,6 +2260,7 @@
 
             if (!txs.length) {
                 list.style.display = 'none';
+                if (viewMoreContainer) viewMoreContainer.classList.add('hidden');
                 empty.classList.remove('hidden');
                 return;
             }
@@ -2128,7 +2268,30 @@
             empty.classList.add('hidden');
             list.style.display = '';
 
-            for (const t of txs) {
+            const isMobile = window.innerWidth < 1024;
+            const searchInput = document.getElementById('search-input');
+            const isSearching = !!(searchInput && searchInput.value.trim());
+
+            // Concise homepage: slice to 5 transactions on mobile view only
+            let visibleTxs = txs;
+            if (isMobile && !isShowingAllTx && !isSearching && txs.length > 5) {
+                visibleTxs = txs.slice(0, 5);
+            }
+
+            if (viewMoreContainer && viewMoreText) {
+                if (isMobile && !isSearching && txs.length > 5) {
+                    viewMoreContainer.classList.remove('hidden');
+                    if (isShowingAllTx) {
+                        viewMoreText.innerHTML = `Show less transactions (top 5) ↑`;
+                    } else {
+                        viewMoreText.innerHTML = `View all transactions (${txs.length} total) →`;
+                    }
+                } else {
+                    viewMoreContainer.classList.add('hidden');
+                }
+            }
+
+            for (const t of visibleTxs) {
                 const cat = getCategoryMeta(t.category, t.type);
                 const isExpense = t.type === 'expense';
                 const sign = isExpense ? '-' : '+';
@@ -2177,6 +2340,18 @@
                 `;
                 list.appendChild(row);
             }
+        }
+
+        // Toggle View All / Top 5 transactions
+        const btnToggleViewAllTx = document.getElementById('btn-toggle-view-all-tx');
+        if (btnToggleViewAllTx) {
+            btnToggleViewAllTx.addEventListener('click', () => {
+                isShowingAllTx = !isShowingAllTx;
+                applyFilters();
+                if (!isShowingAllTx) {
+                    document.getElementById('recent-tx-anchor')?.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
         }
 
         // ─── Month Navigator & Filter State ──────────────────────────────────────
@@ -2296,6 +2471,7 @@
             }
 
             activeMonthFilter = (nextYM === currentYM) ? 'current' : nextYM;
+            isShowingAllTx = false;
             updateMonthNavigatorUI();
             applyFilters();
         }
@@ -2319,6 +2495,7 @@
         if (btnMonthLabel) {
             btnMonthLabel.addEventListener('click', () => {
                 activeMonthFilter = 'current';
+                isShowingAllTx = false;
                 updateMonthNavigatorUI();
                 applyFilters();
             });
@@ -2328,6 +2505,7 @@
         if (btnAllTime) {
             btnAllTime.addEventListener('click', () => {
                 activeMonthFilter = (activeMonthFilter === 'all') ? 'current' : 'all';
+                isShowingAllTx = false;
                 updateMonthNavigatorUI();
                 applyFilters();
             });
@@ -2497,12 +2675,153 @@
                 if (document.getElementById('add-tags')) document.getElementById('add-tags').value = '';
                 document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
                 typeExpenseBtn.click();
+                closeAddTxModal();
                 showToast('Transaction added!');
                 await loadAll();
             } finally {
                 submitBtn.disabled = false;
             }
         });
+
+        // Add Transaction Modal Controls (Mobile Only)
+        function openAddTxModal() {
+            const m = document.getElementById('add-tx-modal');
+            if (m) {
+                m.classList.remove('hidden');
+                // Ensure categories & accounts are freshly populated in modal
+                populateCategorySelect(document.getElementById('modal-add-category'), document.getElementById('modal-add-tx-type')?.value || 'expense');
+                populateAccountSelects();
+                const dateInp = document.getElementById('modal-date-input');
+                if (dateInp && !dateInp.value) {
+                    dateInp.value = new Date().toISOString().split('T')[0];
+                }
+                const amtInput = document.getElementById('modal-amount-input');
+                if (amtInput) setTimeout(() => amtInput.focus(), 150);
+            }
+        }
+
+        function closeAddTxModal() {
+            const m = document.getElementById('add-tx-modal');
+            if (m) m.classList.add('hidden');
+        }
+
+        const btnOpenAddTx = document.getElementById('btn-open-add-tx');
+        if (btnOpenAddTx) {
+            btnOpenAddTx.addEventListener('click', () => {
+                if (window.innerWidth < 1024) {
+                    openAddTxModal();
+                } else {
+                    const noteInp = document.getElementById('tx-note-input');
+                    if (noteInp) {
+                        noteInp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(() => noteInp.focus(), 300);
+                    }
+                }
+            });
+        }
+
+        const btnCloseAddModal = document.getElementById('add-modal-close');
+        if (btnCloseAddModal) btnCloseAddModal.addEventListener('click', closeAddTxModal);
+
+        const btnCancelAddModal = document.getElementById('add-modal-cancel');
+        if (btnCancelAddModal) btnCancelAddModal.addEventListener('click', closeAddTxModal);
+
+        const addTxModal = document.getElementById('add-tx-modal');
+        if (addTxModal) {
+            addTxModal.addEventListener('click', (e) => {
+                if (e.target === addTxModal) closeAddTxModal();
+            });
+        }
+
+        // Mobile Modal Form Elements Wiring
+        formatAmountInput(document.getElementById('modal-amount-input'));
+
+        const modalTypeIncomeBtn = document.getElementById('modal-type-income-btn');
+        const modalTypeExpenseBtn = document.getElementById('modal-type-expense-btn');
+        const modalTypeTransferBtn = document.getElementById('modal-type-transfer-btn');
+        const modalAddTxType = document.getElementById('modal-add-tx-type');
+
+        function updateModalTypeSelector(selectedType) {
+            if (!modalAddTxType) return;
+            modalAddTxType.value = selectedType;
+            if (selectedType === 'income') {
+                if (modalTypeIncomeBtn) modalTypeIncomeBtn.className = activeTypeClass;
+                if (modalTypeExpenseBtn) modalTypeExpenseBtn.className = inactiveTypeClass;
+                if (modalTypeTransferBtn) modalTypeTransferBtn.className = inactiveTypeClass;
+                populateCategorySelect(document.getElementById('modal-add-category'), 'income');
+            } else if (selectedType === 'expense') {
+                if (modalTypeExpenseBtn) modalTypeExpenseBtn.className = activeTypeClass;
+                if (modalTypeIncomeBtn) modalTypeIncomeBtn.className = inactiveTypeClass;
+                if (modalTypeTransferBtn) modalTypeTransferBtn.className = inactiveTypeClass;
+                populateCategorySelect(document.getElementById('modal-add-category'), 'expense');
+            }
+        }
+
+        if (modalTypeIncomeBtn) modalTypeIncomeBtn.addEventListener('click', () => updateModalTypeSelector('income'));
+        if (modalTypeExpenseBtn) modalTypeExpenseBtn.addEventListener('click', () => updateModalTypeSelector('expense'));
+        if (modalTypeTransferBtn) {
+            modalTypeTransferBtn.addEventListener('click', () => {
+                closeAddTxModal();
+                const btnOpenTransfer = document.getElementById('btn-open-transfer');
+                if (btnOpenTransfer) btnOpenTransfer.click();
+            });
+        }
+
+        const modalBtnManageCat = document.getElementById('modal-btn-quick-manage-cat');
+        if (modalBtnManageCat) {
+            modalBtnManageCat.addEventListener('click', () => {
+                closeAddTxModal();
+                const btnOpenCat = document.getElementById('btn-open-category-modal-menu');
+                if (btnOpenCat) btnOpenCat.click();
+            });
+        }
+
+        const modalBtnManageAcc = document.getElementById('modal-btn-quick-manage-accounts');
+        if (modalBtnManageAcc) {
+            modalBtnManageAcc.addEventListener('click', () => {
+                closeAddTxModal();
+                const btnOpenAcc = document.getElementById('btn-open-accounts');
+                if (btnOpenAcc) btnOpenAcc.click();
+            });
+        }
+
+        // Mobile Modal Form Submit
+        const modalAddForm = document.getElementById('modal-add-tx-form');
+        if (modalAddForm) {
+            modalAddForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const errEl = document.getElementById('modal-tx-error');
+                if (errEl) errEl.classList.add('hidden');
+                const submitBtn = document.getElementById('modal-btn-submit-tx');
+                if (submitBtn) submitBtn.disabled = true;
+
+                const fd = new FormData(this);
+                fd.set('amount', getRawAmount(document.getElementById('modal-amount-input')));
+                if (!fd.get('date')) {
+                    fd.set('date', new Date().toISOString().split('T')[0]);
+                }
+
+                try {
+                    const res = await fetch('/api/transactions', { method: 'POST', body: fd });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        if (errEl) {
+                            errEl.textContent = data.error || 'Failed to add transaction.';
+                            errEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                    this.reset();
+                    if (document.getElementById('modal-add-tags')) document.getElementById('modal-add-tags').value = '';
+                    if (document.getElementById('modal-date-input')) document.getElementById('modal-date-input').value = new Date().toISOString().split('T')[0];
+                    closeAddTxModal();
+                    showToast('Transaction added!');
+                    await loadAll();
+                } finally {
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            });
+        }
 
         // Edit Transaction Submit
         document.getElementById('edit-tx-form').addEventListener('submit', async function(e) {
@@ -4110,110 +4429,130 @@
             }
         }
 
+        let isWalletsTrayExpanded = false;
+
         function renderAccountCards(totalBal) {
-            const carousel = document.getElementById('accounts-cards-carousel');
-            if (!carousel) return;
+            const primaryGrid = document.getElementById('primary-accounts-grid');
+            const secondaryGrid = document.getElementById('secondary-accounts-grid');
+            const secondaryWrapper = document.getElementById('secondary-accounts-wrapper');
+            const toggleBtn = document.getElementById('btn-toggle-more-wallets');
+            const toggleText = document.getElementById('toggle-wallets-text');
+            const toggleIcon = document.getElementById('toggle-wallets-icon');
+
+            if (!primaryGrid) return;
 
             if (!userAccounts.length) {
-                carousel.innerHTML = '<div class="p-4 text-center text-xs text-slate-400 w-full">No wallets configured. Click "+ Wallet" to add one.</div>';
+                primaryGrid.innerHTML = '<div class="p-4 text-center text-xs text-slate-400 col-span-2">No wallets configured. Click "+ Wallet" to add one.</div>';
+                if (secondaryWrapper) secondaryWrapper.classList.add('hidden');
+                if (toggleBtn) {
+                    toggleBtn.classList.add('hidden');
+                    toggleBtn.classList.remove('flex');
+                }
                 return;
             }
 
             const isAllActive = activeAccountFilter === 'all';
-            let html = `
-                <!-- All Wallets Card -->
-                <div class="account-card shrink-0 snap-start w-48 sm:w-56 p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+
+            // 1. Primary Card: Total Balance / All Wallets
+            let primaryHtml = `
+                <div class="account-card p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between min-h-[108px] sm:min-h-[116px] ${
                     isAllActive 
                         ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-blue-500/50 dark:bg-emerald-600 dark:border-emerald-600 dark:ring-emerald-400/50' 
                         : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                 }" data-account-id="all">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold ${
+                    <div class="flex items-center justify-between mb-1.5 gap-1">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 ${
                             isAllActive ? 'bg-white/20 text-white' : 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
                         }">
                             🌐
                         </div>
-                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                        <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0 ${
                             isAllActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                         }">${userAccounts.length} Wallets</span>
                     </div>
-                    <div class="text-xs font-semibold ${isAllActive ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'} truncate">Total Balance</div>
-                    <div class="text-base sm:text-lg font-black tracking-tight mt-0.5 truncate">${fmtMoney(totalBal)}</div>
+                    <div class="text-[11px] sm:text-xs font-semibold ${isAllActive ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'} truncate">Total Balance</div>
+                    <div class="text-sm sm:text-base lg:text-lg font-black tracking-tight mt-0.5 truncate">${fmtMoney(totalBal)}</div>
                 </div>
             `;
 
-            for (const acc of userAccounts) {
-                const isActive = activeAccountFilter === String(acc.id);
-                const color = acc.color || '#3B82F6';
-                const typeLabels = {
-                    bank: 'Bank',
-                    mobile_money: 'Mobile Money',
-                    cash: 'Cash / Wallet',
-                    savings: 'Savings Vault',
-                    credit: 'Credit Card',
-                    other: 'Wallet'
-                };
-                const typeText = typeLabels[acc.type] || 'Wallet';
+            // 2. Identify Main Bank (Default Account) and other accounts
+            const defaultAcc = userAccounts.find(a => a.is_default) || userAccounts[0];
+            const otherAccounts = userAccounts.filter(a => a.id !== defaultAcc.id);
 
-                html += `
-                    <div class="account-card shrink-0 snap-start w-48 sm:w-56 p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                        isActive 
-                            ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-blue-500/50 dark:bg-emerald-600 dark:border-emerald-600 dark:ring-emerald-400/50' 
-                            : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                    }" data-account-id="${acc.id}">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shrink-0" style="${
-                                isActive ? 'background: rgba(255,255,255,0.2); color: #fff;' : `background-color: ${color}20; color: ${color}; border: 1.5px solid ${color}40;`
-                            }">
-                                ${acc.icon || '🏦'}
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                ${acc.is_default ? `
-                                    <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
-                                        isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                                    }">Default</span>
-                                ` : ''}
-                                <span class="text-[10px] font-semibold ${
-                                    isActive ? 'text-white/70' : 'text-slate-400'
-                                }">${typeText}</span>
-                            </div>
+            // Primary Card 2: Main Bank
+            primaryHtml += buildSingleAccountCardHtml(defaultAcc);
+            primaryGrid.innerHTML = primaryHtml;
+
+            // 3. Populate Secondary Tray
+            if (secondaryGrid) {
+                let secondaryHtml = '';
+                for (const acc of otherAccounts) {
+                    secondaryHtml += buildSingleAccountCardHtml(acc);
+                }
+
+                // Add Account Card inside tray
+                secondaryHtml += `
+                    <div id="btn-rail-add-account" class="p-3 sm:p-3.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/80 hover:border-emerald-500 dark:hover:border-emerald-500/80 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-emerald-50/20 dark:hover:bg-emerald-950/20 transition-all flex flex-col items-center justify-center text-center cursor-pointer group min-h-[108px] sm:min-h-[116px]">
+                        <div class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-emerald-500 group-hover:text-white flex items-center justify-center text-xs font-bold transition-colors">
+                            +
                         </div>
-                        <div class="flex items-center justify-between gap-1">
-                            <div class="text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-800 dark:text-slate-200'}">${esc(acc.name)}</div>
-                            <span class="text-[10px] font-medium opacity-70 shrink-0">${acc.tx_count || 0} txs</span>
-                        </div>
-                        <div class="flex items-center justify-between mt-1">
-                            <div class="text-base sm:text-lg font-black tracking-tight truncate ${
-                                isActive ? 'text-white' : (acc.current_balance < 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white')
-                            }">${acc.formatted_balance || fmtMoney(acc.current_balance)}</div>
-                            <div class="w-12 h-5 opacity-80 shrink-0">
-                                <svg class="w-full h-full" viewBox="0 0 40 16">
-                                    <path d="M0,12 Q10,3 20,7 T40,2" fill="none" stroke="${isActive ? '#ffffff' : (acc.current_balance >= 0 ? '#10B981' : '#F43F5E')}" stroke-width="2" stroke-linecap="round"/>
-                                </svg>
-                            </div>
-                        </div>
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 mt-1.5 transition-colors">Add Account</span>
                     </div>
                 `;
+                secondaryGrid.innerHTML = secondaryHtml;
+
+                const railAddBtn = document.getElementById('btn-rail-add-account');
+                if (railAddBtn) {
+                    railAddBtn.addEventListener('click', () => {
+                        const btnOpen = document.getElementById('btn-open-accounts');
+                        if (btnOpen) btnOpen.click();
+                    });
+                }
             }
 
-            html += `
-                <div id="btn-rail-add-account" class="shrink-0 snap-start w-36 sm:w-40 p-3 sm:p-3.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700/80 hover:border-emerald-500 dark:hover:border-emerald-500/80 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-emerald-50/20 dark:hover:bg-emerald-950/20 transition-all flex flex-col items-center justify-center text-center cursor-pointer group">
-                    <div class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-emerald-500 group-hover:text-white flex items-center justify-center text-xs font-bold transition-colors">
-                        +
-                    </div>
-                    <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 mt-1.5 transition-colors">Add Account</span>
-                </div>
-            `;
-            carousel.innerHTML = html;
+            // 4. Configure View More / Collapse Toggle Button
+            if (toggleBtn) {
+                if (otherAccounts.length === 0) {
+                    toggleBtn.classList.add('hidden');
+                    toggleBtn.classList.remove('flex');
+                    if (secondaryWrapper) secondaryWrapper.classList.add('hidden');
+                } else {
+                    toggleBtn.classList.remove('hidden');
+                    toggleBtn.classList.add('flex');
+                    if (toggleText) {
+                        toggleText.textContent = isWalletsTrayExpanded ? 'Collapse wallets' : `View more wallets (${otherAccounts.length} more)`;
+                    }
+                    if (toggleIcon) {
+                        toggleIcon.style.transform = isWalletsTrayExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+                    }
+                    if (secondaryWrapper) {
+                        if (isWalletsTrayExpanded) {
+                            secondaryWrapper.classList.remove('hidden');
+                        } else {
+                            secondaryWrapper.classList.add('hidden');
+                        }
+                    }
 
-            const railAddBtn = document.getElementById('btn-rail-add-account');
-            if (railAddBtn) {
-                railAddBtn.addEventListener('click', () => {
-                    const btnOpen = document.getElementById('btn-open-accounts');
-                    if (btnOpen) btnOpen.click();
-                });
+                    if (!toggleBtn.dataset.bound) {
+                        toggleBtn.dataset.bound = 'true';
+                        toggleBtn.addEventListener('click', () => {
+                            isWalletsTrayExpanded = !isWalletsTrayExpanded;
+                            if (isWalletsTrayExpanded) {
+                                secondaryWrapper?.classList.remove('hidden');
+                                if (toggleText) toggleText.textContent = 'Collapse wallets';
+                                if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+                            } else {
+                                secondaryWrapper?.classList.add('hidden');
+                                const remaining = userAccounts.length > 1 ? userAccounts.length - 1 : 0;
+                                if (toggleText) toggleText.textContent = `View more wallets (${remaining} more)`;
+                                if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+                            }
+                        });
+                    }
+                }
             }
 
+            // 5. Update Active Filter text indicator
             const filterIndicator = document.getElementById('account-filter-indicator');
             const filterText = document.getElementById('account-filter-text');
             if (filterIndicator && filterText) {
@@ -4229,6 +4568,60 @@
             }
         }
 
+        function buildSingleAccountCardHtml(acc) {
+            const isActive = activeAccountFilter === String(acc.id);
+            const color = acc.color || '#3B82F6';
+            const typeLabels = {
+                bank: 'Bank',
+                mobile_money: 'Mobile Money',
+                cash: 'Cash / Wallet',
+                savings: 'Savings Vault',
+                credit: 'Credit Card',
+                other: 'Wallet'
+            };
+            const typeText = typeLabels[acc.type] || 'Wallet';
+
+            return `
+                <div class="account-card p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between min-h-[108px] sm:min-h-[116px] ${
+                    isActive 
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-blue-500/50 dark:bg-emerald-600 dark:border-emerald-600 dark:ring-emerald-400/50' 
+                        : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                }" data-account-id="${acc.id}">
+                    <div class="flex items-center justify-between mb-1.5 gap-1">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold shrink-0" style="${
+                            isActive ? 'background: rgba(255,255,255,0.2); color: #fff;' : `background-color: ${color}20; color: ${color}; border: 1.5px solid ${color}40;`
+                        }">
+                            ${acc.icon || '🏦'}
+                        </div>
+                        <div class="flex items-center gap-1 overflow-hidden">
+                            ${acc.is_default ? `
+                                <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md shrink-0 ${
+                                    isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                                }">Default</span>
+                            ` : ''}
+                            <span class="text-[10px] font-semibold truncate ${
+                                isActive ? 'text-white/70' : 'text-slate-400'
+                            }">${typeText}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between gap-1 my-0.5">
+                        <div class="text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-800 dark:text-slate-200'}">${esc(acc.name)}</div>
+                        <span class="text-[9px] sm:text-[10px] font-medium opacity-70 shrink-0">${acc.tx_count || 0} txs</span>
+                    </div>
+                    <div class="flex items-center justify-between mt-1 gap-1">
+                        <div class="text-sm sm:text-base lg:text-lg font-black tracking-tight truncate ${
+                            isActive ? 'text-white' : (acc.current_balance < 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white')
+                        }">${acc.formatted_balance || fmtMoney(acc.current_balance)}</div>
+                        <div class="w-10 sm:w-12 h-4 sm:h-5 opacity-80 shrink-0">
+                            <svg class="w-full h-full" viewBox="0 0 40 16">
+                                <path d="M0,12 Q10,3 20,7 T40,2" fill="none" stroke="${isActive ? '#ffffff' : (acc.current_balance >= 0 ? '#10B981' : '#F43F5E')}" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         function populateAccountSelects() {
             const addSelect = document.getElementById('add-account');
             const editSelect = document.getElementById('edit-account');
@@ -4241,15 +4634,17 @@
 
             const defaultAcc = userAccounts.find(a => a.is_default) || userAccounts[0];
 
-            if (addSelect) {
-                const prev = addSelect.value;
-                addSelect.innerHTML = userAccounts.map(a => `
-                    <option value="${a.id}" ${a.id === defaultAcc.id ? 'selected' : ''}>${a.icon || '🏦'} ${esc(a.name)} (${a.formatted_balance || fmtMoney(a.current_balance)})</option>
-                `).join('');
-                if (prev && userAccounts.some(a => String(a.id) === prev)) {
-                    addSelect.value = prev;
+            [addSelect, document.getElementById('modal-add-account')].forEach(sel => {
+                if (sel) {
+                    const prev = sel.value;
+                    sel.innerHTML = userAccounts.map(a => `
+                        <option value="${a.id}" ${a.id === defaultAcc.id ? 'selected' : ''}>${a.icon || '🏦'} ${esc(a.name)} (${a.formatted_balance || fmtMoney(a.current_balance)})</option>
+                    `).join('');
+                    if (prev && userAccounts.some(a => String(a.id) === prev)) {
+                        sel.value = prev;
+                    }
                 }
-            }
+            });
 
             if (editSelect) {
                 const prev = editSelect.value;
@@ -4345,16 +4740,18 @@
             `).join('');
         }
 
-        // Account Carousel Click Delegation
-        const accountsCarouselEl = document.getElementById('accounts-cards-carousel');
-        if (accountsCarouselEl) {
-            accountsCarouselEl.addEventListener('click', e => {
-                const card = e.target.closest('.account-card');
-                if (!card) return;
-                const accId = card.dataset.accountId;
-                if (accId) setAccountFilter(accId);
-            });
-        }
+        // Account Cards Click Delegation (Primary & Secondary Grids)
+        ['primary-accounts-grid', 'secondary-accounts-grid'].forEach(gridId => {
+            const gridEl = document.getElementById(gridId);
+            if (gridEl) {
+                gridEl.addEventListener('click', e => {
+                    const card = e.target.closest('.account-card');
+                    if (!card) return;
+                    const accId = card.dataset.accountId;
+                    if (accId) setAccountFilter(accId);
+                });
+            }
+        });
 
         // Account Filter Dropdown & Clear Indicator
         const filterAccEl = document.getElementById('filter-account');
@@ -4778,14 +5175,7 @@
         const fabBtn = document.getElementById('btn-mobile-fab');
         if (fabBtn) {
             fabBtn.addEventListener('click', () => {
-                const addForm = document.getElementById('add-tx-form');
-                if (addForm) {
-                    addForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    const amtInput = document.getElementById('amount-input');
-                    if (amtInput) {
-                        setTimeout(() => amtInput.focus(), 300);
-                    }
-                }
+                openAddTxModal();
             });
         }
 

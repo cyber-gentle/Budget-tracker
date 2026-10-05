@@ -12,6 +12,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -24,9 +25,52 @@ var embeddedFS embed.FS
 
 // App holds the shared application state and routing.
 type App struct {
-	DB   *DBStore
-	Tmpl *template.Template
-	Mux  *http.ServeMux
+	DB            *DBStore
+	Tmpl          *template.Template
+	Mux           *http.ServeMux
+	loginLimiter  *IPRateLimiter
+	signupLimiter *IPRateLimiter
+}
+
+// isAllowedOrigin validates if an origin is permitted for CORS.
+func isAllowedOrigin(origin, host string) bool {
+	if origin == "" {
+		return true
+	}
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	// Allow browser extensions (e.g. Mobile Viewer simulator)
+	if u.Scheme == "chrome-extension" || u.Scheme == "moz-extension" {
+		return true
+	}
+	// Allow same host
+	if u.Host == host {
+		return true
+	}
+	hostname := u.Hostname()
+	if hostname == "localhost" || hostname == "127.0.0.1" || hostname == "0.0.0.0" {
+		return true
+	}
+	if strings.HasSuffix(hostname, ".vercel.app") || hostname == "spendly.app" || strings.HasSuffix(hostname, ".spendly.app") {
+		return true
+	}
+	return false
+}
+
+// setSessionCookie sets an HttpOnly session cookie, marking Secure when on HTTPS.
+func (app *App) setSessionCookie(w http.ResponseWriter, r *http.Request, token string) {
+	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   isSecure,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   7 * 86400,
+	})
 }
 
 // NewApp creates an App, parses templates, and registers all routes.
@@ -34,17 +78,44 @@ func NewApp(db *DBStore) *App {
 	tmpl := template.Must(template.ParseFS(embeddedFS, "templates/html/*.html"))
 
 	app := &App{
-		DB:   db,
-		Tmpl: tmpl,
-		Mux:  http.NewServeMux(),
+		DB:            db,
+		Tmpl:          tmpl,
+		Mux:           http.NewServeMux(),
+		loginLimiter:  NewIPRateLimiter(20, time.Minute),    // max 20 login attempts per minute per IP
+		signupLimiter: NewIPRateLimiter(10, 10*time.Minute), // max 10 signups per 10 minutes per IP
 	}
 
 	app.routes()
 	return app
 }
 
-// ServeHTTP delegates to the internal mux (implements http.Handler).
+// ServeHTTP delegates to the internal mux with strict security headers and validated CORS origin.
 func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	if origin != "" {
+		if !isAllowedOrigin(origin, r.Host) {
+			http.Error(w, "forbidden cross-origin request", http.StatusForbidden)
+			return
+		}
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, session")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+	}
+
+	// Security Defense Headers
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("X-XSS-Protection", "1; mode=block")
+	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+	w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+	w.Header().Set("Content-Security-Policy", "frame-ancestors 'self' chrome-extension: moz-extension:;")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	app.Mux.ServeHTTP(w, r)
 }
 
@@ -169,13 +240,20 @@ func (app *App) renderTemplate(w http.ResponseWriter, name string, data any) {
 	}
 }
 
-// getSessionUser extracts the username from the session cookie, if valid.
+// getSessionUser extracts the username from the session cookie, query param, or header.
 func (app *App) getSessionUser(r *http.Request) (string, bool) {
-	c, err := r.Cookie("session")
-	if err != nil {
+	token := ""
+	if c, err := r.Cookie("session"); err == nil && c.Value != "" {
+		token = c.Value
+	} else if q := r.URL.Query().Get("session"); q != "" {
+		token = q
+	} else if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+		token = strings.TrimPrefix(auth, "Bearer ")
+	}
+	if token == "" {
 		return "", false
 	}
-	return app.DB.ValidateSession(c.Value)
+	return app.DB.ValidateSession(token)
 }
 
 // ─── Page Handlers ──────────────────────────────────────────────────────────
@@ -280,6 +358,17 @@ func (app *App) HandleSignupAPI(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Rate limiting: prevent automated account spam
+	if !app.signupLimiter.Allow(GetClientIP(r)) {
+		if strings.Contains(r.Header.Get("Accept"), "application/json") || r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+			jsonError(w, "too many signup attempts, please try again in a few minutes", http.StatusTooManyRequests)
+			return
+		}
+		http.Redirect(w, r, "/sign-up?error=Too+many+attempts.+Please+wait+a+few+minutes.", http.StatusSeeOther)
+		return
+	}
+
 	r.ParseMultipartForm(1 << 20)
 	fullName := strings.TrimSpace(r.FormValue("name"))
 	if fullName == "" {
@@ -290,19 +379,31 @@ func (app *App) HandleSignupAPI(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if err := app.DB.Signup(username, email, password, fullName); err != nil {
-		jsonError(w, err.Error(), http.StatusConflict)
+		if strings.Contains(r.Header.Get("Accept"), "application/json") || r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+			jsonError(w, err.Error(), http.StatusConflict)
+			return
+		}
+		http.Redirect(w, r, "/sign-up?error="+url.QueryEscape(err.Error()), http.StatusSeeOther)
 		return
 	}
 	token, err := app.DB.Login(username, password)
 	if err != nil {
-		jsonError(w, err.Error(), http.StatusInternalServerError)
+		if strings.Contains(r.Header.Get("Accept"), "application/json") || r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+			jsonError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/login?error="+url.QueryEscape(err.Error()), http.StatusSeeOther)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name: "session", Value: token, Path: "/",
-		HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 7 * 86400,
-	})
-	jsonOK(w, map[string]string{"redirect": "/dashboard"})
+	app.setSessionCookie(w, r, token)
+	if strings.Contains(r.Header.Get("Accept"), "application/json") || r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+		jsonOK(w, map[string]string{
+			"redirect": "/dashboard",
+			"token":    token,
+		})
+		return
+	}
+	http.Redirect(w, r, "/dashboard?session="+token, http.StatusSeeOther)
 }
 
 func (app *App) HandleLoginAPI(w http.ResponseWriter, r *http.Request) {
@@ -310,6 +411,17 @@ func (app *App) HandleLoginAPI(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Rate limiting: prevent credential brute-forcing
+	if !app.loginLimiter.Allow(GetClientIP(r)) {
+		if strings.Contains(r.Header.Get("Accept"), "application/json") || r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+			jsonError(w, "too many login attempts, please try again in a minute", http.StatusTooManyRequests)
+			return
+		}
+		http.Redirect(w, r, "/login?error=Too+many+attempts.+Please+wait+a+moment.", http.StatusSeeOther)
+		return
+	}
+
 	r.ParseMultipartForm(1 << 20)
 	identifier := strings.TrimSpace(r.FormValue("identifier"))
 	if identifier == "" {
@@ -322,14 +434,22 @@ func (app *App) HandleLoginAPI(w http.ResponseWriter, r *http.Request) {
 
 	token, err := app.DB.Login(identifier, password)
 	if err != nil {
-		jsonError(w, err.Error(), http.StatusUnauthorized)
+		if strings.Contains(r.Header.Get("Accept"), "application/json") || r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+			jsonError(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		http.Redirect(w, r, "/login?error="+url.QueryEscape(err.Error()), http.StatusSeeOther)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name: "session", Value: token, Path: "/",
-		HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 7 * 86400,
-	})
-	jsonOK(w, map[string]string{"redirect": "/dashboard"})
+	app.setSessionCookie(w, r, token)
+	if strings.Contains(r.Header.Get("Accept"), "application/json") || r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+		jsonOK(w, map[string]string{
+			"redirect": "/dashboard",
+			"token":    token,
+		})
+		return
+	}
+	http.Redirect(w, r, "/dashboard?session="+token, http.StatusSeeOther)
 }
 
 func (app *App) HandleLogoutAPI(w http.ResponseWriter, r *http.Request) {
@@ -2665,12 +2785,22 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 		file, header, err := r.FormFile("file")
 		if err == nil && file != nil {
 			defer file.Close()
-			originalFilename = header.Filename
+			originalFilename = filepath.Base(header.Filename)
 			ext := strings.ToLower(filepath.Ext(originalFilename))
-			if ext == "" {
+			allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".webp": true, ".pdf": true}
+			if !allowedExts[ext] {
 				ext = ".jpg"
 			}
-			safeName := fmt.Sprintf("receipt_%s_%d%s", username, time.Now().UnixNano(), ext)
+			cleanUser := strings.Map(func(r rune) rune {
+				if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '-' {
+					return r
+				}
+				return -1
+			}, username)
+			if cleanUser == "" {
+				cleanUser = "user"
+			}
+			safeName := fmt.Sprintf("receipt_%s_%d%s", cleanUser, time.Now().UnixNano(), ext)
 			diskPath := filepath.Join("uploads", "receipts", safeName)
 
 			out, err := os.Create(diskPath)
@@ -2704,8 +2834,8 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 		manualMerchant = req.Merchant
 		manualAmount = req.Amount
 		manualCategory = req.Category
-		originalFilename = req.Filename
-		if originalFilename == "" {
+		originalFilename = filepath.Base(req.Filename)
+		if originalFilename == "" || originalFilename == "." {
 			originalFilename = "scanned_receipt.jpg"
 		}
 
@@ -2723,8 +2853,17 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 			}
 
 			decoded, err := base64.StdEncoding.DecodeString(b64Data)
-			if err == nil && len(decoded) > 0 {
-				safeName := fmt.Sprintf("receipt_%s_%d%s", username, time.Now().UnixNano(), ext)
+			if err == nil && len(decoded) > 0 && len(decoded) <= 15<<20 { // Max 15MB
+				cleanUser := strings.Map(func(r rune) rune {
+					if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '-' {
+						return r
+					}
+					return -1
+				}, username)
+				if cleanUser == "" {
+					cleanUser = "user"
+				}
+				safeName := fmt.Sprintf("receipt_%s_%d%s", cleanUser, time.Now().UnixNano(), ext)
 				diskPath := filepath.Join("uploads", "receipts", safeName)
 				if err := os.WriteFile(diskPath, decoded, 0644); err == nil {
 					savedFilePath = "/uploads/receipts/" + safeName

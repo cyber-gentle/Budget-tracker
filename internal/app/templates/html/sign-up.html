@@ -203,6 +203,12 @@
 
         const form = document.querySelector('[data-signup-form]');
         const errEl = document.getElementById('signup-error');
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error')) {
+            errEl.textContent = urlParams.get('error');
+            errEl.classList.remove('hidden');
+        }
+
         form.addEventListener('submit', async e => {
             e.preventDefault();
             errEl.classList.add('hidden');
@@ -211,11 +217,36 @@
                 errEl.classList.remove('hidden');
                 return;
             }
-            const fd = new FormData(form);
-            const res = await fetch(form.action, { method: 'POST', body: fd });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) { errEl.textContent = data.error || 'Signup failed.'; errEl.classList.remove('hidden'); return; }
-            window.location.href = data.redirect || '/dashboard';
+
+            try {
+                const fd = new FormData(form);
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: fd
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) { errEl.textContent = data.error || 'Signup failed.'; errEl.classList.remove('hidden'); return; }
+                if (data.token) {
+                    try {
+                        localStorage.setItem('spendly_token', data.token);
+                        document.cookie = `session=${data.token}; path=/; max-age=604800; SameSite=Lax`;
+                    } catch(e) {}
+                }
+                const target = data.redirect || '/dashboard';
+                const inIframe = window.self !== window.top;
+                if (inIframe && data.token) {
+                    window.location.href = target + (target.includes('?') ? '&' : '?') + 'session=' + encodeURIComponent(data.token);
+                } else {
+                    window.location.href = target;
+                }
+            } catch (err) {
+                console.warn('Fetch submission failed, submitting natively', err);
+                form.submit();
+            }
         });
 
         // Theme Toggle

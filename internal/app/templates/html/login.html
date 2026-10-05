@@ -167,25 +167,54 @@
         });
 
         // AJAX submit so we can redirect cleanly and show API errors.
+        // Check for URL query param error (e.g. from standard form submit redirect)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error')) {
+            errorEl.textContent = urlParams.get('error');
+            errorEl.style.display = 'block';
+        }
+
         const form = document.querySelector('[data-login-form]');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorEl.style.display = 'none';
 
-            const fd = new FormData(form);
-            const res = await fetch(form.action, {
-                method: 'POST',
-                body: fd
-            });
+            try {
+                const fd = new FormData(form);
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: fd
+                });
 
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                errorEl.textContent = data.error || 'Login failed.';
-                errorEl.style.display = 'block';
-                return;
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errorEl.textContent = data.error || 'Invalid email/username or password.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                if (data.token) {
+                    try {
+                        localStorage.setItem('spendly_token', data.token);
+                        document.cookie = `session=${data.token}; path=/; max-age=604800; SameSite=Lax`;
+                    } catch(e) {}
+                }
+
+                const target = data.redirect || '/dashboard';
+                const inIframe = window.self !== window.top;
+                if (inIframe && data.token) {
+                    window.location.href = target + (target.includes('?') ? '&' : '?') + 'session=' + encodeURIComponent(data.token);
+                } else {
+                    window.location.href = target;
+                }
+            } catch (err) {
+                console.warn('Fetch submission failed, submitting natively', err);
+                form.submit();
             }
-
-            window.location.href = data.redirect || '/dashboard';
         });
 
         // Theme Toggle

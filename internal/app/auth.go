@@ -3,6 +3,7 @@ package app
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -225,7 +226,8 @@ func sha256Hash(password, salt string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// verifyPassword checks password match and returns true if an upgrade to hash format is needed.
+// verifyPassword checks password match using constant-time comparison to prevent timing attacks,
+// and returns true if an upgrade to hash format is needed.
 func verifyPassword(storedPassword, inputPassword string) (bool, bool) {
 	if strings.HasPrefix(storedPassword, "sha256:") {
 		parts := strings.Split(storedPassword, ":")
@@ -233,11 +235,11 @@ func verifyPassword(storedPassword, inputPassword string) (bool, bool) {
 			salt := parts[1]
 			expectedHash := parts[2]
 			actualHash := sha256Hash(inputPassword, salt)
-			return expectedHash == actualHash, false
+			return subtle.ConstantTimeCompare([]byte(expectedHash), []byte(actualHash)) == 1, false
 		}
 	}
 	// Fallback check for legacy plaintext passwords
-	if storedPassword == inputPassword {
+	if subtle.ConstantTimeCompare([]byte(storedPassword), []byte(inputPassword)) == 1 {
 		return true, true // matched legacy, needs upgrade
 	}
 	return false, false
