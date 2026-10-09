@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"encoding/json"
@@ -11,14 +11,13 @@ import (
 	"testing"
 	"time"
 
-	"spendly/internal/app"
 )
 
 func TestDBFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "test.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -137,7 +136,7 @@ func TestTrendsTimeframes(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "test_trends.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -229,7 +228,7 @@ func TestUserProfileFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "test_profile.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -306,7 +305,7 @@ func TestDebtsFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "debts_test.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -422,7 +421,7 @@ func TestSubscriptionsFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "test_subs.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -507,7 +506,7 @@ func TestSubscriptionsFlow(t *testing.T) {
 func TestGoalsFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "test_goals.db")
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to create db store: %v", err)
 	}
@@ -625,7 +624,7 @@ func TestGoalsFlow(t *testing.T) {
 func TestCategoriesAndTagsFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "test_categories.db")
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to create db store: %v", err)
 	}
@@ -729,7 +728,7 @@ func TestAccountsAndTransfersFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "test_accounts.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -895,7 +894,7 @@ func TestReportsAndAnalyticsFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "test_reports.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -1003,7 +1002,7 @@ func TestReportsAndAnalyticsFlow(t *testing.T) {
 	}
 
 	// 7. Test HTTP API Endpoints
-	application := app.NewApp(store)
+	application := NewApp(store)
 	sessionID, err := store.Login("analyst_user", "hash123")
 	if err != nil || sessionID == "" {
 		t.Fatalf("login failed: %v", err)
@@ -1062,7 +1061,7 @@ func TestSmartBudgetingRulesFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "test_smart_budgets.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -1209,7 +1208,7 @@ func TestSmartBudgetingRulesFlow(t *testing.T) {
 	}
 
 	// 5. Test HTTP API Endpoints
-	application := app.NewApp(store)
+	application := NewApp(store)
 	sessionID, err := store.Login(username, "pass12345")
 	if err != nil || sessionID == "" {
 		t.Fatalf("failed to login: %v", err)
@@ -1272,7 +1271,7 @@ func TestSmartBudgetingRulesFlow(t *testing.T) {
 
 func TestSplitExpensesAndSettlementFlow(t *testing.T) {
 	tempDB := filepath.Join(t.TempDir(), "test_splits.db")
-	store, err := app.NewDBStore(tempDB, "")
+	store, err := NewDBStore(tempDB, "")
 	if err != nil {
 		t.Fatalf("failed to create db store: %v", err)
 	}
@@ -1394,7 +1393,7 @@ func TestSplitExpensesAndSettlementFlow(t *testing.T) {
 	}
 
 	// 6. Test HTTP APIs
-	application := app.NewApp(store)
+	application := NewApp(store)
 	sessionID, err := store.Login(username, "pass123")
 	if err != nil {
 		t.Fatalf("login failed: %v", err)
@@ -1459,7 +1458,7 @@ func TestNetWorthAndWealthFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "wealth_test.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -1475,7 +1474,7 @@ func TestNetWorthAndWealthFlow(t *testing.T) {
 		t.Fatalf("login failed: %v", err)
 	}
 
-	application := app.NewApp(store)
+	application := NewApp(store)
 
 	// 1. Add baseline assets:
 	// A. Accounts / Wallets
@@ -1674,7 +1673,7 @@ func TestReceiptOCRAndDocumentScannerFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "receipt_test.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -1690,7 +1689,7 @@ func TestReceiptOCRAndDocumentScannerFlow(t *testing.T) {
 		t.Fatalf("login failed: %v", err)
 	}
 
-	application := app.NewApp(store)
+	application := NewApp(store)
 
 	// 1. Test ParseReceiptText Engine
 	sampleStarbucks := `STARBUCKS STORE #14920
@@ -1870,7 +1869,7 @@ func TestCashFlowForecastingAndRunwayPredictorFlow(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "forecast_test.db")
 
-	store, err := app.NewDBStore(dbPath, "")
+	store, err := NewDBStore(dbPath, "")
 	if err != nil {
 		t.Fatalf("failed to init db: %v", err)
 	}
@@ -1982,7 +1981,7 @@ func TestCashFlowForecastingAndRunwayPredictorFlow(t *testing.T) {
 	}
 
 	// 6. Test HTTP Endpoints
-	application := app.NewApp(store)
+	application := NewApp(store)
 
 	// GET /forecast HTML Page
 	reqPage := httptest.NewRequest(http.MethodGet, "/forecast", nil)

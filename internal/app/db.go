@@ -21,7 +21,6 @@ import (
 // DBStore wraps the SQL connection to Turso / SQLite.
 type DBStore struct {
 	db *sql.DB
-	mu sync.RWMutex
 }
 
 // NewDBStore connects to Turso (if URL provided) or falls back to local SQLite.
@@ -38,9 +37,9 @@ func NewDBStore(rawURL, authToken string) (*DBStore, error) {
 	if connStr == "" {
 		// Use /tmp in serverless/Vercel environments where root is read-only
 		if os.Getenv("VERCEL") != "" || os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
-			connStr = "file:/tmp/spendly.db"
+			connStr = "file:/tmp/spendly.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
 		} else {
-			connStr = "file:spendly.db"
+			connStr = "file:spendly.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
 		}
 	} else if strings.HasPrefix(connStr, "libsql://") || strings.HasPrefix(connStr, "http://") || strings.HasPrefix(connStr, "https://") || strings.HasPrefix(connStr, "ws://") || strings.HasPrefix(connStr, "wss://") {
 		driverName = "libsql"
@@ -69,6 +68,11 @@ func NewDBStore(rawURL, authToken string) (*DBStore, error) {
 	}
 
 	return store, nil
+}
+
+// Close closes the underlying database connection.
+func (s *DBStore) Close() error {
+	return s.db.Close()
 }
 
 func (s *DBStore) migrate() error {
@@ -306,8 +310,6 @@ func (s *DBStore) migrate() error {
 // ─── Authentication & User Methods ──────────────────────────────────────────
 
 func (s *DBStore) Signup(username, email, password string, optFullName ...string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	username = strings.TrimSpace(username)
 	email = strings.ToLower(strings.TrimSpace(email))
@@ -317,6 +319,9 @@ func (s *DBStore) Signup(username, email, password string, optFullName ...string
 	}
 	if username == "" || email == "" || password == "" {
 		return fmt.Errorf("username, email, and password are required")
+	}
+	if len(password) < 6 {
+		return fmt.Errorf("password must be at least 6 characters")
 	}
 
 	if !strings.Contains(email, "@") || !strings.Contains(email, ".") {
@@ -352,8 +357,6 @@ func (s *DBStore) Signup(username, email, password string, optFullName ...string
 }
 
 func (s *DBStore) Login(identifier, password string) (string, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	identifier = strings.TrimSpace(identifier)
 	if identifier == "" || password == "" {
@@ -398,8 +401,6 @@ func (s *DBStore) Login(identifier, password string) (string, error) {
 }
 
 func (s *DBStore) ValidateSession(token string) (string, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	if token == "" {
 		return "", false
@@ -414,8 +415,6 @@ func (s *DBStore) ValidateSession(token string) (string, bool) {
 
 	if time.Now().After(expiresAt) {
 		go func(t string) {
-			s.mu.Lock()
-			defer s.mu.Unlock()
 			_, _ = s.db.Exec("DELETE FROM sessions WHERE token = ?", t)
 		}(token)
 		return "", false
@@ -425,14 +424,10 @@ func (s *DBStore) ValidateSession(token string) (string, bool) {
 }
 
 func (s *DBStore) Logout(token string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	_, _ = s.db.Exec("DELETE FROM sessions WHERE token = ?", token)
 }
 
 func (s *DBStore) GetCurrency(username string) string {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	var curr string
 	err := s.db.QueryRow("SELECT currency FROM users WHERE username = ?", username).Scan(&curr)
@@ -443,8 +438,6 @@ func (s *DBStore) GetCurrency(username string) string {
 }
 
 func (s *DBStore) SetCurrency(username, currency string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if currency == "" {
 		currency = "₦"
@@ -463,8 +456,6 @@ type UserProfile struct {
 }
 
 func (s *DBStore) GetProfile(username string) (*UserProfile, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	var prof UserProfile
 	var createdAt time.Time
@@ -493,8 +484,6 @@ func (s *DBStore) GetProfile(username string) (*UserProfile, error) {
 }
 
 func (s *DBStore) UpdateProfile(username, fullName, email, currency, currentPass, newPass string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	fullName = strings.TrimSpace(fullName)
 	email = strings.ToLower(strings.TrimSpace(email))
@@ -577,8 +566,6 @@ func parseTags(tags string) (string, []string) {
 }
 
 func (s *DBStore) AddTransactionFull(username string, amount float64, category, note, txnType, tags string, accountID int, optDate ...time.Time) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	txDate := time.Now()
 	if len(optDate) > 0 && !optDate[0].IsZero() {
@@ -603,8 +590,6 @@ func (s *DBStore) AddTransaction(username string, amount float64, category, note
 }
 
 func (s *DBStore) AddTransactionWithReceipt(username string, amount float64, category, note, txnType, tags string, accountID int, receiptURL string, optDate ...time.Time) (int, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	txDate := time.Now()
 	if len(optDate) > 0 && !optDate[0].IsZero() {
@@ -625,16 +610,12 @@ func (s *DBStore) AddTransactionWithReceipt(username string, amount float64, cat
 }
 
 func (s *DBStore) AttachReceiptToTransaction(id int, username string, receiptURL string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	_, err := s.db.Exec("UPDATE transactions SET receipt_url = ? WHERE id = ? AND username = ?", receiptURL, id, username)
 	return err
 }
 
 func (s *DBStore) UpdateTransactionFull(id int, username string, amount float64, category, note, txnType, tags string, accountID int, optDate ...time.Time) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	cleanTags, _ := parseTags(tags)
 
@@ -669,8 +650,6 @@ func (s *DBStore) UpdateTransaction(id int, username string, amount float64, cat
 }
 
 func (s *DBStore) DeleteTransaction(id int, username string) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	res, err := s.db.Exec("DELETE FROM transactions WHERE id = ? AND username = ?", id, username)
 	if err != nil {
@@ -681,8 +660,6 @@ func (s *DBStore) DeleteTransaction(id int, username string) (bool, error) {
 }
 
 func (s *DBStore) GetTransactions(username string) ([]Transaction, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		`SELECT t.id, t.amount, t.category, t.note, t.date, t.type, COALESCE(t.tags, ''),
@@ -722,8 +699,6 @@ func (s *DBStore) GetTransactions(username string) ([]Transaction, error) {
 }
 
 func (s *DBStore) GetPopularTags(username string) ([]string, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query("SELECT tags FROM transactions WHERE username = ? AND tags != ''", username)
 	if err != nil {
@@ -767,8 +742,6 @@ func (s *DBStore) GetPopularTags(username string) ([]string, error) {
 // ─── Budget Methods ────────────────────────────────────────────────────────
 
 func (s *DBStore) GetBudgets(username string) (map[string]float64, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query("SELECT category, monthly_limit FROM budgets WHERE username = ?", username)
 	if err != nil {
@@ -788,8 +761,6 @@ func (s *DBStore) GetBudgets(username string) (map[string]float64, error) {
 }
 
 func (s *DBStore) SetBudget(username, category string, limit float64) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if limit <= 0 {
 		_, err := s.db.Exec("DELETE FROM budgets WHERE username = ? AND category = ?", username, category)
@@ -806,8 +777,6 @@ func (s *DBStore) SetBudget(username, category string, limit float64) error {
 // ─── Financial Calculations & Analytics ────────────────────────────────────
 
 func (s *DBStore) CalculateTotals(username string) (income, expense, balance float64, err error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query("SELECT type, COALESCE(SUM(amount), 0) FROM transactions WHERE username = ? GROUP BY type", username)
 	if err != nil {
@@ -831,16 +800,27 @@ func (s *DBStore) CalculateTotals(username string) (income, expense, balance flo
 }
 
 func (s *DBStore) GetCurrentMonthSpending(username string) (map[string]float64, error) {
-	txs, err := s.GetTransactions(username)
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	startOfNextMonth := startOfMonth.AddDate(0, 1, 0)
+
+	rows, err := s.db.Query(`
+		SELECT category, SUM(amount)
+		FROM transactions 
+		WHERE username = ? AND type = 'expense' AND date >= ? AND date < ?
+		GROUP BY category`, 
+		username, startOfMonth.Format(time.RFC3339), startOfNextMonth.Format(time.RFC3339))
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	now := time.Now()
 	res := make(map[string]float64)
-	for _, t := range txs {
-		if t.Type == "expense" && t.Date.Year() == now.Year() && t.Date.Month() == now.Month() {
-			res[t.Category] += t.Amount
+	for rows.Next() {
+		var cat string
+		var amt float64
+		if err := rows.Scan(&cat, &amt); err == nil {
+			res[cat] = amt
 		}
 	}
 	return res, nil
@@ -1429,8 +1409,6 @@ type DebtSummary struct {
 }
 
 func (s *DBStore) CreateDebt(username, personName, debtType string, amount float64, dueDate *time.Time, note string) (*Debt, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	personName = strings.TrimSpace(personName)
 	if personName == "" {
@@ -1478,8 +1456,6 @@ func (s *DBStore) CreateDebt(username, personName, debtType string, amount float
 }
 
 func (s *DBStore) GetDebts(username string) ([]Debt, *DebtSummary, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		"SELECT id, username, person_name, amount, amount_paid, type, due_date, note, status, created_at FROM debts WHERE username = ? ORDER BY CASE status WHEN 'unpaid' THEN 1 WHEN 'partial' THEN 2 ELSE 3 END, created_at DESC",
@@ -1532,8 +1508,6 @@ func (s *DBStore) GetDebts(username string) ([]Debt, *DebtSummary, error) {
 }
 
 func (s *DBStore) GetDebtByID(id int, username string) (*Debt, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	var d Debt
 	var dueDate sql.NullTime
@@ -1559,8 +1533,6 @@ func (s *DBStore) GetDebtByID(id int, username string) (*Debt, error) {
 }
 
 func (s *DBStore) UpdateDebt(id int, username, personName, debtType string, amount float64, dueDate *time.Time, note string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	personName = strings.TrimSpace(personName)
 	if personName == "" {
@@ -1592,8 +1564,6 @@ func (s *DBStore) UpdateDebt(id int, username, personName, debtType string, amou
 }
 
 func (s *DBStore) DeleteDebt(id int, username string) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	res, err := s.db.Exec("DELETE FROM debts WHERE id = ? AND username = ?", id, username)
 	if err != nil {
@@ -1604,8 +1574,6 @@ func (s *DBStore) DeleteDebt(id int, username string) (bool, error) {
 }
 
 func (s *DBStore) RecordDebtPayment(id int, username string, paymentAmount float64, paymentDate time.Time, logTransaction bool) (*Debt, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if paymentAmount <= 0 {
 		return nil, fmt.Errorf("payment amount must be greater than zero")
@@ -1717,8 +1685,6 @@ type Subscription struct {
 }
 
 func (s *DBStore) GetSubscriptions(username string) ([]Subscription, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		"SELECT id, username, name, amount, category, billing_cycle, next_due_date, status, created_at FROM subscriptions WHERE username = ? AND status != 'cancelled' ORDER BY next_due_date ASC",
@@ -1764,8 +1730,6 @@ func (s *DBStore) GetSubscriptions(username string) ([]Subscription, error) {
 }
 
 func (s *DBStore) AddSubscription(username, name string, amount float64, category, billingCycle string, nextDueDate time.Time) (*Subscription, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -1826,8 +1790,6 @@ func (s *DBStore) AddSubscription(username, name string, amount float64, categor
 }
 
 func (s *DBStore) UpdateSubscription(id int, username, name string, amount float64, category, billingCycle string, nextDueDate time.Time, status string) (*Subscription, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -1872,8 +1834,6 @@ func (s *DBStore) UpdateSubscription(id int, username, name string, amount float
 }
 
 func (s *DBStore) DeleteSubscription(id int, username string) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	res, err := s.db.Exec("DELETE FROM subscriptions WHERE id = ? AND username = ?", id, username)
 	if err != nil {
@@ -1884,8 +1844,6 @@ func (s *DBStore) DeleteSubscription(id int, username string) (bool, error) {
 }
 
 func (s *DBStore) PaySubscription(id int, username string) (*Subscription, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	var sub Subscription
 	err := s.db.QueryRow(
@@ -1943,8 +1901,6 @@ func (s *DBStore) PaySubscription(id int, username string) (*Subscription, error
 }
 
 func (s *DBStore) GetMonthlyCommitment(username string) (float64, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		"SELECT amount, billing_cycle FROM subscriptions WHERE username = ? AND status = 'active'",
@@ -2023,8 +1979,6 @@ type GoalSummary struct {
 }
 
 func (s *DBStore) GetGoals(username string) ([]Goal, GoalSummary, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		"SELECT id, username, name, target_amount, saved_amount, category, target_date, color, emoji, status, created_at FROM goals WHERE username = ? ORDER BY status ASC, created_at DESC",
@@ -2106,8 +2060,6 @@ func (s *DBStore) GetGoals(username string) ([]Goal, GoalSummary, error) {
 }
 
 func (s *DBStore) GetGoalByID(id int, username string) (*Goal, []GoalContribution, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	var g Goal
 	var targetDate sql.NullTime
@@ -2164,8 +2116,6 @@ func (s *DBStore) GetGoalByID(id int, username string) (*Goal, []GoalContributio
 }
 
 func (s *DBStore) CreateGoal(username, name string, targetAmount float64, targetDate *time.Time, emoji, color, category string) (*Goal, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2218,8 +2168,6 @@ func (s *DBStore) CreateGoal(username, name string, targetAmount float64, target
 }
 
 func (s *DBStore) UpdateGoal(id int, username, name string, targetAmount float64, targetDate *time.Time, emoji, color, category, status string) (*Goal, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2267,8 +2215,6 @@ func (s *DBStore) UpdateGoal(id int, username, name string, targetAmount float64
 }
 
 func (s *DBStore) DeleteGoal(id int, username string) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	_, _ = s.db.Exec("DELETE FROM goal_contributions WHERE goal_id = ? AND username = ?", id, username)
 	res, err := s.db.Exec("DELETE FROM goals WHERE id = ? AND username = ?", id, username)
@@ -2280,8 +2226,6 @@ func (s *DBStore) DeleteGoal(id int, username string) (bool, error) {
 }
 
 func (s *DBStore) DepositToGoal(id int, username string, amount float64, note string, logTransaction bool) (*Goal, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if amount <= 0 {
 		return nil, fmt.Errorf("deposit amount must be greater than zero")
@@ -2354,8 +2298,6 @@ func (s *DBStore) DepositToGoal(id int, username string, amount float64, note st
 }
 
 func (s *DBStore) WithdrawFromGoal(id int, username string, amount float64, note string, logTransaction bool) (*Goal, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if amount <= 0 {
 		return nil, fmt.Errorf("withdrawal amount must be greater than zero")
@@ -2497,12 +2439,8 @@ func (s *DBStore) EnsureDefaultCategories(username string) error {
 }
 
 func (s *DBStore) GetCategories(username string) ([]Category, error) {
-	s.mu.Lock()
 	_ = s.EnsureDefaultCategories(username)
 	s.mu.Unlock()
-
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	txCounts := make(map[string]int)
 	countRows, err := s.db.Query("SELECT category, COUNT(1) FROM transactions WHERE username = ? GROUP BY category", username)
@@ -2548,8 +2486,6 @@ func (s *DBStore) GetCategories(username string) ([]Category, error) {
 }
 
 func (s *DBStore) CreateCategory(username, name, catType, emoji, color string) (*Category, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2606,8 +2542,6 @@ func (s *DBStore) CreateCategory(username, name, catType, emoji, color string) (
 }
 
 func (s *DBStore) UpdateCategory(id int, username, name, emoji, color string) (*Category, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2642,8 +2576,6 @@ func (s *DBStore) UpdateCategory(id int, username, name, emoji, color string) (*
 }
 
 func (s *DBStore) DeleteCategory(id int, username string, reassignTo ...string) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	var cat Category
 	err := s.db.QueryRow("SELECT id, slug, is_default FROM categories WHERE id = ? AND username = ?", id, username).Scan(&cat.ID, &cat.Slug, &cat.IsDefault)
@@ -2742,12 +2674,8 @@ func (s *DBStore) ensureDefaultAccounts(username string) error {
 }
 
 func (s *DBStore) GetAccounts(username string) ([]Account, error) {
-	s.mu.Lock()
 	_ = s.ensureDefaultAccounts(username)
 	s.mu.Unlock()
-
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		"SELECT id, username, name, type, currency, initial_balance, color, icon, is_default, created_at FROM accounts WHERE username = ? ORDER BY is_default DESC, id ASC",
@@ -2870,8 +2798,6 @@ func (s *DBStore) GetAccountByID(id int, username string) (*Account, error) {
 }
 
 func (s *DBStore) CreateAccount(username, name, accType, currency, color, icon string, initialBalance float64, isDefault bool) (*Account, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2947,8 +2873,6 @@ func (s *DBStore) CreateAccount(username, name, accType, currency, color, icon s
 }
 
 func (s *DBStore) UpdateAccount(id int, username, name, accType, currency, color, icon string, initialBalance float64, isDefault bool) (*Account, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -3007,8 +2931,6 @@ func (s *DBStore) UpdateAccount(id int, username, name, accType, currency, color
 }
 
 func (s *DBStore) DeleteAccount(id int, username string, reassignToAccountID int) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	var count int
 	_ = s.db.QueryRow("SELECT COUNT(1) FROM accounts WHERE username = ?", username).Scan(&count)
@@ -3045,8 +2967,6 @@ func (s *DBStore) DeleteAccount(id int, username string, reassignToAccountID int
 }
 
 func (s *DBStore) SetDefaultAccount(id int, username string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	var exists int
 	err := s.db.QueryRow("SELECT COUNT(1) FROM accounts WHERE id = ? AND username = ?", id, username).Scan(&exists)
@@ -3060,8 +2980,6 @@ func (s *DBStore) SetDefaultAccount(id int, username string) error {
 }
 
 func (s *DBStore) CreateAccountTransfer(username string, fromID, toID int, amount float64, note string, optDate ...time.Time) (*AccountTransfer, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if fromID == toID {
 		return nil, fmt.Errorf("source and destination accounts cannot be the same")
@@ -3114,8 +3032,6 @@ func (s *DBStore) CreateAccountTransfer(username string, fromID, toID int, amoun
 }
 
 func (s *DBStore) GetAccountTransfers(username string, limit int) ([]AccountTransfer, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	if limit <= 0 {
 		limit = 50
@@ -3777,8 +3693,6 @@ func (s *DBStore) CreateSplitExpense(
 	logTx bool,
 	accountID int,
 ) (*SplitExpense, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	username = strings.TrimSpace(username)
 	title = strings.TrimSpace(title)
@@ -3919,8 +3833,6 @@ func (s *DBStore) CreateSplitExpense(
 }
 
 func (s *DBStore) GetSplits(username string) ([]SplitExpense, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		"SELECT id, username, title, total_amount, payer_name, payer_is_user, category, date, split_type, note, created_at FROM splits WHERE username = ? ORDER BY date DESC, id DESC",
@@ -3966,8 +3878,6 @@ func (s *DBStore) GetSplits(username string) ([]SplitExpense, error) {
 }
 
 func (s *DBStore) GetSplitByID(id int, username string) (*SplitExpense, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 	return s.getSplitByIDLocked(id, username)
 }
 
@@ -4040,8 +3950,6 @@ func (s *DBStore) getSplitParticipantsLocked(splitID int) ([]SplitParticipant, e
 }
 
 func (s *DBStore) DeleteSplit(id int, username string) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	_, _ = s.db.Exec("DELETE FROM debts WHERE split_id = ? AND username = ?", id, username)
 	_, _ = s.db.Exec("DELETE FROM split_participants WHERE split_id = ?", id)
@@ -4056,8 +3964,6 @@ func (s *DBStore) DeleteSplit(id int, username string) (bool, error) {
 
 // GetSettlementOverview aggregates debts by contact to calculate mutual net balances.
 func (s *DBStore) GetSettlementOverview(username string) (*SettlementOverview, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		"SELECT id, username, person_name, amount, amount_paid, type, due_date, note, status, created_at FROM debts WHERE username = ? AND status != 'settled' ORDER BY person_name ASC, created_at DESC",
@@ -4142,8 +4048,6 @@ func (s *DBStore) GetSettlementOverview(username string) (*SettlementOverview, e
 
 // SettleContactDebts simplifies or completes settlement with a contact.
 func (s *DBStore) SettleContactDebts(username, contactName, mode string, accountID int, logTx bool) (*SettlementResult, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	contactName = strings.TrimSpace(contactName)
 	if contactName == "" {
@@ -4381,8 +4285,6 @@ func getLiabilityIcon(cat string) string {
 }
 
 func (s *DBStore) AddCustomAssetLiability(username string, item CustomAssetLiability) (*CustomAssetLiability, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	item.Username = username
 	item.Name = strings.TrimSpace(item.Name)
@@ -4424,8 +4326,6 @@ func (s *DBStore) AddCustomAssetLiability(username string, item CustomAssetLiabi
 }
 
 func (s *DBStore) UpdateCustomAssetLiability(username string, id int, item CustomAssetLiability) (*CustomAssetLiability, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	item.Name = strings.TrimSpace(item.Name)
 	if item.Name == "" {
@@ -4467,8 +4367,6 @@ func (s *DBStore) UpdateCustomAssetLiability(username string, id int, item Custo
 }
 
 func (s *DBStore) DeleteCustomAssetLiability(username string, id int) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	res, err := s.db.Exec("DELETE FROM custom_assets_liabilities WHERE id = ? AND username = ?", id, username)
 	if err != nil {
@@ -4479,8 +4377,6 @@ func (s *DBStore) DeleteCustomAssetLiability(username string, id int) (bool, err
 }
 
 func (s *DBStore) GetCustomAssetLiabilities(username string) ([]CustomAssetLiability, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		"SELECT id, username, name, type, category, amount, institution, notes, updated_at, created_at FROM custom_assets_liabilities WHERE username = ? ORDER BY type ASC, amount DESC",
@@ -5147,8 +5043,6 @@ func ParseReceiptText(text string) ParsedReceiptData {
 }
 
 func (s *DBStore) CreateReceipt(username, filePath, originalFilename, merchant string, totalAmount, taxAmount, tipAmount float64, receiptDate *time.Time, suggestedCategory, rawOCRText string) (*Receipt, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	rDate := time.Now()
 	if receiptDate != nil && !receiptDate.IsZero() {
@@ -5190,8 +5084,6 @@ func (s *DBStore) CreateReceipt(username, filePath, originalFilename, merchant s
 }
 
 func (s *DBStore) GetReceipts(username string) ([]Receipt, ReceiptSummary, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	var summary ReceiptSummary
 
@@ -5244,8 +5136,6 @@ func (s *DBStore) GetReceipts(username string) ([]Receipt, ReceiptSummary, error
 }
 
 func (s *DBStore) GetReceiptByID(id int, username string) (*Receipt, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	var r Receipt
 	var rDate time.Time
@@ -5270,8 +5160,6 @@ func (s *DBStore) GetReceiptByID(id int, username string) (*Receipt, error) {
 }
 
 func (s *DBStore) LinkReceiptToTransaction(receiptID, transactionID int, username string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	_, err := s.db.Exec(
 		"UPDATE receipts SET transaction_id = ?, status = 'linked' WHERE id = ? AND username = ?",
@@ -5281,8 +5169,6 @@ func (s *DBStore) LinkReceiptToTransaction(receiptID, transactionID int, usernam
 }
 
 func (s *DBStore) DeleteReceipt(id int, username string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	var filePath string
 	_ = s.db.QueryRow("SELECT file_path FROM receipts WHERE id = ? AND username = ?", id, username).Scan(&filePath)
@@ -5390,8 +5276,6 @@ type WhatIfSimulationParams struct {
 }
 
 func (s *DBStore) GetCashFlowSettings(username string) (*CashFlowSettings, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	var safetyBuffer, dailyBurn float64
 	err := s.db.QueryRow(
@@ -5415,8 +5299,6 @@ func (s *DBStore) GetCashFlowSettings(username string) (*CashFlowSettings, error
 }
 
 func (s *DBStore) SaveCashFlowSettings(username string, safetyBuffer, dailyBurn float64) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if safetyBuffer <= 0 {
 		safetyBuffer = 1000.0
@@ -5438,8 +5320,6 @@ func (s *DBStore) SaveCashFlowSettings(username string, safetyBuffer, dailyBurn 
 }
 
 func (s *DBStore) CreateRecurringIncome(username, name, frequency, category string, amount float64, nextPayDate time.Time) (*RecurringIncome, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -5489,8 +5369,6 @@ func (s *DBStore) CreateRecurringIncome(username, name, frequency, category stri
 }
 
 func (s *DBStore) GetRecurringIncomes(username string) ([]RecurringIncome, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
 		"SELECT id, username, name, amount, frequency, next_pay_date, category, status, created_at FROM recurring_incomes WHERE username = ? ORDER BY next_pay_date ASC",
@@ -5518,8 +5396,6 @@ func (s *DBStore) GetRecurringIncomes(username string) ([]RecurringIncome, error
 }
 
 func (s *DBStore) UpdateRecurringIncome(id int, username, name, frequency, category, status string, amount float64, nextPayDate time.Time) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -5554,8 +5430,6 @@ func (s *DBStore) UpdateRecurringIncome(id int, username, name, frequency, categ
 }
 
 func (s *DBStore) DeleteRecurringIncome(id int, username string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	_, err := s.db.Exec("DELETE FROM recurring_incomes WHERE id = ? AND username = ?", id, username)
 	return err

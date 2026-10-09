@@ -105,6 +105,7 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Security Defense Headers
+	w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-XSS-Protection", "1; mode=block")
 	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -452,7 +453,7 @@ func (app *App) HandleSignupAPI(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	http.Redirect(w, r, "/dashboard?session="+token, http.StatusSeeOther)
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 func (app *App) HandleLoginAPI(w http.ResponseWriter, r *http.Request) {

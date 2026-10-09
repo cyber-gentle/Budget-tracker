@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/tursodatabase/libsql-client-go v0.0.0-20260528064733-9d5d30a29a60
+	golang.org/x/crypto v0.26.0
 	modernc.org/sqlite v1.59.0
 )
 
