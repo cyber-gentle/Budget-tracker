@@ -61,9 +61,21 @@
             header, #timeframe-toolbar, #export-dropdown-wrapper, .no-print {
                 display: none !important;
             }
-            body {
+            body, html {
                 background: white !important;
                 color: black !important;
+                height: auto !important;
+                min-height: auto !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+            main {
+                display: block !important;
+                overflow: visible !important;
+            }
+            .overflow-x-auto, .overflow-y-auto, .max-h-72 {
+                overflow: visible !important;
+                max-height: none !important;
             }
             .print-statement-header {
                 display: block !important;
@@ -73,10 +85,14 @@
                 box-shadow: none !important;
                 break-inside: avoid;
             }
+            canvas {
+                max-width: 100% !important;
+                page-break-inside: avoid;
+            }
         }
     </style>
 </head>
-<body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200">
+<body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200">
 
     <!-- Top Navigation Header -->
     <header class="fixed top-0 left-0 right-0 z-40 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors shadow-xs">
