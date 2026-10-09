@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0F172A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Transaction History — Spendly</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+        .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    <script>
+        if (localStorage.getItem('spendly_theme') === 'dark' || (!('spendly_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col antialiased transition-colors duration-200">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+    <!-- Navigation Header -->
+    <header class="fixed top-0 left-0 right-0 z-40 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors shadow-xs">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 h-16 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-3 sm:gap-6">
+                <a href="/dashboard" class="flex items-center gap-2 sm:gap-2.5 group">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 dark:bg-emerald-600 text-white flex items-center justify-center shadow-sm group-hover:bg-black dark:group-hover:bg-emerald-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" class="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                    </div>
+                    <span class="font-heading font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">Spendly</span>
+                </a>
+
+                <nav class="hidden sm:flex items-center gap-1 sm:gap-2">
+                    <a href="/dashboard" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Dashboard
+                    </a>
+                    <a href="/transactions" class="px-3 py-1.5 text-xs font-bold rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 transition-all flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>Transactions</span>
+                    </a>
+                    <a href="/debts" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Debts
+                    </a>
+                    <a href="/subscriptions" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Subscriptions
+                    </a>
+                    <a href="/goals" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Goals
+                    </a>
+                    <a href="/reports" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Reports
+                    </a>
+                    <a href="/net-worth" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Net Worth
+                    </a>
+                    <a href="/receipts" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Receipts
+                    </a>
+                    <a href="/forecast" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Forecast
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center gap-1.5 sm:gap-3">
+                <!-- Theme Toggle Button -->
+                <button type="button" id="theme-toggle-btn" class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer" title="Toggle Light/Dark Theme">
+                    <svg id="theme-icon-sun" class="w-4 h-4 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg id="theme-icon-moon" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+
+                <!-- Currency Picker -->
+                <div class="relative">
+                    <select id="currency-select" class="appearance-none bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-colors cursor-pointer">
+                        <option value="₦" {{if eq .Currency "₦"}}selected{{end}}>₦ (NGN)</option>
+                        <option value="$" {{if eq .Currency "$"}}selected{{end}}>$ (USD)</option>
+                        <option value="€" {{if eq .Currency "€"}}selected{{end}}>€ (EUR)</option>
+                        <option value="£" {{if eq .Currency "£"}}selected{{end}}>£ (GBP)</option>
+                        <option value="¥" {{if eq .Currency "¥"}}selected{{end}}>¥ (JPY)</option>
+                        <option value="₹" {{if eq .Currency "₹"}}selected{{end}}>₹ (INR)</option>
+                        <option value="C$" {{if eq .Currency "C$"}}selected{{end}}>C$ (CAD)</option>
+                        <option value="A$" {{if eq .Currency "A$"}}selected{{end}}>A$ (AUD)</option>
+                        <option value="₵" {{if eq .Currency "₵"}}selected{{end}}>₵ (GHS)</option>
+                        <option value="KSh" {{if eq .Currency "KSh"}}selected{{end}}>KSh (KES)</option>
+                        <option value="R" {{if eq .Currency "R"}}selected{{end}}>R (ZAR)</option>
+                    </select>
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </span>
+                </div>
+
+                <!-- User Dropdown Menu -->
+                <div class="relative">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                        <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center uppercase">
+                            {{if .FullName}}{{printf "%.1s" .FullName}}{{else}}{{printf "%.1s" .Username}}{{end}}
+                        </span>
+                        <div class="hidden md:flex flex-col text-left">
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[100px] truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">@{{.Username}}</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+
+                    <!-- Dropdown Content -->
+                    <div id="user-dropdown-menu" class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 hidden z-50">
+                        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                            <p class="text-xs font-bold text-slate-800 dark:text-white truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">{{if .Email}}{{.Email}}{{else}}@{{.Username}}{{end}}</p>
+                        </div>
+                        <div class="py-1">
+                            <a href="/dashboard" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="/transactions" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg>
+                                <span>Transaction History</span>
+                            </a>
+                            <a href="/reports" class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                                <span>Reports & Analytics</span>
+                            </a>
+                        </div>
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-1">
+                            <form action="/api/logout" method="POST">
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                    <span>Log out</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Header Spacer -->
+    <div class="h-16" aria-hidden="true"></div>
+
+    <!-- Main Container -->
+    <main class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-8 space-y-4 sm:space-y-6 pb-28 lg:pb-12 flex-1 w-full">
+
+        <!-- Page Header & Action Toolbar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-base shrink-0 border border-emerald-200/60 dark:border-emerald-800/60">
+                        📋
+                    </span>
+                    <h1 class="font-heading text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Transaction History</h1>
+                </div>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Search, filter, categorize, and inspect your full financial transaction history.</p>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button type="button" id="btn-export" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    <span>Export</span>
+                </button>
+                <button type="button" id="btn-open-add" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 rounded-xl transition-all shadow-sm cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    <span>+ Add Transaction</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Selected Period Summary Metrics Banner -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs transition-colors">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Filtered Period:</span>
+                    <span id="period-display-label" class="text-xs font-extrabold text-slate-900 dark:text-white">This Month</span>
+                    <span id="tx-count-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">0 transactions</span>
+                </div>
+                <div class="text-[11px] text-slate-400" id="period-date-range"></div>
+            </div>
+
+            <!-- 3 Financial Metrics Grid -->
+            <div class="grid grid-cols-3 gap-2 sm:gap-4">
+                <div class="bg-slate-50/80 dark:bg-slate-800/60 p-2.5 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 block truncate">Total Inflow</span>
+                    <p class="font-heading text-sm sm:text-xl md:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 truncate" id="kpi-inflow">+₦0.00</p>
+                </div>
+                <div class="bg-slate-50/80 dark:bg-slate-800/60 p-2.5 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 block truncate">Total Outflow</span>
+                    <p class="font-heading text-sm sm:text-xl md:text-2xl font-black text-rose-500 dark:text-rose-400 mt-0.5 truncate" id="kpi-outflow">-₦0.00</p>
+                </div>
+                <div class="bg-slate-50/80 dark:bg-slate-800/60 p-2.5 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 block truncate">Net Cash Flow</span>
+                    <p class="font-heading text-sm sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white mt-0.5 truncate" id="kpi-net">₦0.00</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Comprehensive Filters Toolbar -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs space-y-3">
+            
+            <div class="grid grid-cols-2 sm:grid-cols-12 gap-2 sm:gap-2.5">
+                <!-- Search Input -->
+                <div class="col-span-2 sm:col-span-4 relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </span>
+                    <input type="text" id="tx-search" placeholder="Search note, merchant, category, or amount..." class="w-full pl-8.5 pr-8 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium">
+                    <button type="button" id="btn-clear-search" class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Month Navigator (< {Month} >) -->
+                <div class="col-span-2 sm:col-span-3 flex items-center justify-between bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-1.5 py-1">
+                    <button type="button" id="btn-prev-month" class="p-1 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" title="Previous Month">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <button type="button" id="btn-month-label" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate px-1 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer" title="Click to reset to current month">
+                        <span id="month-display-text">This Month</span>
+                    </button>
+                    <button type="button" id="btn-next-month" class="p-1 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" title="Next Month">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                    <button type="button" id="btn-all-time" class="text-[10px] font-bold px-2 py-0.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1" title="Toggle all historical transactions">All</button>
+                </div>
+
+                <!-- Type Filter -->
+                <div class="col-span-1 sm:col-span-2">
+                    <select id="filter-type" class="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer truncate font-medium">
+                        <option value="all">All Types</option>
+                        <option value="income">Income Only</option>
+                        <option value="expense">Expense Only</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="col-span-1 sm:col-span-3">
+                    <select id="filter-category" class="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer truncate font-medium">
+                        <option value="all">All Categories</option>
+                        <optgroup label="Expense Categories">
+                            <option value="food">🍔 Food & Groceries</option>
+                            <option value="transport">🚗 Transportation</option>
+                            <option value="housing">🏠 Housing & Utilities</option>
+                            <option value="entertainment">🎬 Entertainment</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="healthcare">💊 Healthcare</option>
+                            <option value="education">📚 Education</option>
+                            <option value="bills">💡 Bills & Utilities</option>
+                            <option value="personal">✨ Personal Care</option>
+                            <option value="other">📦 Other Expense</option>
+                        </optgroup>
+                        <optgroup label="Income Categories">
+                            <option value="salary">💼 Salary & Wages</option>
+                            <option value="freelance">💻 Freelance & Side Hustles</option>
+                            <option value="investments">📈 Investments</option>
+                            <option value="business">🏢 Business & Sales</option>
+                            <option value="gifts">🎁 Gifts & Grants</option>
+                            <option value="refunds">🔄 Refunds</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Secondary Filter Row: Wallet + Sort -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-[11px] font-semibold text-slate-400">Wallet:</span>
+                    <select id="filter-account" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none cursor-pointer font-medium">
+                        <option value="all">💳 All Wallets</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-semibold text-slate-400">Sort:</span>
+                    <select id="sort-order" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none cursor-pointer font-medium">
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="amount-desc">Highest Amount</option>
+                        <option value="amount-asc">Lowest Amount</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Ledger Card -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden transition-colors">
+            
+            <!-- Table Header (Desktop Only) -->
+            <div class="hidden md:grid grid-cols-12 gap-3 px-5 py-3 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div class="col-span-2">Date</div>
+                <div class="col-span-3">Category & Note</div>
+                <div class="col-span-3">Wallet / Account</div>
+                <div class="col-span-2 text-right">Amount</div>
+                <div class="col-span-2 text-right">Actions</div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="tx-loading" class="py-16 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
+                <div class="inline-block animate-spin mb-2">⏳</div>
+                <p>Loading transactions...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="tx-empty" class="py-20 text-center px-4 hidden">
+                <div class="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto mb-3 text-2xl text-slate-400">
+                    🧾
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">No transactions found</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">Try adjusting your date range or filters, or record a new transaction with "+ Add Transaction".</p>
+            </div>
+
+            <!-- Transactions List Container -->
+            <div id="tx-list" class="divide-y divide-slate-100 dark:divide-slate-800"></div>
+
+        </div>
+
+    </main>
+
+    <!-- ─── Fixed Mobile Bottom Navigation Bar ────────────────────────────── -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 h-16 px-2 flex items-center justify-around shadow-lg transition-colors">
+        <a href="/dashboard" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Home</span>
+        </a>
+        <a href="/transactions" class="flex flex-col items-center justify-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 py-1 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg>
+            <span>Transactions</span>
+        </a>
+        <a href="/reports" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            <span>Budgets</span>
+        </a>
+        <a href="/goals" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
+            <span>Goals</span>
+        </a>
+        <button type="button" id="btn-nav-mobile-more" onclick="const s = document.getElementById('mobile-more-sheet'); if (s) s.classList.remove('hidden');" class="flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white py-1 px-3 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            <span>More</span>
+        </button>
+    </nav>
+
+    <!-- Mobile Floating Action Button (FAB) -->
+    <button type="button" id="btn-mobile-fab" class="lg:hidden fixed right-4 bottom-20 z-40 w-[58px] h-[58px] rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black flex items-center justify-center shadow-xl shadow-emerald-500/40 active:scale-90 transition-all cursor-pointer" title="Add Transaction" aria-label="Add Transaction">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+    </button>
+
+    <!-- ─── Add / Edit Transaction Modal ────────────────────────────────────── -->
+    <div id="tx-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 id="modal-title" class="font-heading font-extrabold text-base text-slate-900 dark:text-white">Add Transaction</h3>
+                <button type="button" id="btn-close-tx-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <form id="tx-form" class="space-y-4">
+                <input type="hidden" id="form-tx-id" value="">
+
+                <!-- Type Selector (Income vs Expense) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Type</label>
+                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                        <button type="button" id="type-btn-expense" class="py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-rose-500 shadow-xs">
+                            − Expense
+                        </button>
+                        <button type="button" id="type-btn-income" class="py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                            + Income
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Amount -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Amount (<span class="currency-label">{{.Currency}}</span>)</label>
+                    <div class="relative">
+                        <span class="currency-label absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">{{.Currency}}</span>
+                        <input type="number" step="any" min="0.01" id="form-amount" required placeholder="0.00" class="w-full pl-8 pr-3 py-2.5 text-base font-extrabold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <!-- Note / Merchant -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Note / Description</label>
+                    <input type="text" id="form-note" placeholder="e.g., Grocery shopping at Trader Joe's" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                </div>
+
+                <!-- Category & Account Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Category</label>
+                        <select id="form-category" required class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer font-medium">
+                            <!-- Populated dynamically based on type -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Wallet / Account</label>
+                        <select id="form-account" required class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer font-medium">
+                            <!-- Populated from accounts API -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Date -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Date</label>
+                    <input type="date" id="form-date" required class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" id="btn-cancel-tx" class="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" id="btn-submit-tx" class="px-5 py-2 text-xs font-bold rounded-xl bg-slate-900 dark:bg-emerald-600 text-white hover:bg-black dark:hover:bg-emerald-500 transition-colors shadow-sm cursor-pointer">
+                        Save Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── Delete Confirmation Modal ──────────────────────────────────────── -->
+    <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center mx-auto text-xl font-bold">
+                🗑️
+            </div>
+            <div>
+                <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-white">Delete Transaction?</h3>
+                <p class="text-xs text-slate-400 mt-1">This action cannot be undone. Account balances will update automatically.</p>
+            </div>
+            <div class="flex items-center justify-center gap-2 pt-2">
+                <button type="button" id="btn-cancel-delete" class="flex-1 px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" id="btn-confirm-delete" class="flex-1 px-4 py-2 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition-colors cursor-pointer">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Export Modal ────────────────────────────────────────────────────── -->
+    <div id="export-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Export Transactions</h3>
+                <button type="button" id="btn-close-export" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+            </div>
+            <div class="space-y-3">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Download your transactions for spreadsheets or external tax audits.</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="triggerExport('csv')" class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="text-xl">📊</span>
+                        <strong class="text-xs font-bold">CSV Spreadsheet</strong>
+                        <span class="text-[10px] text-slate-400">Excel / Numbers</span>
+                    </button>
+                    <button type="button" onclick="triggerExport('json')" class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 flex flex-col items-center gap-1 cursor-pointer">
+                        <span class="text-xl">📄</span>
+                        <strong class="text-xs font-bold">JSON Data</strong>
+                        <span class="text-[10px] text-slate-400">Raw Records</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Mobile More Navigation Drawer / Sheet ───────────────────────────── -->
+    <div id="mobile-more-sheet" onclick="if(event.target===this)this.classList.add('hidden')" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden transition-opacity">
+        <div class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4"></div>
+            
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+                <div>
+                    <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-white">All Features</h3>
+                    <p class="text-xs text-slate-400 dark:text-slate-500">Dedicated financial management sections</p>
+                </div>
+                <button type="button" onclick="const s = document.getElementById('mobile-more-sheet'); if (s) s.classList.add('hidden');" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">✕</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 mb-5">
+                <a href="/dashboard" class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
+                    <span class="text-xl">🏠</span>
+                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Home Dashboard</strong>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Overview & charts</span>
+                </a>
+                <a href="/debts" class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
+                    <span class="text-xl">💳</span>
+                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Debts & Loans</strong>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Track money owed</span>
+                </a>
+                <a href="/subscriptions" class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
+                    <span class="text-xl">🔄</span>
+                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Subscriptions</strong>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Recurring bills</span>
+                </a>
+                <a href="/reports" class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
+                    <span class="text-xl">📊</span>
+                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Budgets & Reports</strong>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Analytics & stats</span>
+                </a>
+                <a href="/goals" class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
+                    <span class="text-xl">🎯</span>
+                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Savings Goals</strong>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Target pots</span>
+                </a>
+                <a href="/net-worth" class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
+                    <span class="text-xl">🏛️</span>
+                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Net Worth</strong>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Assets & liabilities</span>
+                </a>
+                <a href="/receipts" class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
+                    <span class="text-xl">🧾</span>
+                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Receipts & OCR</strong>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Scan & store</span>
+                </a>
+                <a href="/forecast" class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
+                    <span class="text-xl">🔮</span>
+                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Cash Runway</strong>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Predictive engine</span>
+                </a>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <a href="/dashboard" class="text-xs font-bold text-slate-700 dark:text-slate-300">Back to Dashboard</a>
+                <a href="/api/logout" class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors">Sign Out</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Core Script ─────────────────────────────────────────────────────── -->
+    <script>
+        let currentCurrency = '{{.Currency}}' || '₦';
+        let allTransactions = [];
+        let filteredTransactions = [];
+        let accounts = [];
+        let selectedYear = new Date().getFullYear();
+        let selectedMonth = new Date().getMonth(); // 0-indexed
+        let isAllTime = false;
+        let pendingDeleteId = null;
+
+        const CATEGORIES = {
+            food: { label: 'Food & Groceries', icon: '🍔', type: 'expense' },
+            transport: { label: 'Transportation', icon: '🚗', type: 'expense' },
+            housing: { label: 'Housing & Utilities', icon: '🏠', type: 'expense' },
+            entertainment: { label: 'Entertainment', icon: '🎬', type: 'expense' },
+            shopping: { label: 'Shopping', icon: '🛍️', type: 'expense' },
+            healthcare: { label: 'Healthcare', icon: '💊', type: 'expense' },
+            education: { label: 'Education', icon: '📚', type: 'expense' },
+            bills: { label: 'Bills & Subscriptions', icon: '💡', type: 'expense' },
+            personal: { label: 'Personal Care', icon: '✨', type: 'expense' },
+            other: { label: 'Other Expense', icon: '📦', type: 'expense' },
+            salary: { label: 'Salary & Wages', icon: '💼', type: 'income' },
+            freelance: { label: 'Freelance & Side Hustles', icon: '💻', type: 'income' },
+            investments: { label: 'Investments & Dividends', icon: '📈', type: 'income' },
+            business: { label: 'Business & Sales', icon: '🏢', type: 'income' },
+            gifts: { label: 'Grants & Gifts', icon: '🎁', type: 'income' },
+            refunds: { label: 'Refunds & Returns', icon: '🔄', type: 'income' }
+        };
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const el = document.createElement('div');
+            el.className = `px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold text-white transition-all transform translate-y-2 opacity-0 flex items-center gap-2 ${
+                type === 'error' ? 'bg-rose-600' : 'bg-slate-900 dark:bg-emerald-600'
+            }`;
+            el.innerHTML = `<span>${msg}</span>`;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+            setTimeout(() => {
+                el.classList.add('opacity-0');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
+
+        function fmtMoney(amount) {
+            const n = Number(amount) || 0;
+            return currentCurrency + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function fmtDate(isoStr) {
+            if (!isoStr) return '';
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return isoStr;
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Initialize Month Navigation
+        function updateMonthNavigator() {
+            const labelEl = document.getElementById('month-display-text');
+            const periodLabel = document.getElementById('period-display-label');
+            const dateRangeEl = document.getElementById('period-date-range');
+            const allBtn = document.getElementById('btn-all-time');
+
+            if (isAllTime) {
+                if (labelEl) labelEl.textContent = 'All Time';
+                if (periodLabel) periodLabel.textContent = 'All Recorded History';
+                if (allBtn) {
+                    allBtn.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-lg bg-emerald-500 text-white transition-colors cursor-pointer ml-1';
+                }
+                if (dateRangeEl) dateRangeEl.textContent = 'All dates included';
+                return;
+            }
+
+            if (allBtn) {
+                allBtn.className = 'text-[10px] font-bold px-2 py-0.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1';
+            }
+
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const curDate = new Date();
+            const isThisMonth = selectedYear === curDate.getFullYear() && selectedMonth === curDate.getMonth();
+
+            const text = isThisMonth ? 'This Month' : `${monthNames[selectedMonth]} ${selectedYear}`;
+            if (labelEl) labelEl.textContent = text;
+            if (periodLabel) periodLabel.textContent = `${monthNames[selectedMonth]} ${selectedYear}`;
+
+            const startD = new Date(selectedYear, selectedMonth, 1);
+            const endD = new Date(selectedYear, selectedMonth + 1, 0);
+            if (dateRangeEl) {
+                dateRangeEl.textContent = `${startD.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${endD.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+            }
+        }
+
+        async function loadAccounts() {
+            try {
+                const res = await fetch('/api/accounts');
+                if (res.ok) {
+                    const data = await res.json();
+                    accounts = data.accounts || [];
+                    populateAccountSelects();
+                }
+            } catch (err) {
+                console.error('Error loading accounts:', err);
+            }
+        }
+
+        function populateAccountSelects() {
+            const filterAcc = document.getElementById('filter-account');
+            const formAcc = document.getElementById('form-account');
+
+            if (filterAcc) {
+                const curVal = filterAcc.value;
+                filterAcc.innerHTML = '<option value="all">💳 All Wallets</option>';
+                accounts.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `${a.name} (${fmtMoney(a.balance)})`;
+                    filterAcc.appendChild(opt);
+                });
+                filterAcc.value = curVal || 'all';
+            }
+
+            if (formAcc) {
+                formAcc.innerHTML = '';
+                accounts.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `${a.name} (${fmtMoney(a.balance)})`;
+                    formAcc.appendChild(opt);
+                });
+            }
+        }
+
+        function populateCategorySelect(type = 'expense') {
+            const sel = document.getElementById('form-category');
+            if (!sel) return;
+            sel.innerHTML = '';
+            for (const [key, meta] of Object.entries(CATEGORIES)) {
+                if (meta.type === type) {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = `${meta.icon} ${meta.label}`;
+                    sel.appendChild(opt);
+                }
+            }
+        }
+
+        async function loadTransactions() {
+            const loading = document.getElementById('tx-loading');
+            const list = document.getElementById('tx-list');
+            const empty = document.getElementById('tx-empty');
+
+            if (loading) loading.style.display = 'block';
+            if (list) list.style.display = 'none';
+            if (empty) empty.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/transactions');
+                if (res.ok) {
+                    allTransactions = await res.json().catch(() => []);
+                    applyFilters();
+                }
+            } catch (err) {
+                console.error('Error loading transactions:', err);
+            } finally {
+                if (loading) loading.style.display = 'none';
+            }
+        }
+
+        function applyFilters() {
+            const searchVal = (document.getElementById('tx-search')?.value || '').toLowerCase().trim();
+            const typeVal = document.getElementById('filter-type')?.value || 'all';
+            const catVal = document.getElementById('filter-category')?.value || 'all';
+            const accVal = document.getElementById('filter-account')?.value || 'all';
+            const sortVal = document.getElementById('sort-order')?.value || 'date-desc';
+
+            const btnClear = document.getElementById('btn-clear-search');
+            if (btnClear) {
+                btnClear.classList.toggle('hidden', searchVal.length === 0);
+            }
+
+            filteredTransactions = allTransactions.filter(tx => {
+                // Period filter
+                if (!isAllTime && tx.date) {
+                    const d = new Date(tx.date);
+                    if (d.getFullYear() !== selectedYear || d.getMonth() !== selectedMonth) {
+                        return false;
+                    }
+                }
+
+                // Type filter
+                if (typeVal !== 'all' && tx.type !== typeVal) return false;
+
+                // Category filter
+                if (catVal !== 'all' && tx.category !== catVal) return false;
+
+                // Account filter
+                if (accVal !== 'all' && String(tx.account_id) !== String(accVal)) return false;
+
+                // Keyword search
+                if (searchVal) {
+                    const note = (tx.note || '').toLowerCase();
+                    const catMeta = CATEGORIES[tx.category];
+                    const catLabel = catMeta ? catMeta.label.toLowerCase() : '';
+                    const amtStr = String(tx.amount);
+                    if (!note.includes(searchVal) && !catLabel.includes(searchVal) && !amtStr.includes(searchVal)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            // Sorting
+            filteredTransactions.sort((a, b) => {
+                if (sortVal === 'date-desc') return new Date(b.date || 0) - new Date(a.date || 0);
+                if (sortVal === 'date-asc') return new Date(a.date || 0) - new Date(b.date || 0);
+                if (sortVal === 'amount-desc') return (b.amount || 0) - (a.amount || 0);
+                if (sortVal === 'amount-asc') return (a.amount || 0) - (b.amount || 0);
+                return 0;
+            });
+
+            updatePeriodSummary();
+            renderTransactions();
+        }
+
+        function updatePeriodSummary() {
+            let inflow = 0;
+            let outflow = 0;
+
+            filteredTransactions.forEach(tx => {
+                const amt = Number(tx.amount) || 0;
+                if (tx.type === 'income') inflow += amt;
+                else if (tx.type === 'expense') outflow += amt;
+            });
+
+            const net = inflow - outflow;
+
+            const inflowEl = document.getElementById('kpi-inflow');
+            const outflowEl = document.getElementById('kpi-outflow');
+            const netEl = document.getElementById('kpi-net');
+            const countEl = document.getElementById('tx-count-pill');
+
+            if (inflowEl) inflowEl.textContent = '+' + fmtMoney(inflow);
+            if (outflowEl) outflowEl.textContent = '-' + fmtMoney(outflow);
+            if (netEl) {
+                netEl.textContent = (net >= 0 ? '+' : '') + fmtMoney(net);
+                netEl.className = `font-heading text-sm sm:text-xl md:text-2xl font-black truncate ${net >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-500'}`;
+            }
+            if (countEl) countEl.textContent = `${filteredTransactions.length} transaction${filteredTransactions.length === 1 ? '' : 's'}`;
+        }
+
+        function renderTransactions() {
+            const list = document.getElementById('tx-list');
+            const empty = document.getElementById('tx-empty');
+            if (!list) return;
+
+            if (filteredTransactions.length === 0) {
+                list.style.display = 'none';
+                if (empty) empty.classList.remove('hidden');
+                return;
+            }
+
+            if (empty) empty.classList.add('hidden');
+            list.style.display = 'block';
+
+            list.innerHTML = filteredTransactions.map(tx => {
+                const isIncome = tx.type === 'income';
+                const meta = CATEGORIES[tx.category] || { label: tx.category || 'Transaction', icon: isIncome ? '💰' : '📦' };
+                const acc = accounts.find(a => String(a.id) === String(tx.account_id));
+                const accName = acc ? acc.name : (tx.account_name || 'Main Wallet');
+
+                return `
+                    <div class="px-4 sm:px-5 py-3.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-3 group">
+                        
+                        <!-- Left: Icon + Description -->
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-lg ${
+                                isIncome ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
+                            }">
+                                ${meta.icon}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-xs">
+                                        ${tx.note || meta.label}
+                                    </span>
+                                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 truncate">
+                                        ${meta.label}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                                    <span>${fmtDate(tx.date)}</span>
+                                    <span>•</span>
+                                    <span class="truncate">💳 ${accName}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Amount + Actions -->
+                        <div class="flex items-center gap-3 shrink-0">
+                            <span class="font-heading text-xs sm:text-sm font-black whitespace-nowrap ${
+                                isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
+                            }">
+                                ${isIncome ? '+' : '−'}${fmtMoney(tx.amount)}
+                            </span>
+
+                            <div class="flex items-center gap-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button type="button" onclick="editTransaction(${tx.id})" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                                </button>
+                                <button type="button" onclick="promptDeleteTransaction(${tx.id})" class="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Modal Handlers
+        let currentFormType = 'expense';
+
+        function setFormType(type) {
+            currentFormType = type;
+            const expBtn = document.getElementById('type-btn-expense');
+            const incBtn = document.getElementById('type-btn-income');
+
+            if (type === 'expense') {
+                expBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-rose-500 shadow-xs';
+                incBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+            } else {
+                incBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-emerald-500 shadow-xs';
+                expBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+            }
+            populateCategorySelect(type);
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Add Transaction';
+            document.getElementById('form-tx-id').value = '';
+            document.getElementById('form-amount').value = '';
+            document.getElementById('form-note').value = '';
+            document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+            setFormType('expense');
+            document.getElementById('tx-modal').classList.remove('hidden');
+        }
+
+        function closeTxModal() {
+            document.getElementById('tx-modal').classList.add('hidden');
+        }
+
+        function editTransaction(id) {
+            const tx = allTransactions.find(t => t.id === id);
+            if (!tx) return;
+
+            document.getElementById('modal-title').textContent = 'Edit Transaction';
+            document.getElementById('form-tx-id').value = tx.id;
+            document.getElementById('form-amount').value = tx.amount;
+            document.getElementById('form-note').value = tx.note || '';
+            document.getElementById('form-date').value = (tx.date || '').split('T')[0] || new Date().toISOString().split('T')[0];
+
+            setFormType(tx.type || 'expense');
+            if (tx.category) {
+                document.getElementById('form-category').value = tx.category;
+            }
+            if (tx.account_id) {
+                document.getElementById('form-account').value = tx.account_id;
+            }
+
+            document.getElementById('tx-modal').classList.remove('hidden');
+        }
+
+        function promptDeleteTransaction(id) {
+            pendingDeleteId = id;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        async function executeDeleteTransaction() {
+            if (!pendingDeleteId) return;
+            try {
+                const res = await fetch('/api/transactions/' + pendingDeleteId, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Transaction deleted!');
+                    document.getElementById('delete-modal').classList.add('hidden');
+                    pendingDeleteId = null;
+                    await loadTransactions();
+                    await loadAccounts();
+                } else {
+                    showToast('Failed to delete transaction', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        function triggerExport(format) {
+            document.getElementById('export-modal').classList.add('hidden');
+            showToast(`Generating ${format.toUpperCase()} export...`);
+            window.location.href = `/api/export?format=${format}`;
+        }
+
+        // Event Listeners Setup
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateMonthNavigator();
+            await loadAccounts();
+            await loadTransactions();
+
+            // Month Navigator Buttons
+            document.getElementById('btn-prev-month')?.addEventListener('click', () => {
+                isAllTime = false;
+                selectedMonth--;
+                if (selectedMonth < 0) {
+                    selectedMonth = 11;
+                    selectedYear--;
+                }
+                updateMonthNavigator();
+                applyFilters();
+            });
+
+            document.getElementById('btn-next-month')?.addEventListener('click', () => {
+                isAllTime = false;
+                selectedMonth++;
+                if (selectedMonth > 11) {
+                    selectedMonth = 0;
+                    selectedYear++;
+                }
+                updateMonthNavigator();
+                applyFilters();
+            });
+
+            document.getElementById('btn-month-label')?.addEventListener('click', () => {
+                isAllTime = false;
+                selectedYear = new Date().getFullYear();
+                selectedMonth = new Date().getMonth();
+                updateMonthNavigator();
+                applyFilters();
+            });
+
+            document.getElementById('btn-all-time')?.addEventListener('click', () => {
+                isAllTime = !isAllTime;
+                updateMonthNavigator();
+                applyFilters();
+            });
+
+            // Search & Filter change
+            document.getElementById('tx-search')?.addEventListener('input', applyFilters);
+            document.getElementById('btn-clear-search')?.addEventListener('click', () => {
+                const inp = document.getElementById('tx-search');
+                if (inp) inp.value = '';
+                applyFilters();
+            });
+            document.getElementById('filter-type')?.addEventListener('change', applyFilters);
+            document.getElementById('filter-category')?.addEventListener('change', applyFilters);
+            document.getElementById('filter-account')?.addEventListener('change', applyFilters);
+            document.getElementById('sort-order')?.addEventListener('change', applyFilters);
+
+            // Modal Triggers
+            document.getElementById('btn-open-add')?.addEventListener('click', openAddModal);
+            document.getElementById('btn-mobile-fab')?.addEventListener('click', openAddModal);
+            document.getElementById('btn-close-tx-modal')?.addEventListener('click', closeTxModal);
+            document.getElementById('btn-cancel-tx')?.addEventListener('click', closeTxModal);
+
+            document.getElementById('type-btn-expense')?.addEventListener('click', () => setFormType('expense'));
+            document.getElementById('type-btn-income')?.addEventListener('click', () => setFormType('income'));
+
+            // Delete modal triggers
+            document.getElementById('btn-cancel-delete')?.addEventListener('click', () => {
+                document.getElementById('delete-modal').classList.add('hidden');
+                pendingDeleteId = null;
+            });
+            document.getElementById('btn-confirm-delete')?.addEventListener('click', executeDeleteTransaction);
+
+            // Export Modal
+            document.getElementById('btn-export')?.addEventListener('click', () => {
+                document.getElementById('export-modal').classList.remove('hidden');
+            });
+            document.getElementById('btn-close-export')?.addEventListener('click', () => {
+                document.getElementById('export-modal').classList.add('hidden');
+            });
+
+            // Form Submit
+            document.getElementById('tx-form')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('form-tx-id').value;
+                const amount = parseFloat(document.getElementById('form-amount').value);
+                const note = document.getElementById('form-note').value.trim();
+                const category = document.getElementById('form-category').value;
+                const accountId = parseInt(document.getElementById('form-account').value, 10);
+                const date = document.getElementById('form-date').value;
+
+                if (!amount || amount <= 0) {
+                    showToast('Please enter a valid amount', 'error');
+                    return;
+                }
+
+                const fd = new FormData();
+                fd.set('amount', amount);
+                fd.set('type', currentFormType);
+                fd.set('note', note);
+                fd.set('category', category);
+                fd.set('account_id', accountId || 0);
+                fd.set('date', date);
+
+                try {
+                    const url = id ? `/api/transactions/${id}` : '/api/transactions';
+                    const method = id ? 'PUT' : 'POST';
+                    const res = await fetch(url, { method, body: fd });
+
+                    if (res.ok) {
+                        showToast(id ? 'Transaction updated!' : 'Transaction created!');
+                        closeTxModal();
+                        await loadTransactions();
+                        await loadAccounts();
+                    } else {
+                        const errData = await res.json().catch(() => ({}));
+                        showToast(errData.error || 'Failed to save transaction', 'error');
+                    }
+                } catch (err) {
+                    showToast('Network error', 'error');
+                }
+            });
+
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle-btn');
+            const sunIcon = document.getElementById('theme-icon-sun');
+            const moonIcon = document.getElementById('theme-icon-moon');
+
+            function syncThemeIcons() {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    sunIcon?.classList.remove('hidden');
+                    moonIcon?.classList.add('hidden');
+                } else {
+                    sunIcon?.classList.add('hidden');
+                    moonIcon?.classList.remove('hidden');
+                }
+            }
+            syncThemeIcons();
+
+            themeBtn?.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('spendly_theme', isDark ? 'dark' : 'light');
+                syncThemeIcons();
+            });
+
+            // Currency Selector
+            document.getElementById('currency-select')?.addEventListener('change', async (e) => {
+                const newCurr = e.target.value;
+                const fd = new FormData();
+                fd.set('currency', newCurr);
+                try {
+                    const res = await fetch('/api/currency', { method: 'POST', body: fd });
+                    if (res.ok) {
+                        currentCurrency = newCurr;
+                        document.querySelectorAll('.currency-label').forEach(el => el.textContent = newCurr);
+                        showToast(`Currency changed to ${newCurr}`);
+                        await loadAccounts();
+                        applyFilters();
+                    }
+                } catch (err) {
+                    showToast('Failed to change currency', 'error');
+                }
+            });
+
+            // User dropdown
+            const userMenuBtn = document.getElementById('btn-user-menu');
+            const userDropdown = document.getElementById('user-dropdown-menu');
+            userMenuBtn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown?.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                if (userDropdown && !userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
+                    userDropdown.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -148,6 +148,7 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/login", app.HandleLogin)
 	app.Mux.HandleFunc("/sign-up", app.HandleSignUp)
 	app.Mux.HandleFunc("/dashboard", app.HandleDashboard)
+	app.Mux.HandleFunc("/transactions", app.HandleTransactionsPage)
 	app.Mux.HandleFunc("/debts", app.HandleDebts)
 	app.Mux.HandleFunc("/subscriptions", app.HandleSubscriptionsPage)
 	app.Mux.HandleFunc("/goals", app.HandleGoalsPage)
@@ -349,6 +350,54 @@ func (app *App) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.renderTemplate(w, "dashboard.html", data)
+}
+
+func (app *App) HandleTransactionsPage(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	curr := app.DB.GetCurrency(username)
+	income, expenses, balance, _ := app.DB.CalculateTotals(username)
+
+	prof, _ := app.DB.GetProfile(username)
+	fullName := ""
+	email := ""
+	firstName := username
+	if prof != nil {
+		fullName = prof.FullName
+		email = prof.Email
+		if strings.TrimSpace(prof.FullName) != "" {
+			parts := strings.Fields(prof.FullName)
+			if len(parts) > 0 {
+				firstName = parts[0]
+			}
+		}
+	}
+
+	data := struct {
+		Username    string
+		FirstName   string
+		FullName    string
+		Email       string
+		Currency    string
+		IncomeFmt   string
+		ExpensesFmt string
+		BalanceFmt  string
+	}{
+		Username:    username,
+		FirstName:   firstName,
+		FullName:    fullName,
+		Email:       email,
+		Currency:    curr,
+		IncomeFmt:   formatMoney(income, curr),
+		ExpensesFmt: formatMoney(expenses, curr),
+		BalanceFmt:  formatMoney(balance, curr),
+	}
+
+	app.renderTemplate(w, "transactions.html", data)
 }
 
 // ─── Auth API Handlers ─────────────────────────────────────────────────────
