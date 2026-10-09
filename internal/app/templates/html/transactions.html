@@ -820,16 +820,13 @@
                 return `
                     <div class="px-3.5 sm:px-5 py-3.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors flex items-start gap-3 group">
                         
-                        <!-- Left: Category Icon -->
                         <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-lg mt-0.5 ${
                             isIncome ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
                         }">
                             ${meta.icon}
                         </div>
 
-                        <!-- Right: Content & Metadata -->
                         <div class="min-w-0 flex-1">
-                            <!-- Row 1: Note (Left) <---> Amount (Right) -->
                             <div class="flex items-start justify-between gap-3">
                                 <span class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white break-words">
                                     ${tx.note || meta.label}
@@ -841,7 +838,6 @@
                                 </span>
                             </div>
 
-                            <!-- Row 2: Metadata (Category Pill + Date + Wallet) & Actions -->
                             <div class="flex items-center justify-between gap-2 mt-1.5 flex-wrap">
                                 <div class="flex items-center gap-1.5 flex-wrap text-[11px] text-slate-400">
                                     <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
