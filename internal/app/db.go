@@ -2440,7 +2440,6 @@ func (s *DBStore) EnsureDefaultCategories(username string) error {
 
 func (s *DBStore) GetCategories(username string) ([]Category, error) {
 	_ = s.EnsureDefaultCategories(username)
-	s.mu.Unlock()
 
 	txCounts := make(map[string]int)
 	countRows, err := s.db.Query("SELECT category, COUNT(1) FROM transactions WHERE username = ? GROUP BY category", username)
@@ -2675,7 +2674,6 @@ func (s *DBStore) ensureDefaultAccounts(username string) error {
 
 func (s *DBStore) GetAccounts(username string) ([]Account, error) {
 	_ = s.ensureDefaultAccounts(username)
-	s.mu.Unlock()
 
 	rows, err := s.db.Query(
 		"SELECT id, username, name, type, currency, initial_balance, color, icon, is_default, created_at FROM accounts WHERE username = ? ORDER BY is_default DESC, id ASC",
