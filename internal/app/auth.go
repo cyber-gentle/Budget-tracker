@@ -5,15 +5,13 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
-	"encoding/json"
-	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
-	"sync"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
+)
+
+func generateToken() (string, error) {
+	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
