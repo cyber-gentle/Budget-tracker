@@ -6621,20 +6621,14 @@
                 return;
             }
 
-            // Step 1: Explicitly trigger browser microphone permission dialog via getUserMedia
+            // Step 1: Request microphone permission via getUserMedia
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     stream.getTracks().forEach(t => t.stop());
                 } catch (permErr) {
-                    console.warn('Microphone permission error:', permErr);
-                    if (permErr.name === 'NotAllowedError' || permErr.name === 'PermissionDeniedError') {
-                        showToast('Microphone access blocked. Click the lock/settings icon in the address bar to Allow.', 'error');
-                        return;
-                    } else if (permErr.name === 'NotFoundError' || permErr.name === 'DevicesNotFoundError') {
-                        showToast('No microphone hardware detected on your device.', 'error');
-                        return;
-                    }
+                    console.warn('Microphone permission pre-check:', permErr);
+                    // Don't abort here; SpeechRecognition uses its own permission state in Chromium
                 }
             }
 
