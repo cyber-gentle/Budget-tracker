@@ -6639,7 +6639,9 @@
                 aiSpeechRecognition.onerror = (event) => {
                     console.warn('Speech recognition error:', event.error);
                     stopVoiceInput(bannerId, pulseDotId);
-                    if (event.error !== 'no-speech') {
+                    if (event.error === 'not-allowed') {
+                        showToast('Microphone blocked. Click the lock/mic icon in the address bar to Allow.', 'error');
+                    } else if (event.error !== 'no-speech') {
                         showToast('Voice recognition: ' + event.error, 'error');
                     }
                 };

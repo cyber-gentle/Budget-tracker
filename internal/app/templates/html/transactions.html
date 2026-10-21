@@ -1234,7 +1234,14 @@
                         }
                         if (txAiInput) txAiInput.value = text;
                     };
-                    txSpeechRec.onerror = () => stopTxVoice();
+                    txSpeechRec.onerror = (event) => {
+                        stopTxVoice();
+                        if (event?.error === 'not-allowed') {
+                            showToast('Microphone blocked. Click the lock/mic icon in the address bar to Allow.', 'error');
+                        } else if (event?.error && event.error !== 'no-speech') {
+                            showToast('Voice recognition: ' + event.error, 'error');
+                        }
+                    };
                     txSpeechRec.onend = () => {
                         stopTxVoice();
                         if (txAiInput && txAiInput.value.trim().length > 0) {
