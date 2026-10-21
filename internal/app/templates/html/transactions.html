@@ -1212,16 +1212,42 @@
             const btnTxStopVoice = document.getElementById('tx-modal-btn-stop-voice');
             const btnTxAiParse = document.getElementById('tx-modal-btn-ai-parse');
 
-            function startTxVoice() {
-                if (!txSpeechRec) {
+            async function startTxVoice() {
+                if (!SpeechRecCls) {
                     showToast('Voice input is supported in Chrome, Edge, Safari, and mobile browsers.', 'error');
                     return;
                 }
                 if (isTxListening) {
-                    try { txSpeechRec.stop(); } catch (e) {}
+                    stopTxVoice();
                     return;
                 }
+
+                // Explicitly trigger browser microphone permission dialog via getUserMedia
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        stream.getTracks().forEach(t => t.stop());
+                    } catch (permErr) {
+                        console.warn('Microphone permission error:', permErr);
+                        if (permErr.name === 'NotAllowedError' || permErr.name === 'PermissionDeniedError') {
+                            showToast('Microphone access blocked. Click the lock/settings icon in the address bar to Allow.', 'error');
+                            return;
+                        } else if (permErr.name === 'NotFoundError' || permErr.name === 'DevicesNotFoundError') {
+                            showToast('No microphone hardware detected on your device.', 'error');
+                            return;
+                        }
+                    }
+                }
+
                 try {
+                    if (txSpeechRec) {
+                        try { txSpeechRec.abort(); } catch (e) {}
+                    }
+                    txSpeechRec = new SpeechRecCls();
+                    txSpeechRec.continuous = false;
+                    txSpeechRec.interimResults = true;
+                    txSpeechRec.lang = 'en-US';
+
                     txSpeechRec.onstart = () => {
                         isTxListening = true;
                         txVoiceBanner?.classList.remove('hidden');
@@ -1234,12 +1260,19 @@
                         }
                         if (txAiInput) txAiInput.value = text;
                     };
-                    txSpeechRec.onerror = (event) => {
+                    txSpeechRec.onerror = async (event) => {
                         stopTxVoice();
                         if (event?.error === 'not-allowed') {
-                            showToast('Microphone blocked. Click the lock/mic icon in the address bar to Allow.', 'error');
+                            const isBrave = (navigator.brave && await navigator.brave.isBrave()) || false;
+                            if (isBrave) {
+                                showToast('Brave blocks Google speech by default. Enable it in brave://settings/extensions or use Chrome/Edge.', 'error');
+                            } else {
+                                showToast('Microphone blocked. Click the lock/tune icon in the address bar to Allow.', 'error');
+                            }
+                        } else if (event?.error === 'network') {
+                            showToast('Speech network error. Chrome speech requires connection to speech recognition servers.', 'error');
                         } else if (event?.error && event.error !== 'no-speech') {
-                            showToast('Voice recognition: ' + event.error, 'error');
+                            showToast('Voice error: ' + event.error, 'error');
                         }
                     };
                     txSpeechRec.onend = () => {
@@ -1250,7 +1283,9 @@
                     };
                     txSpeechRec.start();
                 } catch (err) {
+                    console.error(err);
                     stopTxVoice();
+                    showToast('Could not start microphone: ' + (err.message || err), 'error');
                 }
             }
 

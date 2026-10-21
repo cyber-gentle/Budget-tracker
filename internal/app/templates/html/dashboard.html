@@ -6606,8 +6606,8 @@
         }
 
         // Voice Recognition Handling
-        function startVoiceInput(targetInputId, bannerId, pulseDotId) {
-            if (!aiSpeechRecognition) {
+        async function startVoiceInput(targetInputId, bannerId, pulseDotId) {
+            if (!SpeechRecClass) {
                 showToast('Voice input is supported in Chrome, Edge, Safari, and mobile browsers.', 'error');
                 return;
             }
@@ -6617,11 +6617,37 @@
             const dotEl = document.getElementById(pulseDotId);
 
             if (isListeningSpeech) {
-                try { aiSpeechRecognition.stop(); } catch (e) {}
+                stopVoiceInput(bannerId, pulseDotId);
                 return;
             }
 
+            // Step 1: Explicitly trigger browser microphone permission dialog via getUserMedia
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(t => t.stop());
+                } catch (permErr) {
+                    console.warn('Microphone permission error:', permErr);
+                    if (permErr.name === 'NotAllowedError' || permErr.name === 'PermissionDeniedError') {
+                        showToast('Microphone access blocked. Click the lock/settings icon in the address bar to Allow.', 'error');
+                        return;
+                    } else if (permErr.name === 'NotFoundError' || permErr.name === 'DevicesNotFoundError') {
+                        showToast('No microphone hardware detected on your device.', 'error');
+                        return;
+                    }
+                }
+            }
+
+            // Step 2: Fresh instance initialization
             try {
+                if (aiSpeechRecognition) {
+                    try { aiSpeechRecognition.abort(); } catch (e) {}
+                }
+                aiSpeechRecognition = new SpeechRecClass();
+                aiSpeechRecognition.continuous = false;
+                aiSpeechRecognition.interimResults = true;
+                aiSpeechRecognition.lang = 'en-US';
+
                 aiSpeechRecognition.onstart = () => {
                     isListeningSpeech = true;
                     if (bannerEl) bannerEl.classList.remove('hidden');
@@ -6636,13 +6662,20 @@
                     if (inputEl) inputEl.value = transcript;
                 };
 
-                aiSpeechRecognition.onerror = (event) => {
+                aiSpeechRecognition.onerror = async (event) => {
                     console.warn('Speech recognition error:', event.error);
                     stopVoiceInput(bannerId, pulseDotId);
                     if (event.error === 'not-allowed') {
-                        showToast('Microphone blocked. Click the lock/mic icon in the address bar to Allow.', 'error');
+                        const isBrave = (navigator.brave && await navigator.brave.isBrave()) || false;
+                        if (isBrave) {
+                            showToast('Brave blocks Google speech by default. Enable it in brave://settings/extensions or use Chrome/Edge.', 'error');
+                        } else {
+                            showToast('Microphone blocked. Click the lock/tune icon in the address bar to Allow.', 'error');
+                        }
+                    } else if (event.error === 'network') {
+                        showToast('Speech network error. Chrome speech requires connection to speech recognition servers.', 'error');
                     } else if (event.error !== 'no-speech') {
-                        showToast('Voice recognition: ' + event.error, 'error');
+                        showToast('Voice error: ' + event.error, 'error');
                     }
                 };
 
@@ -6661,6 +6694,7 @@
             } catch (err) {
                 console.error(err);
                 stopVoiceInput(bannerId, pulseDotId);
+                showToast('Could not start microphone: ' + (err.message || err), 'error');
             }
         }
 
