@@ -6524,6 +6524,10 @@
         if (transferBtn && noteInput) {
             transferBtn.addEventListener('click', () => {
                 if (noteLabel) noteLabel.textContent = 'Transfer Note';
+                noteInput.placeholder = 'e.g. Monthly Savings, Split payment...';
+            });
+        }
+
         // ─── AI Natural Language & Voice Assistant Engine ────────────────────────
         let currentAIParsed = null;
         let aiSpeechRecognition = null;
