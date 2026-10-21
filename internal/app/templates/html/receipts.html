@@ -237,7 +237,7 @@
 
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Processed Value</span>
-                <p id="stat-total-amount" class="font-heading text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{{.Currency}}{{printf "%.2f" .Summary.TotalAmount}}</p>
+                <p id="stat-total-amount" class="font-heading text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{{formatMoney .Summary.TotalAmount .Currency}}</p>
                 <span class="text-[10px] text-slate-400 mt-0.5 block">Parsed expenditure</span>
             </div>
 
@@ -501,7 +501,7 @@
                         <div class="space-y-1">
                             <div class="flex items-center justify-between gap-2">
                                 <h4 class="font-heading text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{{.Merchant}}</h4>
-                                <span class="font-heading text-sm font-extrabold text-slate-900 dark:text-white shrink-0">{{$.Currency}}{{printf "%.2f" .TotalAmount}}</span>
+                                <span class="font-heading text-sm font-extrabold text-slate-900 dark:text-white shrink-0">{{formatMoney .TotalAmount $.Currency}}</span>
                             </div>
                             <div class="flex items-center justify-between text-[11px] text-slate-400">
                                 <span>{{.ReceiptDateStr}}</span>
@@ -612,6 +612,14 @@
     <!-- Client-side Logic Script -->
     <script>
         const currencySymbol = '{{.Currency}}' || '$';
+
+        function fmtMoney(amount) {
+            if (amount === null || amount === undefined || isNaN(Number(amount))) return currencySymbol + '0.00';
+            const n = Number(amount);
+            const isNeg = n < 0;
+            const absVal = Math.abs(n);
+            return (isNeg ? '-' : '') + currencySymbol + absVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
         // Predefined Sample Receipts for instant test runs
         const sampleReceipts = {
@@ -825,7 +833,7 @@
                         
                         if (data.success && data.receipt) {
                             populateReviewForm(data.receipt, sample.img, sample.notes);
-                            showToast(`Extracted ${sample.merchant} receipt ($${sample.amount})!`, '🧾');
+                            showToast(`Extracted ${sample.merchant} receipt (${fmtMoney(sample.amount)})!`, '🧾');
                             prependGalleryCard(data.receipt);
                         }
                     } catch (err) {
@@ -901,7 +909,7 @@
                         const lineItemsText = (json.parsed && json.parsed.line_items) ? json.parsed.line_items.join('\n') : ocrText;
                         populateReviewForm(json.receipt, dataUrl, lineItemsText);
                         prependGalleryCard(json.receipt);
-                        showToast(`Extracted ${json.receipt.merchant || 'Receipt'} (${currencySymbol}${json.receipt.total_amount.toFixed(2)})!`, '🧾');
+                        showToast(`Extracted ${json.receipt.merchant || 'Receipt'} (${fmtMoney(json.receipt.total_amount)})!`, '🧾');
                     } else {
                         showToast(json.error || 'Failed to parse receipt', '⚠️');
                     }
@@ -1036,7 +1044,7 @@
                     <div class="space-y-1">
                         <div class="flex items-center justify-between gap-2">
                             <h4 class="font-heading text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${receipt.merchant}</h4>
-                            <span class="font-heading text-sm font-extrabold text-slate-900 dark:text-white shrink-0">${currencySymbol}${receipt.total_amount.toFixed(2)}</span>
+                            <span class="font-heading text-sm font-extrabold text-slate-900 dark:text-white shrink-0">${fmtMoney(receipt.total_amount)}</span>
                         </div>
                         <div class="flex items-center justify-between text-[11px] text-slate-400">
                             <span>${receipt.receipt_date_str}</span>
@@ -1086,7 +1094,7 @@
                 viewBtn.addEventListener('click', () => {
                     lightboxTitle.textContent = card.getAttribute('data-merchant') || 'Receipt';
                     lightboxImg.src = card.getAttribute('data-filepath');
-                    lightboxAmount.textContent = `${currencySymbol}${parseFloat(card.getAttribute('data-amount') || 0).toFixed(2)}`;
+                    lightboxAmount.textContent = fmtMoney(parseFloat(card.getAttribute('data-amount') || 0));
                     lightboxDate.textContent = card.getAttribute('data-date') || '';
                     lightboxOcrSnippet.textContent = card.getAttribute('data-notes') || 'No parsed text available.';
                     lightboxModal.classList.remove('hidden');

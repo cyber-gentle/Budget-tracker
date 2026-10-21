@@ -818,7 +818,16 @@
 
         // Format money helper
         function fmtMoney(amount) {
-            return currentCurrency + Number(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            if (amount === null || amount === undefined || isNaN(Number(amount))) return currentCurrency + '0';
+            const n = Number(amount);
+            const isNeg = n < 0;
+            const absVal = Math.abs(n);
+            const hasDecimals = (absVal % 1) !== 0;
+            const formatted = absVal.toLocaleString('en-US', {
+                minimumFractionDigits: hasDecimals ? 2 : 0,
+                maximumFractionDigits: 2
+            });
+            return (isNeg ? '-' : '') + currentCurrency + formatted;
         }
 
         // Toast Helper

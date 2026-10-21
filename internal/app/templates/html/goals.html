@@ -692,6 +692,18 @@
             }
         });
 
+        function fmtMoney(amount) {
+            if (amount === null || amount === undefined || isNaN(Number(amount))) return currentCurrency + '0.00';
+            const n = Number(amount);
+            const isNeg = n < 0;
+            const absVal = Math.abs(n);
+            const hasDecimals = (absVal % 1) !== 0;
+            return (isNeg ? '-' : '') + currentCurrency + absVal.toLocaleString('en-US', {
+                minimumFractionDigits: hasDecimals ? 2 : 0,
+                maximumFractionDigits: 2
+            });
+        }
+
         // Load Goals from API
         async function loadGoals() {
             try {
@@ -703,9 +715,9 @@
                 currentCurrency = data.currency || currentCurrency;
 
                 // Update summary metrics
-                document.getElementById('summary-total-saved').textContent = goalSummary.total_saved_fmt || (currentCurrency + '0.00');
-                document.getElementById('summary-total-target').textContent = goalSummary.total_target_fmt || (currentCurrency + '0.00');
-                document.getElementById('summary-total-remaining').textContent = goalSummary.total_remaining_fmt || (currentCurrency + '0.00');
+                document.getElementById('summary-total-saved').textContent = goalSummary.total_saved_fmt || fmtMoney(goalSummary.total_saved || 0);
+                document.getElementById('summary-total-target').textContent = goalSummary.total_target_fmt || fmtMoney(goalSummary.total_target || 0);
+                document.getElementById('summary-total-remaining').textContent = goalSummary.total_remain_fmt || goalSummary.total_remaining_fmt || fmtMoney(goalSummary.total_remaining || 0);
                 document.getElementById('summary-active-count').textContent = goalSummary.in_progress_goals || 0;
                 document.getElementById('summary-completed-count').textContent = `${goalSummary.completed_goals || 0} reached`;
                 document.getElementById('summary-total-count').textContent = `${goalSummary.total_goals || 0} total pots`;
@@ -827,17 +839,17 @@
                             <div class="mt-3 flex items-baseline justify-between text-xs">
                                 <div>
                                     <span class="text-[10px] text-slate-400 block font-medium">Saved</span>
-                                    <span class="font-heading font-extrabold text-slate-900 dark:text-white text-sm">${g.saved_fmt || (currentCurrency + g.saved_amount)}</span>
+                                    <span class="font-heading font-extrabold text-slate-900 dark:text-white text-sm">${g.saved_fmt || fmtMoney(g.saved_amount)}</span>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] text-slate-400 block font-medium">Target</span>
-                                    <span class="font-heading font-semibold text-slate-600 dark:text-slate-300 text-sm">${g.target_fmt || (currentCurrency + g.target_amount)}</span>
+                                    <span class="font-heading font-semibold text-slate-600 dark:text-slate-300 text-sm">${g.target_fmt || fmtMoney(g.target_amount)}</span>
                                 </div>
                             </div>
 
                             <!-- Remaining Notice -->
                             <div class="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
-                                <span>${isCompleted ? 'Target achieved! 🎉' : `${g.remaining_fmt || (currentCurrency + g.remaining)} remaining`}</span>
+                                <span>${isCompleted ? 'Target achieved! 🎉' : `${g.remaining_fmt || fmtMoney(g.remaining)} remaining`}</span>
                                 <button type="button" onclick="openLedgerModal(${g.id})" class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
                                     View Activity
                                 </button>
@@ -979,8 +991,8 @@
 
             document.getElementById('deposit-goal-id').value = goal.id;
             document.getElementById('deposit-goal-name').textContent = goal.name;
-            document.getElementById('deposit-current-saved').textContent = goal.saved_fmt || (currentCurrency + goal.saved_amount);
-            document.getElementById('deposit-remaining').textContent = goal.remaining_fmt || (currentCurrency + goal.remaining);
+            document.getElementById('deposit-current-saved').textContent = goal.saved_fmt || fmtMoney(goal.saved_amount);
+            document.getElementById('deposit-remaining').textContent = goal.remaining_fmt || fmtMoney(goal.remaining);
             document.getElementById('deposit-amount').value = '';
             document.getElementById('deposit-note').value = '';
             document.getElementById('deposit-modal').classList.remove('hidden');
@@ -1043,7 +1055,7 @@
 
             document.getElementById('withdraw-goal-id').value = goal.id;
             document.getElementById('withdraw-goal-name').textContent = goal.name;
-            document.getElementById('withdraw-available-saved').textContent = goal.saved_fmt || (currentCurrency + goal.saved_amount);
+            document.getElementById('withdraw-available-saved').textContent = goal.saved_fmt || fmtMoney(goal.saved_amount);
             document.getElementById('withdraw-amount').value = '';
             document.getElementById('withdraw-amount').max = goal.saved_amount;
             document.getElementById('withdraw-note').value = '';
@@ -1135,7 +1147,7 @@
                                 </div>
                             </div>
                             <span class="font-heading font-black text-xs sm:text-sm ${amountColor} shrink-0">
-                                ${prefix}${c.amount_fmt || (currentCurrency + c.amount)}
+                                ${prefix}${c.amount_fmt || fmtMoney(c.amount)}
                             </span>
                         </div>
                     `;

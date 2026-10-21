@@ -556,8 +556,11 @@
 
         // Helpers
         function fmtMoney(amount) {
-            const val = Number(amount || 0);
-            return currentCurrency + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (amount === null || amount === undefined || isNaN(Number(amount))) return currentCurrency + '0.00';
+            const val = Number(amount);
+            const isNeg = val < 0;
+            const absVal = Math.abs(val);
+            return (isNeg ? '-' : '') + currentCurrency + absVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function esc(s) {

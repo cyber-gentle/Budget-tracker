@@ -894,7 +894,7 @@
             // Label safety buffer
             ctx.fillStyle = '#F59E0B';
             ctx.font = '10px Inter, sans-serif';
-            ctx.fillText(`Safety ${currencySymbol}${Math.round(forecast.safety_buffer)}`, width - padding.right - 95, safetyY - 5);
+            ctx.fillText(`Safety ${currencySymbol}${Math.round(forecast.safety_buffer).toLocaleString('en-US')}`, width - padding.right - 95, safetyY - 5);
 
             // Compute Points
             chartPoints = [];
@@ -993,12 +993,12 @@
                 document.getElementById('tooltipBal').textContent = `${currencySymbol}${d.closing_balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 
                 const netSign = d.net_change >= 0 ? '+' : '';
-                document.getElementById('tooltipChange').textContent = `Day Net: ${netSign}${currencySymbol}${d.net_change.toFixed(2)}`;
+                document.getElementById('tooltipChange').textContent = `Day Net: ${netSign}${currencySymbol}${Math.abs(d.net_change).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
                 const evsDiv = document.getElementById('tooltipEvents');
                 if (d.events && d.events.length > 0) {
                     evsDiv.innerHTML = d.events.map(ev => `
-                        <div class="truncate">${ev.icon} ${ev.title}: ${currencySymbol}${ev.amount}</div>
+                        <div class="truncate">${ev.icon} ${ev.title}: ${currencySymbol}${Number(ev.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     `).join('');
                     evsDiv.classList.remove('hidden');
                 } else {
@@ -1021,6 +1021,14 @@
         window.addEventListener('resize', () => {
             if (currentForecast) drawChart(currentForecast);
         });
+
+        function fmtMoney(amount) {
+            if (amount === null || amount === undefined || isNaN(Number(amount))) return currencySymbol + '0.00';
+            const n = Number(amount);
+            const isNeg = n < 0;
+            const absVal = Math.abs(n);
+            return (isNeg ? '-' : '') + currencySymbol + absVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
         // ─── UI Refresh & Sync Engine ──────────────────────────────────────────
         function updateUI(forecast) {
@@ -1081,7 +1089,7 @@
             const dangerBanner = document.getElementById('danger-alert-banner');
             const dangerText = document.getElementById('danger-alert-text');
             if (forecast.days_until_safety_breach !== -1) {
-                dangerText.textContent = `Projected balance breaches your safety buffer (${currencySymbol}${forecast.safety_buffer}) in ${forecast.days_until_safety_breach} days (on ${forecast.lowest_balance_date}).`;
+                dangerText.textContent = `Projected balance breaches your safety buffer (${fmtMoney(forecast.safety_buffer)}) in ${forecast.days_until_safety_breach} days (on ${forecast.lowest_balance_date}).`;
                 dangerBanner.classList.remove('hidden');
             } else {
                 dangerBanner.classList.add('hidden');
@@ -1136,7 +1144,7 @@
                         </div>
                         <div class="text-right">
                             <div class="text-xs font-heading font-extrabold ${amtColor}">
-                                ${sign}${currencySymbol}${ev.amount.toFixed(2)}
+                                ${sign}${fmtMoney(ev.amount)}
                             </div>
                             <span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md ${isInflow ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">
                                 ${ev.type.replace('_', ' ')}
@@ -1354,7 +1362,7 @@
                 if (!res.ok) throw new Error('Failed to save recurring income');
                 modalIncome.classList.add('hidden');
                 document.getElementById('form-income').reset();
-                showToast(`Added ${name} (${currencySymbol}${amount})`, '💰');
+                showToast(`Added ${name} (${fmtMoney(amount)})`, '💰');
                 setTimeout(() => location.reload(), 600);
             } catch (err) {
                 alert(err.message);

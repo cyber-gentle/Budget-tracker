@@ -450,6 +450,19 @@
             } catch (e) {}
         });
 
+        function fmtMoney(amount) {
+            if (amount === null || amount === undefined || isNaN(Number(amount))) return currentCurrency + '0';
+            const n = Number(amount);
+            const isNeg = n < 0;
+            const absVal = Math.abs(n);
+            const hasDecimals = (absVal % 1) !== 0;
+            const formatted = absVal.toLocaleString('en-US', {
+                minimumFractionDigits: hasDecimals ? 2 : 0,
+                maximumFractionDigits: 2
+            });
+            return (isNeg ? '-' : '') + currentCurrency + formatted;
+        }
+
         // Load Subscriptions
         async function loadSubscriptions() {
             try {
@@ -460,12 +473,12 @@
                 currentCurrency = data.currency || currentCurrency;
 
                 // Update summary stats
-                document.getElementById('summary-monthly').textContent = data.monthly_commitment_fmt || (currentCurrency + '0');
+                document.getElementById('summary-monthly').textContent = data.monthly_commitment_fmt || fmtMoney(data.monthly_commitment || 0);
                 document.getElementById('summary-count').textContent = `${data.count || 0} active subscriptions`;
 
                 // Annual projection
                 const annual = (data.monthly_commitment || 0) * 12;
-                document.getElementById('summary-annual').textContent = `${currentCurrency}${annual.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+                document.getElementById('summary-annual').textContent = fmtMoney(annual);
 
                 // Due in 7 days
                 const dueSoonCount = allSubscriptions.filter(s => s.status === 'active' && s.days_until >= 0 && s.days_until <= 7).length;
@@ -550,7 +563,7 @@
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <p class="font-heading font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">${s.amount_fmt || (currentCurrency + s.amount)}</p>
+                                <p class="font-heading font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">${s.amount_fmt || fmtMoney(s.amount)}</p>
                                 <span class="text-[10px] text-slate-400 font-medium">per ${s.billing_cycle === 'yearly' ? 'year' : s.billing_cycle === 'weekly' ? 'week' : 'month'}</span>
                             </div>
                         </div>

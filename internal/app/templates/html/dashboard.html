@@ -3051,10 +3051,16 @@
 
         // Number Formatting
         function fmtMoney(num) {
-            const n = Math.trunc(Number(num) || 0);
+            if (num === null || num === undefined || isNaN(Number(num))) return currentCurrency + '0';
+            const n = Number(num);
             const isNeg = n < 0;
-            const str = Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            return (isNeg ? '-' : '') + currentCurrency + str;
+            const absVal = Math.abs(n);
+            const hasDecimals = (absVal % 1) !== 0;
+            const formatted = absVal.toLocaleString('en-US', {
+                minimumFractionDigits: hasDecimals ? 2 : 0,
+                maximumFractionDigits: 2
+            });
+            return (isNeg ? '-' : '') + currentCurrency + formatted;
         }
 
         function fmtDate(iso) {
@@ -3204,9 +3210,24 @@
 
         // Amount Input live formatting
         function formatAmountInput(el) {
+            if (!el) return;
             el.addEventListener('input', function () {
-                const raw = this.value.replace(/[^0-9]/g, '');
-                this.value = raw ? Number(raw).toLocaleString('en-US') : '';
+                let val = this.value.replace(/[^0-9.]/g, '');
+                const parts = val.split('.');
+                if (parts.length > 2) {
+                    val = parts[0] + '.' + parts.slice(1).join('');
+                }
+                const hasDot = val.includes('.');
+                const integerPart = val.split('.')[0];
+                const decimalPart = hasDot ? '.' + val.split('.')[1] : '';
+                if (integerPart) {
+                    const formattedInt = Number(integerPart).toLocaleString('en-US');
+                    this.value = formattedInt + decimalPart;
+                } else if (hasDot) {
+                    this.value = '0' + decimalPart;
+                } else {
+                    this.value = '';
+                }
             });
         }
         formatAmountInput(document.getElementById('amount-input'));
@@ -3840,7 +3861,10 @@
             const btn = e.target.closest('.edit-tx');
             if (!btn) return;
             document.getElementById('edit-id').value = btn.dataset.id;
-            document.getElementById('edit-amount').value = Number(btn.dataset.amount).toLocaleString('en-US');
+            const editAmt = Number(btn.dataset.amount || 0);
+            document.getElementById('edit-amount').value = (editAmt % 1 !== 0)
+                ? editAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : editAmt.toLocaleString('en-US');
             document.getElementById('edit-note').value = btn.dataset.note;
             if (document.getElementById('edit-tags')) {
                 document.getElementById('edit-tags').value = btn.dataset.tags || '';
@@ -5327,7 +5351,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
-                                <span class="text-xs font-bold text-slate-900 dark:text-white">${s.amount_fmt || (currentCurrency + s.amount)}</span>
+                                <span class="text-xs font-bold text-slate-900 dark:text-white">${s.amount_fmt || fmtMoney(s.amount)}</span>
                                 <button type="button" onclick="payDashSubscription(${s.id}, '${s.name}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-xs cursor-pointer" title="Log payment and advance next due date">
                                     Pay
                                 </button>

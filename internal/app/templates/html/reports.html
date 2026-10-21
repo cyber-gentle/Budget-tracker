@@ -565,10 +565,16 @@
 
         // Format Helpers
         function fmtMoney(num) {
-            const n = Math.trunc(Number(num) || 0);
+            if (num === null || num === undefined || isNaN(Number(num))) return currentCurrency + '0';
+            const n = Number(num);
             const isNeg = n < 0;
-            const str = Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            return (isNeg ? '-' : '') + currentCurrency + str;
+            const absVal = Math.abs(n);
+            const hasDecimals = (absVal % 1) !== 0;
+            const formatted = absVal.toLocaleString('en-US', {
+                minimumFractionDigits: hasDecimals ? 2 : 0,
+                maximumFractionDigits: 2
+            });
+            return (isNeg ? '-' : '') + currentCurrency + formatted;
         }
 
         function fmtDate(iso) {

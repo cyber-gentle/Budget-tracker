@@ -3283,20 +3283,20 @@ func (s *DBStore) GetSmartBudgetReport(username string) (*SmartBudgetReport, err
 			paceMsg = "No monthly limit set"
 		} else if spent > limit {
 			paceStatus = "exceeded"
-			paceMsg = fmt.Sprintf("Exceeded limit by %s%.0f", currency, spent-limit)
+			paceMsg = fmt.Sprintf("Exceeded limit by %s", formatMoney(spent-limit, currency))
 		} else if pacePercent > 115 && dayOfMonth >= 2 {
 			paceStatus = "warning"
-			paceMsg = fmt.Sprintf("Projected to overshoot by %s%.0f (+%.0f%%)", currency, projectedSpend-limit, pacePercent-100)
+			paceMsg = fmt.Sprintf("Projected to overshoot by %s (+%.0f%%)", formatMoney(projectedSpend-limit, currency), pacePercent-100)
 		} else if pctUsed >= 80 {
 			paceStatus = "caution"
-			paceMsg = fmt.Sprintf("%s%.0f remaining (%d days left)", currency, remaining, daysRemaining)
+			paceMsg = fmt.Sprintf("%s remaining (%d days left)", formatMoney(remaining, currency), daysRemaining)
 		} else {
 			paceStatus = "on_track"
 			dailyRemaining := 0.0
 			if daysRemaining > 0 {
 				dailyRemaining = remaining / float64(daysRemaining)
 			}
-			paceMsg = fmt.Sprintf("On track (%s%.0f/day remaining)", currency, dailyRemaining)
+			paceMsg = fmt.Sprintf("On track (%s/day remaining)", formatMoney(dailyRemaining, currency))
 		}
 
 		// Icon and display label
@@ -3504,7 +3504,7 @@ func (s *DBStore) GetSmartBudgetReport(username string) (*SmartBudgetReport, err
 			alerts = append(alerts, SpendingAlert{
 				Type:     "danger",
 				Title:    fmt.Sprintf("%s Envelope Exceeded!", env.CategoryLabel),
-				Message:  fmt.Sprintf("You have spent %s%.0f, exceeding your %s%.0f monthly limit by %s%.0f.", currency, env.Spent, currency, env.MonthlyLimit, currency, env.Spent-env.MonthlyLimit),
+				Message:  fmt.Sprintf("You have spent %s, exceeding your %s monthly limit by %s.", formatMoney(env.Spent, currency), formatMoney(env.MonthlyLimit, currency), formatMoney(env.Spent-env.MonthlyLimit, currency)),
 				Category: env.Category,
 				Pace:     env.PacePercent,
 			})
@@ -3512,7 +3512,7 @@ func (s *DBStore) GetSmartBudgetReport(username string) (*SmartBudgetReport, err
 			alerts = append(alerts, SpendingAlert{
 				Type:     "warning",
 				Title:    fmt.Sprintf("%s Burning Faster Than Normal", env.CategoryLabel),
-				Message:  fmt.Sprintf("Current burn rate is pacing at %.0f%% of monthly envelope. Projected month-end spend is %s%.0f.", env.PacePercent, currency, env.ProjectedSpend),
+				Message:  fmt.Sprintf("Current burn rate is pacing at %.0f%% of monthly envelope. Projected month-end spend is %s.", env.PacePercent, formatMoney(env.ProjectedSpend, currency)),
 				Category: env.Category,
 				Pace:     env.PacePercent,
 			})
@@ -4140,7 +4140,7 @@ func (s *DBStore) SettleContactDebts(username, contactName, mode string, account
 		}
 
 		res.OffsetAmount = offset
-		res.Message = fmt.Sprintf("Successfully simplified debts! Offset %s%.2f of mutual debt with %s.", currency, offset, contactName)
+		res.Message = fmt.Sprintf("Successfully simplified debts! Offset %s of mutual debt with %s.", formatMoney(offset, currency), contactName)
 		return res, nil
 	}
 
@@ -4173,11 +4173,11 @@ func (s *DBStore) SettleContactDebts(username, contactName, mode string, account
 	}
 
 	if net > 0.005 {
-		res.Message = fmt.Sprintf("All settled! %s paid you %s%.2f. Account is now completely squared up.", contactName, currency, net)
+		res.Message = fmt.Sprintf("All settled! %s paid you %s. Account is now completely squared up.", contactName, formatMoney(net, currency))
 	} else if net < -0.005 {
-		res.Message = fmt.Sprintf("All settled! You paid %s %s%.2f. Account is now completely squared up.", contactName, currency, -net)
+		res.Message = fmt.Sprintf("All settled! You paid %s %s. Account is now completely squared up.", contactName, formatMoney(-net, currency))
 	} else {
-		res.Message = fmt.Sprintf("All debts with %s were fully offset and squared up to %s0.00.", contactName, currency)
+		res.Message = fmt.Sprintf("All debts with %s were fully offset and squared up to %s.", contactName, formatMoney(0, currency))
 	}
 
 	return res, nil
@@ -4460,7 +4460,7 @@ func (s *DBStore) GetNetWorthOverview(username string) (*NetWorthOverview, error
 				Type:     "asset",
 				Category: "Savings Goal",
 				Amount:   g.SavedAmount,
-				Subtitle: fmt.Sprintf("Target: %s%.2f (%d%%)", currency, g.TargetAmount, int((g.SavedAmount/g.TargetAmount)*100)),
+				Subtitle: fmt.Sprintf("Target: %s (%d%%)", formatMoney(g.TargetAmount, currency), int((g.SavedAmount/g.TargetAmount)*100)),
 				Icon:     g.Emoji,
 				Color:    g.Color,
 			})
@@ -4496,7 +4496,7 @@ func (s *DBStore) GetNetWorthOverview(username string) (*NetWorthOverview, error
 				Type:     "asset",
 				Category: "IOU Receivable",
 				Amount:   rem,
-				Subtitle: fmt.Sprintf("Total: %s%.2f | %s", currency, d.Amount, dueStr),
+				Subtitle: fmt.Sprintf("Total: %s | %s", formatMoney(d.Amount, currency), dueStr),
 				Icon:     "🤝",
 				Color:    "#10B981",
 			})
@@ -4509,7 +4509,7 @@ func (s *DBStore) GetNetWorthOverview(username string) (*NetWorthOverview, error
 				Type:     "liability",
 				Category: "Debt Payable",
 				Amount:   rem,
-				Subtitle: fmt.Sprintf("Total: %s%.2f | %s", currency, d.Amount, dueStr),
+				Subtitle: fmt.Sprintf("Total: %s | %s", formatMoney(d.Amount, currency), dueStr),
 				Icon:     "💸",
 				Color:    "#EF4444",
 			})

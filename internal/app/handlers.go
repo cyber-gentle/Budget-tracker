@@ -75,7 +75,23 @@ func (app *App) setSessionCookie(w http.ResponseWriter, r *http.Request, token s
 
 // NewApp creates an App, parses templates, and registers all routes.
 func NewApp(db *DBStore) *App {
-	tmpl := template.Must(template.ParseFS(embeddedFS, "templates/html/*.html"))
+	funcMap := template.FuncMap{
+		"formatMoney":  formatMoney,
+		"formatAmount": formatAmount,
+		"comma": func(n any) string {
+			switch v := n.(type) {
+			case int:
+				return comma(int64(v))
+			case int64:
+				return comma(v)
+			case float64:
+				return formatAmount(v)
+			default:
+				return fmt.Sprintf("%v", v)
+			}
+		},
+	}
+	tmpl := template.Must(template.New("").Funcs(funcMap).ParseFS(embeddedFS, "templates/html/*.html"))
 
 	app := &App{
 		DB:            db,
@@ -1049,16 +1065,53 @@ func formatMoney(v float64, symbol string) string {
 	if symbol == "" {
 		symbol = "₦"
 	}
-	return fmt.Sprintf("%s%s", symbol, comma(int(v)))
+	isNeg := v < 0
+	absV := math.Abs(v)
+	intPart := int64(absV)
+	cents := int(math.Round((absV - float64(intPart)) * 100))
+	if cents == 100 {
+		intPart++
+		cents = 0
+	}
+	var s string
+	if cents > 0 {
+		s = fmt.Sprintf("%s%s.%02d", symbol, comma(intPart), cents)
+	} else {
+		s = fmt.Sprintf("%s%s", symbol, comma(intPart))
+	}
+	if isNeg {
+		return "-" + s
+	}
+	return s
 }
 
-func comma(n int) string {
-	isNeg := false
-	if n < 0 {
-		isNeg = true
+func formatAmount(v float64) string {
+	isNeg := v < 0
+	absV := math.Abs(v)
+	intPart := int64(absV)
+	cents := int(math.Round((absV - float64(intPart)) * 100))
+	if cents == 100 {
+		intPart++
+		cents = 0
+	}
+	var s string
+	if cents > 0 {
+		s = fmt.Sprintf("%s.%02d", comma(intPart), cents)
+	} else {
+		s = comma(intPart)
+	}
+	if isNeg {
+		return "-" + s
+	}
+	return s
+}
+
+func comma(n int64) string {
+	isNeg := n < 0
+	if isNeg {
 		n = -n
 	}
-	s := strconv.Itoa(n)
+	s := strconv.FormatInt(n, 10)
 	if len(s) <= 3 {
 		if isNeg {
 			return "-" + s

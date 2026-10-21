@@ -388,7 +388,7 @@
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Amount (<span class="currency-label">{{.Currency}}</span>)</label>
                     <div class="relative">
                         <span class="currency-label absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">{{.Currency}}</span>
-                        <input type="number" step="any" min="0.01" id="form-amount" required placeholder="0.00" class="w-full pl-8 pr-3 py-2.5 text-base font-extrabold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" inputmode="decimal" id="form-amount" required placeholder="0.00" class="w-full pl-8 pr-3 py-2.5 text-base font-extrabold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
 
@@ -591,8 +591,33 @@
         }
 
         function fmtMoney(amount) {
-            const n = Number(amount) || 0;
-            return currentCurrency + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (amount === null || amount === undefined || isNaN(Number(amount))) return currentCurrency + '0.00';
+            const n = Number(amount);
+            const isNeg = n < 0;
+            const absVal = Math.abs(n);
+            return (isNeg ? '-' : '') + currentCurrency + absVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatAmountInput(el) {
+            if (!el) return;
+            el.addEventListener('input', function () {
+                let val = this.value.replace(/[^0-9.]/g, '');
+                const parts = val.split('.');
+                if (parts.length > 2) {
+                    val = parts[0] + '.' + parts.slice(1).join('');
+                }
+                const hasDot = val.includes('.');
+                const integerPart = val.split('.')[0];
+                const decimalPart = hasDot ? '.' + val.split('.')[1] : '';
+                if (integerPart) {
+                    const formattedInt = Number(integerPart).toLocaleString('en-US');
+                    this.value = formattedInt + decimalPart;
+                } else if (hasDot) {
+                    this.value = '0' + decimalPart;
+                } else {
+                    this.value = '';
+                }
+            });
         }
 
         function fmtDate(isoStr) {
@@ -899,7 +924,10 @@
 
             document.getElementById('modal-title').textContent = 'Edit Transaction';
             document.getElementById('form-tx-id').value = tx.id;
-            document.getElementById('form-amount').value = tx.amount;
+            const editAmt = Number(tx.amount || 0);
+            document.getElementById('form-amount').value = (editAmt % 1 !== 0)
+                ? editAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : editAmt.toLocaleString('en-US');
             document.getElementById('form-note').value = tx.note || '';
             document.getElementById('form-date').value = (tx.date || '').split('T')[0] || new Date().toISOString().split('T')[0];
 
@@ -1023,10 +1051,11 @@
             });
 
             // Form Submit
+            formatAmountInput(document.getElementById('form-amount'));
             document.getElementById('tx-form')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const id = document.getElementById('form-tx-id').value;
-                const amount = parseFloat(document.getElementById('form-amount').value);
+                const amount = parseFloat(document.getElementById('form-amount').value.replace(/,/g, ''));
                 const note = document.getElementById('form-note').value.trim();
                 const category = document.getElementById('form-category').value;
                 const accountId = parseInt(document.getElementById('form-account').value, 10);
