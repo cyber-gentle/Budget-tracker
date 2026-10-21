@@ -813,10 +813,25 @@
             <div
                 class="hidden lg:flex bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex-col justify-between">
                 <div>
+                    <!-- Header with Tabs: AI Magic & Manual Form, and Actions -->
                     <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2">
-                            <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Quick Add
-                                Transaction</h2>
+                        <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs font-semibold">
+                            <button type="button" id="tab-quick-ai"
+                                class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all">
+                                <span class="text-emerald-500">✨</span>
+                                <span>AI Assistant</span>
+                            </button>
+                            <button type="button" id="tab-quick-manual"
+                                class="px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer transition-all">
+                                <span>📝 Form</span>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" id="btn-open-ai-settings"
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                title="AI Assistant Settings (Gemini / OpenAI / Smart NLP)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                            </button>
                             <a href="/receipts"
                                 class="px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 rounded-lg border border-emerald-200/60 dark:border-emerald-800/60 flex items-center gap-1 transition-colors"
                                 title="Scan receipt with OCR">
@@ -831,7 +846,102 @@
                         </div>
                     </div>
 
-                    <form id="add-tx-form" class="space-y-2.5">
+                    <!-- 1. AI Conversational & Voice Assistant Panel -->
+                    <div id="panel-quick-ai" class="space-y-3">
+                        <div class="relative bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/25 dark:border-emerald-500/35 rounded-2xl p-3 sm:p-3.5 space-y-2.5 shadow-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>Speak or type naturally:</span>
+                                </span>
+                                <span id="ai-active-badge" class="px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40">
+                                    Smart NLP
+                                </span>
+                            </div>
+
+                            <div class="relative">
+                                <textarea id="ai-chat-input" rows="2" placeholder='e.g. "Spent ₦4,500 on dinner at KFC yesterday" or "350k salary" or paste bank SMS...' class="w-full pl-3 pr-24 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none transition-all font-medium"></textarea>
+                                
+                                <div class="absolute right-2 top-2 flex items-center gap-1">
+                                    <button type="button" id="btn-ai-mic" class="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 bg-slate-100 dark:bg-slate-700/80 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all cursor-pointer relative" title="Voice Input (Tap to speak)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                                        <span id="mic-pulse-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                                    </button>
+                                    <button type="button" id="btn-run-ai-parse" class="px-2.5 py-1 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg shadow-sm shadow-emerald-500/20 transition-all cursor-pointer">
+                                        Parse
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Voice Recording Status Banner -->
+                            <div id="voice-banner" class="hidden py-1.5 px-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                    <span id="voice-listening-label">Listening... Speak your expense now</span>
+                                </div>
+                                <button type="button" id="btn-stop-listening" class="text-[10px] font-bold uppercase underline cursor-pointer">Stop</button>
+                            </div>
+
+                            <!-- Live Extracted Preview Card -->
+                            <div id="ai-preview-card" class="hidden p-3 rounded-xl bg-white dark:bg-slate-800/90 border border-emerald-500/30 dark:border-emerald-500/40 space-y-2 shadow-xs transition-all">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span id="ai-prev-cat-icon">🍔</span>
+                                        <span id="ai-prev-note" class="truncate max-w-[170px]">Dinner at KFC</span>
+                                    </div>
+                                    <div id="ai-prev-amount" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+                                        ₦4,500.00
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold">
+                                    <span id="ai-prev-type" class="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 uppercase tracking-wider font-bold">
+                                        Expense
+                                    </span>
+                                    <span id="ai-prev-cat" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 capitalize">
+                                        Food
+                                    </span>
+                                    <span id="ai-prev-date" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                        📅 Today
+                                    </span>
+                                    <span id="ai-prev-account" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                        🏦 Main Bank
+                                    </span>
+                                </div>
+
+                                <div class="pt-1 flex items-center gap-2">
+                                    <button type="button" id="btn-ai-confirm-save" class="flex-1 py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99]">
+                                        <span>⚡ Save Transaction</span>
+                                        <span class="text-[9px] opacity-75">(Enter)</span>
+                                    </button>
+                                    <button type="button" id="btn-ai-to-manual" class="py-2 px-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-xl transition-all cursor-pointer" title="Edit in manual form">
+                                        ✏️ Edit
+                                    </button>
+                                    <button type="button" id="btn-ai-discard" class="py-2 px-2 text-xs text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer" title="Clear">
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Sample Prompts -->
+                            <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                <span class="text-[10px] text-slate-400">Try:</span>
+                                <button type="button" class="btn-sample-ai px-2 py-0.5 text-[10px] rounded-lg bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-500 cursor-pointer transition-colors" data-phrase="Spent ₦3,500 on lunch at KFC yesterday">
+                                    "Lunch at KFC 3,500"
+                                </button>
+                                <button type="button" class="btn-sample-ai px-2 py-0.5 text-[10px] rounded-lg bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-500 cursor-pointer transition-colors" data-phrase="Uber ride to airport 4.5k">
+                                    "Uber 4.5k"
+                                </button>
+                                <button type="button" class="btn-sample-ai px-2 py-0.5 text-[10px] rounded-lg bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-500 cursor-pointer transition-colors" data-phrase="Received 250,000 salary today">
+                                    "Salary 250k"
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Manual Form Panel (Collapsible / Toggleable) -->
+                    <div id="panel-quick-manual" class="hidden">
+                        <form id="add-tx-form" class="space-y-2.5">
                         <input type="hidden" name="type" id="add-tx-type" value="expense">
 
                         <!-- Row 1: Note / Description & Date -->
@@ -1599,6 +1709,36 @@
                             <path d="m6 6 12 12" />
                         </svg>
                     </button>
+                </div>
+            <!-- Mobile AI Natural Language & Voice Assistant Bar -->
+            <div class="mb-3 p-3 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/25 dark:border-emerald-500/35 rounded-2xl space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <span class="text-emerald-500">✨</span>
+                        <span>AI Voice / Smart Fill:</span>
+                    </span>
+                    <span class="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                        Auto-Fills Below
+                    </span>
+                </div>
+                <div class="relative">
+                    <input type="text" id="modal-ai-chat-input" placeholder='e.g. "Dinner at KFC 4,500" or tap mic...' class="w-full pl-3 pr-20 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-medium">
+                    <div class="absolute right-1.5 top-1.5 flex items-center gap-1">
+                        <button type="button" id="modal-btn-ai-mic" class="p-1 rounded-lg text-slate-500 hover:text-emerald-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-50 transition-all cursor-pointer relative" title="Voice Input (Tap to speak)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                            <span id="modal-mic-pulse-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                        </button>
+                        <button type="button" id="modal-btn-run-ai-parse" class="px-2 py-1 text-[11px] font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg transition-all cursor-pointer shadow-xs">
+                            Fill
+                        </button>
+                    </div>
+                </div>
+                <div id="modal-voice-banner" class="hidden py-1 px-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[11px] font-semibold flex items-center justify-between">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                        <span>Listening... Say your expense</span>
+                    </div>
+                    <button type="button" id="modal-btn-stop-listening" class="text-[9px] font-bold uppercase underline cursor-pointer">Stop</button>
                 </div>
             </div>
 
@@ -2565,6 +2705,133 @@
                 <button type="button" id="account-delete-confirm"
                     class="flex-1 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer">Delete</button>
             </div>
+    <!-- ─── AI Assistant Settings Modal ────────────────────────────────────────── -->
+    <div id="modal-ai-settings"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs hidden p-4">
+        <div
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 flex items-center justify-center font-bold text-base shadow-sm">
+                        ✨
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-white">AI Assistant Settings</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Configure conversational parser & speech engine</p>
+                    </div>
+                </div>
+                <button type="button" id="btn-close-ai-settings"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="ai-settings-form" class="space-y-4">
+                <!-- AI Engine Provider Selection -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                        AI Engine Provider
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-800/40 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/20 dark:has-[:checked]:bg-emerald-950/20">
+                            <input type="radio" name="ai_provider" value="local" checked class="text-emerald-500 focus:ring-emerald-500">
+                            <div>
+                                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                                    <span>🧠 Smart NLP</span>
+                                </div>
+                                <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Free • Offline</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-800/40 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/20 dark:has-[:checked]:bg-emerald-950/20">
+                            <input type="radio" name="ai_provider" value="gemini" class="text-emerald-500 focus:ring-emerald-500">
+                            <div>
+                                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                                    <span>✨ Gemini</span>
+                                </div>
+                                <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Google Flash</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-800/40 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/20 dark:has-[:checked]:bg-emerald-950/20">
+                            <input type="radio" name="ai_provider" value="openai" class="text-emerald-500 focus:ring-emerald-500">
+                            <div>
+                                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                                    <span>🟢 OpenAI</span>
+                                </div>
+                                <span class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold">GPT-4o Mini</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- API Key Configuration (shown when gemini or openai selected) -->
+                <div id="ai-api-key-container" class="space-y-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hidden">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label id="ai-key-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                API Key
+                            </label>
+                            <a id="ai-get-key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1">
+                                <span>Get free API key</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            </a>
+                        </div>
+                        <div class="relative">
+                            <input type="password" id="ai-api-key-input" placeholder="AIzaSy... or sk-proj-..." class="w-full px-3 py-2 pr-16 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-emerald-500 font-mono">
+                            <button type="button" id="btn-toggle-ai-key-visibility" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-1.5 py-0.5 rounded cursor-pointer">
+                                Show
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                            Your key is stored securely in your private database and used exclusively for your account.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Model</label>
+                        <select id="ai-model-select" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-emerald-500 cursor-pointer">
+                            <option value="gemini-3.5-flash-lite" selected>Gemini 3.5 Flash-Lite (Fastest & Ultra-Efficient)</option>
+                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-1">
+                        <button type="button" id="btn-test-ai-key" class="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-emerald-500 transition-all cursor-pointer flex items-center gap-1.5">
+                            <span id="test-key-spinner" class="hidden">⏳</span>
+                            <span>Test Connection</span>
+                        </button>
+                        <span id="test-key-status" class="text-xs font-semibold"></span>
+                    </div>
+                </div>
+
+                <!-- Auto-Save Toggle -->
+                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <span class="block text-xs font-bold text-slate-900 dark:text-white">Auto-Save High-Confidence Matches</span>
+                        <span class="block text-[11px] text-slate-500 dark:text-slate-400">Save immediately when recognized without waiting for confirmation</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer ml-3">
+                        <input type="checkbox" id="ai-auto-save-toggle" class="sr-only peer">
+                        <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                </div>
+
+                <p id="ai-settings-error" class="text-xs text-rose-500 font-semibold hidden"></p>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" id="btn-cancel-ai-settings" class="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="submit" id="btn-save-ai-settings" class="px-5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold transition-all shadow-md shadow-emerald-500/20 cursor-pointer">
+                        Save Preferences
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -6257,7 +6524,718 @@
         if (transferBtn && noteInput) {
             transferBtn.addEventListener('click', () => {
                 if (noteLabel) noteLabel.textContent = 'Transfer Note';
-                noteInput.placeholder = 'e.g. Monthly Savings, Split payment...';
+        // ─── AI Natural Language & Voice Assistant Engine ────────────────────────
+        let currentAIParsed = null;
+        let aiSpeechRecognition = null;
+        let isListeningSpeech = false;
+        let currentAISettings = {
+            provider: 'local',
+            model: 'gemini-3.5-flash-lite',
+            auto_save: false,
+            has_api_key: false
+        };
+
+        // Initialize Speech Recognition if supported by browser
+        const SpeechRecClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecClass) {
+            aiSpeechRecognition = new SpeechRecClass();
+            aiSpeechRecognition.continuous = false;
+            aiSpeechRecognition.interimResults = true;
+            aiSpeechRecognition.lang = 'en-US';
+        }
+
+        // Tab Switching between AI Assistant and Manual Form
+        const tabQuickAI = document.getElementById('tab-quick-ai');
+        const tabQuickManual = document.getElementById('tab-quick-manual');
+        const panelQuickAI = document.getElementById('panel-quick-ai');
+        const panelQuickManual = document.getElementById('panel-quick-manual');
+
+        function setQuickAddMode(mode) {
+            if (mode === 'ai') {
+                if (tabQuickAI) tabQuickAI.className = 'px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all';
+                if (tabQuickManual) tabQuickManual.className = 'px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer transition-all';
+                if (panelQuickAI) panelQuickAI.classList.remove('hidden');
+                if (panelQuickManual) panelQuickManual.classList.add('hidden');
+                const chatInp = document.getElementById('ai-chat-input');
+                if (chatInp) chatInp.focus();
+            } else {
+                if (tabQuickManual) tabQuickManual.className = 'px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all';
+                if (tabQuickAI) tabQuickAI.className = 'px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer transition-all';
+                if (panelQuickManual) panelQuickManual.classList.remove('hidden');
+                if (panelQuickAI) panelQuickAI.classList.add('hidden');
+                const noteInp = document.getElementById('tx-note-input');
+                if (noteInp) noteInp.focus();
+            }
+        }
+
+        if (tabQuickAI) tabQuickAI.addEventListener('click', () => setQuickAddMode('ai'));
+        if (tabQuickManual) tabQuickManual.addEventListener('click', () => setQuickAddMode('manual'));
+
+        // Load AI Settings on Startup
+        async function loadAISettings() {
+            try {
+                const res = await fetch('/api/ai/settings');
+                if (res.ok) {
+                    const data = await res.json();
+                    currentAISettings = data;
+                    updateAIBadge(data.provider);
+                }
+            } catch (e) {
+                console.warn('Could not load AI settings', e);
+            }
+        }
+        loadAISettings();
+
+        function updateAIBadge(provider) {
+            const badge = document.getElementById('ai-active-badge');
+            if (!badge) return;
+            if (provider === 'gemini') {
+                badge.textContent = '✨ Gemini AI';
+                badge.className = 'px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-md bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300/40';
+            } else if (provider === 'openai') {
+                badge.textContent = '🟢 OpenAI';
+                badge.className = 'px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-md bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border border-teal-300/40';
+            } else {
+                badge.textContent = '🧠 Smart NLP';
+                badge.className = 'px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40';
+            }
+        }
+
+        // Voice Recognition Handling
+        function startVoiceInput(targetInputId, bannerId, pulseDotId) {
+            if (!aiSpeechRecognition) {
+                showToast('Voice input is supported in Chrome, Edge, Safari, and mobile browsers.', 'error');
+                return;
+            }
+
+            const inputEl = document.getElementById(targetInputId);
+            const bannerEl = document.getElementById(bannerId);
+            const dotEl = document.getElementById(pulseDotId);
+
+            if (isListeningSpeech) {
+                try { aiSpeechRecognition.stop(); } catch (e) {}
+                return;
+            }
+
+            try {
+                aiSpeechRecognition.onstart = () => {
+                    isListeningSpeech = true;
+                    if (bannerEl) bannerEl.classList.remove('hidden');
+                    if (dotEl) dotEl.classList.remove('hidden');
+                };
+
+                aiSpeechRecognition.onresult = (event) => {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    if (inputEl) inputEl.value = transcript;
+                };
+
+                aiSpeechRecognition.onerror = (event) => {
+                    console.warn('Speech recognition error:', event.error);
+                    stopVoiceInput(bannerId, pulseDotId);
+                    if (event.error !== 'no-speech') {
+                        showToast('Voice recognition: ' + event.error, 'error');
+                    }
+                };
+
+                aiSpeechRecognition.onend = () => {
+                    stopVoiceInput(bannerId, pulseDotId);
+                    if (inputEl && inputEl.value.trim().length > 0) {
+                        if (targetInputId === 'ai-chat-input') {
+                            triggerAIParse(inputEl.value.trim());
+                        } else if (targetInputId === 'modal-ai-chat-input') {
+                            triggerModalAIParse(inputEl.value.trim());
+                        }
+                    }
+                };
+
+                aiSpeechRecognition.start();
+            } catch (err) {
+                console.error(err);
+                stopVoiceInput(bannerId, pulseDotId);
+            }
+        }
+
+        function stopVoiceInput(bannerId, pulseDotId) {
+            isListeningSpeech = false;
+            const bannerEl = document.getElementById(bannerId);
+            const dotEl = document.getElementById(pulseDotId);
+            if (bannerEl) bannerEl.classList.add('hidden');
+            if (dotEl) dotEl.classList.add('hidden');
+            if (aiSpeechRecognition) {
+                try { aiSpeechRecognition.stop(); } catch (e) {}
+            }
+        }
+
+        const btnAiMic = document.getElementById('btn-ai-mic');
+        if (btnAiMic) {
+            btnAiMic.addEventListener('click', () => {
+                startVoiceInput('ai-chat-input', 'voice-banner', 'mic-pulse-dot');
+            });
+        }
+        const btnStopListening = document.getElementById('btn-stop-listening');
+        if (btnStopListening) {
+            btnStopListening.addEventListener('click', () => {
+                stopVoiceInput('voice-banner', 'mic-pulse-dot');
+            });
+        }
+
+        const modalBtnAiMic = document.getElementById('modal-btn-ai-mic');
+        if (modalBtnAiMic) {
+            modalBtnAiMic.addEventListener('click', () => {
+                startVoiceInput('modal-ai-chat-input', 'modal-voice-banner', 'modal-mic-pulse-dot');
+            });
+        }
+        const modalBtnStopListening = document.getElementById('modal-btn-stop-listening');
+        if (modalBtnStopListening) {
+            modalBtnStopListening.addEventListener('click', () => {
+                stopVoiceInput('modal-voice-banner', 'modal-mic-pulse-dot');
+            });
+        }
+
+        // Trigger AI Parse (Desktop)
+        async function triggerAIParse(text) {
+            const trimmed = (text || '').trim();
+            if (!trimmed) {
+                const chatInp = document.getElementById('ai-chat-input');
+                if (chatInp) chatInp.focus();
+                return;
+            }
+
+            const parseBtn = document.getElementById('btn-run-ai-parse');
+            const prevText = parseBtn ? parseBtn.innerHTML : 'Parse';
+            if (parseBtn) {
+                parseBtn.disabled = true;
+                parseBtn.innerHTML = '<span class="inline-block animate-spin">⏳</span>';
+            }
+
+            try {
+                const res = await fetch('/api/ai/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: trimmed })
+                });
+                const parsed = await res.json();
+                if (!res.ok) {
+                    showToast(parsed.error || 'Could not parse text', 'error');
+                    return;
+                }
+
+                currentAIParsed = parsed;
+                renderAIPreview(parsed);
+
+                // Auto-save if enabled
+                if (currentAISettings.auto_save && parsed.amount > 0 && parsed.confidence >= 0.7) {
+                    await saveAITransaction(parsed);
+                }
+            } catch (err) {
+                showToast('Failed to connect to AI parser', 'error');
+            } finally {
+                if (parseBtn) {
+                    parseBtn.disabled = false;
+                    parseBtn.innerHTML = prevText;
+                }
+            }
+        }
+
+        function renderAIPreview(parsed) {
+            const previewCard = document.getElementById('ai-preview-card');
+            if (!previewCard) return;
+
+            const iconEl = document.getElementById('ai-prev-cat-icon');
+            const noteEl = document.getElementById('ai-prev-note');
+            const amountEl = document.getElementById('ai-prev-amount');
+            const typeEl = document.getElementById('ai-prev-type');
+            const catEl = document.getElementById('ai-prev-cat');
+            const dateEl = document.getElementById('ai-prev-date');
+            const accountEl = document.getElementById('ai-prev-account');
+
+            const allCats = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
+            const catObj = allCats.find(c => c.key.toLowerCase() === (parsed.category || '').toLowerCase());
+            const catIcon = catObj ? catObj.icon : '✨';
+            const catLabel = catObj ? catObj.label : (parsed.category || 'Other');
+
+            if (iconEl) iconEl.textContent = catIcon;
+            if (noteEl) noteEl.textContent = parsed.note || 'Transaction';
+            if (amountEl) {
+                amountEl.textContent = fmtMoney(parsed.amount);
+                if (parsed.type === 'income') {
+                    amountEl.className = 'text-sm font-extrabold text-emerald-600 dark:text-emerald-400';
+                } else if (parsed.type === 'transfer') {
+                    amountEl.className = 'text-sm font-extrabold text-blue-600 dark:text-blue-400';
+                } else {
+                    amountEl.className = 'text-sm font-extrabold text-rose-600 dark:text-rose-400';
+                }
+            }
+
+            if (typeEl) {
+                typeEl.textContent = parsed.type;
+                if (parsed.type === 'income') {
+                    typeEl.className = 'px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 uppercase tracking-wider font-bold';
+                } else if (parsed.type === 'transfer') {
+                    typeEl.className = 'px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 uppercase tracking-wider font-bold';
+                } else {
+                    typeEl.className = 'px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 uppercase tracking-wider font-bold';
+                }
+            }
+
+            if (catEl) catEl.textContent = catLabel;
+            if (dateEl) {
+                const isToday = parsed.date === new Date().toISOString().split('T')[0];
+                dateEl.textContent = isToday ? '📅 Today' : ('📅 ' + parsed.date);
+            }
+
+            if (accountEl) {
+                const acc = (userAccounts || []).find(a => a.id === parsed.account_id);
+                accountEl.textContent = acc ? `${acc.icon || '🏦'} ${acc.name}` : '🏦 Main Bank';
+            }
+
+            previewCard.classList.remove('hidden');
+        }
+
+        // Save AI Transaction
+        async function saveAITransaction(parsed) {
+            if (!parsed || parsed.amount <= 0) {
+                showToast('Please specify a valid amount', 'error');
+                return;
+            }
+
+            const saveBtn = document.getElementById('btn-ai-confirm-save');
+            const prevText = saveBtn ? saveBtn.innerHTML : 'Save';
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span>Saving...</span>';
+            }
+
+            try {
+                const res = await fetch('/api/ai/quick-save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(parsed)
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    showToast(data.error || 'Failed to save transaction', 'error');
+                    return;
+                }
+
+                showToast(data.message || '⚡ Transaction saved!', 'success');
+
+                // Clear input and hide preview
+                const chatInp = document.getElementById('ai-chat-input');
+                if (chatInp) chatInp.value = '';
+                const previewCard = document.getElementById('ai-preview-card');
+                if (previewCard) previewCard.classList.add('hidden');
+                currentAIParsed = null;
+
+                // Refresh dashboard data
+                await loadAll();
+            } catch (err) {
+                showToast('Failed to save transaction', 'error');
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = prevText;
+                }
+            }
+        }
+
+        // Trigger Modal AI Parse (Mobile)
+        async function triggerModalAIParse(text) {
+            const trimmed = (text || '').trim();
+            if (!trimmed) return;
+
+            const fillBtn = document.getElementById('modal-btn-run-ai-parse');
+            if (fillBtn) {
+                fillBtn.disabled = true;
+                fillBtn.textContent = '...';
+            }
+
+            try {
+                const res = await fetch('/api/ai/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: trimmed })
+                });
+                const parsed = await res.json();
+                if (!res.ok) {
+                    showToast(parsed.error || 'Could not parse text', 'error');
+                    return;
+                }
+
+                // Fill modal form inputs directly
+                const amtInput = document.getElementById('modal-amount-input');
+                if (amtInput && parsed.amount > 0) {
+                    const formatted = (parsed.amount % 1 !== 0)
+                        ? parsed.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : parsed.amount.toLocaleString('en-US');
+                    amtInput.value = formatted;
+                }
+
+                const noteInput = document.getElementById('modal-tx-note-input');
+                if (noteInput && parsed.note) {
+                    noteInput.value = parsed.note;
+                }
+
+                const dateInput = document.getElementById('modal-date-input');
+                if (dateInput && parsed.date) {
+                    dateInput.value = parsed.date;
+                }
+
+                if (parsed.type) {
+                    updateModalTypeSelector(parsed.type);
+                }
+
+                const catSelect = document.getElementById('modal-add-category');
+                if (catSelect && parsed.category) {
+                    catSelect.value = parsed.category;
+                }
+
+                const accSelect = document.getElementById('modal-add-account');
+                if (accSelect && parsed.account_id) {
+                    accSelect.value = parsed.account_id;
+                }
+
+                showToast(`✨ Auto-filled: ${parsed.note} (${fmtMoney(parsed.amount)})`, 'success');
+            } catch (err) {
+                showToast('Failed to parse text', 'error');
+            } finally {
+                if (fillBtn) {
+                    fillBtn.disabled = false;
+                    fillBtn.textContent = 'Fill';
+                }
+            }
+        }
+
+        // Bind Parse & Save Buttons
+        const btnRunAIParse = document.getElementById('btn-run-ai-parse');
+        if (btnRunAIParse) {
+            btnRunAIParse.addEventListener('click', () => {
+                const chatInp = document.getElementById('ai-chat-input');
+                if (chatInp) triggerAIParse(chatInp.value);
+            });
+        }
+
+        const modalBtnRunAIParse = document.getElementById('modal-btn-run-ai-parse');
+        if (modalBtnRunAIParse) {
+            modalBtnRunAIParse.addEventListener('click', () => {
+                const inp = document.getElementById('modal-ai-chat-input');
+                if (inp) triggerModalAIParse(inp.value);
+            });
+        }
+
+        const btnAIConfirmSave = document.getElementById('btn-ai-confirm-save');
+        if (btnAIConfirmSave) {
+            btnAIConfirmSave.addEventListener('click', () => {
+                if (currentAIParsed) saveAITransaction(currentAIParsed);
+            });
+        }
+
+        const btnAIDiscard = document.getElementById('btn-ai-discard');
+        if (btnAIDiscard) {
+            btnAIDiscard.addEventListener('click', () => {
+                const previewCard = document.getElementById('ai-preview-card');
+                if (previewCard) previewCard.classList.add('hidden');
+                currentAIParsed = null;
+            });
+        }
+
+        // Transfer parsed data to manual form for fine-tuning
+        const btnAIToManual = document.getElementById('btn-ai-to-manual');
+        if (btnAIToManual) {
+            btnAIToManual.addEventListener('click', () => {
+                if (!currentAIParsed) return;
+                setQuickAddMode('manual');
+
+                const amtInput = document.getElementById('amount-input');
+                if (amtInput && currentAIParsed.amount > 0) {
+                    const formatted = (currentAIParsed.amount % 1 !== 0)
+                        ? currentAIParsed.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : currentAIParsed.amount.toLocaleString('en-US');
+                    amtInput.value = formatted;
+                }
+
+                const noteInput = document.getElementById('tx-note-input');
+                if (noteInput && currentAIParsed.note) {
+                    noteInput.value = currentAIParsed.note;
+                }
+
+                const dateInput = document.getElementById('date-input');
+                if (dateInput && currentAIParsed.date) {
+                    dateInput.value = currentAIParsed.date;
+                }
+
+                if (currentAIParsed.type === 'income' && incomeBtn) {
+                    incomeBtn.click();
+                } else if (currentAIParsed.type === 'transfer' && transferBtn) {
+                    transferBtn.click();
+                } else if (expenseBtn) {
+                    expenseBtn.click();
+                }
+
+                const catSelect = document.getElementById('add-category');
+                if (catSelect && currentAIParsed.category) {
+                    catSelect.value = currentAIParsed.category;
+                }
+
+                const accSelect = document.getElementById('add-account');
+                if (accSelect && currentAIParsed.account_id) {
+                    accSelect.value = currentAIParsed.account_id;
+                }
+
+                if (amtInput) amtInput.focus();
+            });
+        }
+
+        // Enter key in AI Chat Input: parse or save
+        const aiChatInput = document.getElementById('ai-chat-input');
+        if (aiChatInput) {
+            aiChatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const previewCard = document.getElementById('ai-preview-card');
+                    if (previewCard && !previewCard.classList.contains('hidden') && currentAIParsed) {
+                        saveAITransaction(currentAIParsed);
+                    } else {
+                        triggerAIParse(aiChatInput.value);
+                    }
+                }
+            });
+        }
+
+        const modalAiChatInput = document.getElementById('modal-ai-chat-input');
+        if (modalAiChatInput) {
+            modalAiChatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    triggerModalAIParse(modalAiChatInput.value);
+                }
+            });
+        }
+
+        // Sample Prompt chips
+        document.querySelectorAll('.btn-sample-ai').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const phrase = btn.dataset.phrase || btn.textContent.trim();
+                const chatInp = document.getElementById('ai-chat-input');
+                if (chatInp) {
+                    chatInp.value = phrase;
+                    triggerAIParse(phrase);
+                }
+            });
+        });
+
+        // ─── AI Settings Modal Controller ────────────────────────────────────────
+        const modalAISettings = document.getElementById('modal-ai-settings');
+        const btnOpenAISettings = document.getElementById('btn-open-ai-settings');
+        const btnCloseAISettings = document.getElementById('btn-close-ai-settings');
+        const btnCancelAISettings = document.getElementById('btn-cancel-ai-settings');
+        const formAISettings = document.getElementById('ai-settings-form');
+        const aiKeyContainer = document.getElementById('ai-api-key-container');
+        const aiKeyInput = document.getElementById('ai-api-key-input');
+        const aiModelSelect = document.getElementById('ai-model-select');
+        const aiAutoSaveToggle = document.getElementById('ai-auto-save-toggle');
+        const aiKeyLabel = document.getElementById('ai-key-label');
+        const aiGetKeyLink = document.getElementById('ai-get-key-link');
+        const btnToggleKeyVis = document.getElementById('btn-toggle-ai-key-visibility');
+        const btnTestAIKey = document.getElementById('btn-test-ai-key');
+        const testKeyStatus = document.getElementById('test-key-status');
+        const testKeySpinner = document.getElementById('test-key-spinner');
+        const aiSettingsError = document.getElementById('ai-settings-error');
+
+        function openAISettingsModal() {
+            if (!modalAISettings) return;
+            modalAISettings.classList.remove('hidden');
+            if (aiSettingsError) aiSettingsError.classList.add('hidden');
+            if (testKeyStatus) testKeyStatus.textContent = '';
+
+            // Populate form with current settings
+            const providerRadios = document.querySelectorAll('input[name="ai_provider"]');
+            providerRadios.forEach(r => {
+                r.checked = (r.value === (currentAISettings.provider || 'local'));
+            });
+            updateAIProviderUI(currentAISettings.provider || 'local');
+
+            if (aiAutoSaveToggle) aiAutoSaveToggle.checked = !!currentAISettings.auto_save;
+            if (aiKeyInput) {
+                aiKeyInput.value = currentAISettings.has_api_key ? '••••••••••••••••' : '';
+                aiKeyInput.type = 'password';
+            }
+        }
+
+        function closeAISettingsModal() {
+            if (modalAISettings) modalAISettings.classList.add('hidden');
+        }
+
+        if (btnOpenAISettings) btnOpenAISettings.addEventListener('click', openAISettingsModal);
+        if (btnCloseAISettings) btnCloseAISettings.addEventListener('click', closeAISettingsModal);
+        if (btnCancelAISettings) btnCancelAISettings.addEventListener('click', closeAISettingsModal);
+        if (modalAISettings) {
+            modalAISettings.addEventListener('click', (e) => {
+                if (e.target === modalAISettings) closeAISettingsModal();
+            });
+        }
+
+        function updateAIProviderUI(provider) {
+            if (provider === 'local') {
+                if (aiKeyContainer) aiKeyContainer.classList.add('hidden');
+            } else if (provider === 'gemini') {
+                if (aiKeyContainer) aiKeyContainer.classList.remove('hidden');
+                if (aiKeyLabel) aiKeyLabel.textContent = 'Google Gemini API Key';
+                if (aiGetKeyLink) {
+                    aiGetKeyLink.href = 'https://aistudio.google.com/app/apikey';
+                    aiGetKeyLink.classList.remove('hidden');
+                }
+                if (aiKeyInput) aiKeyInput.placeholder = 'AIzaSy...';
+                if (aiModelSelect) {
+                    aiModelSelect.innerHTML = `
+                        <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite (Fastest & Ultra-Efficient)</option>
+                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                    `;
+                    if (currentAISettings.model && currentAISettings.model.includes('gemini')) {
+                        aiModelSelect.value = currentAISettings.model;
+                    }
+                }
+            } else if (provider === 'openai') {
+                if (aiKeyContainer) aiKeyContainer.classList.remove('hidden');
+                if (aiKeyLabel) aiKeyLabel.textContent = 'OpenAI API Key';
+                if (aiGetKeyLink) {
+                    aiGetKeyLink.href = 'https://platform.openai.com/api-keys';
+                    aiGetKeyLink.classList.remove('hidden');
+                }
+                if (aiKeyInput) aiKeyInput.placeholder = 'sk-proj-...';
+                if (aiModelSelect) {
+                    aiModelSelect.innerHTML = `
+                        <option value="gpt-4o-mini">GPT-4o Mini (Fast & Cost Efficient)</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                    `;
+                    if (currentAISettings.model && currentAISettings.model.includes('gpt')) {
+                        aiModelSelect.value = currentAISettings.model;
+                    }
+                }
+            }
+        }
+
+        document.querySelectorAll('input[name="ai_provider"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                updateAIProviderUI(radio.value);
+            });
+        });
+
+        if (btnToggleKeyVis && aiKeyInput) {
+            btnToggleKeyVis.addEventListener('click', () => {
+                if (aiKeyInput.type === 'password') {
+                    aiKeyInput.type = 'text';
+                    btnToggleKeyVis.textContent = 'Hide';
+                } else {
+                    aiKeyInput.type = 'password';
+                    btnToggleKeyVis.textContent = 'Show';
+                }
+            });
+        }
+
+        // Test API Key
+        if (btnTestAIKey) {
+            btnTestAIKey.addEventListener('click', async () => {
+                const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'local';
+                if (selectedProvider === 'local') {
+                    if (testKeyStatus) {
+                        testKeyStatus.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400';
+                        testKeyStatus.textContent = '✓ Smart NLP is always ready (offline)';
+                    }
+                    return;
+                }
+
+                let keyVal = aiKeyInput ? aiKeyInput.value.trim() : '';
+                if (keyVal === '••••••••••••••••') {
+                    keyVal = ''; // Will test with existing saved key
+                }
+
+                if (testKeySpinner) testKeySpinner.classList.remove('hidden');
+                if (testKeyStatus) testKeyStatus.textContent = '';
+
+                try {
+                    const res = await fetch('/api/ai/test-key', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            provider: selectedProvider,
+                            api_key: keyVal,
+                            model: aiModelSelect ? aiModelSelect.value : ''
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'ok') {
+                        if (testKeyStatus) {
+                            testKeyStatus.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400';
+                            testKeyStatus.textContent = '✓ ' + (data.message || 'Connected successfully!');
+                        }
+                    } else {
+                        if (testKeyStatus) {
+                            testKeyStatus.className = 'text-xs font-semibold text-rose-500';
+                            testKeyStatus.textContent = '✗ ' + (data.error || 'Connection failed');
+                        }
+                    }
+                } catch (err) {
+                    if (testKeyStatus) {
+                        testKeyStatus.className = 'text-xs font-semibold text-rose-500';
+                        testKeyStatus.textContent = '✗ Network error testing key';
+                    }
+                } finally {
+                    if (testKeySpinner) testKeySpinner.classList.add('hidden');
+                }
+            });
+        }
+
+        // Save AI Preferences
+        if (formAISettings) {
+            formAISettings.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const provider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'local';
+                let apiKey = aiKeyInput ? aiKeyInput.value.trim() : '';
+                if (apiKey === '••••••••••••••••') apiKey = ''; // keep existing
+                const model = aiModelSelect ? aiModelSelect.value : '';
+                const autoSave = aiAutoSaveToggle ? aiAutoSaveToggle.checked : false;
+
+                const saveBtn = document.getElementById('btn-save-ai-settings');
+                if (saveBtn) saveBtn.disabled = true;
+
+                try {
+                    const res = await fetch('/api/ai/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            provider,
+                            api_key: apiKey,
+                            model,
+                            auto_save: autoSave
+                        })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        if (aiSettingsError) {
+                            aiSettingsError.textContent = data.error || 'Failed to save settings';
+                            aiSettingsError.classList.remove('hidden');
+                        }
+                        return;
+                    }
+
+                    currentAISettings = data;
+                    updateAIBadge(provider);
+                    closeAISettingsModal();
+                    showToast('AI preferences updated!', 'success');
+                } catch (err) {
+                    if (aiSettingsError) {
+                        aiSettingsError.textContent = 'Failed to save settings';
+                        aiSettingsError.classList.remove('hidden');
+                    }
+                } finally {
+                    if (saveBtn) saveBtn.disabled = false;
+                }
             });
         }
 

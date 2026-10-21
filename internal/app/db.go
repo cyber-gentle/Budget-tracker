@@ -288,6 +288,15 @@ func (s *DBStore) migrate() error {
 		discretionary_daily_burn REAL NOT NULL DEFAULT 0,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
+
+	CREATE TABLE IF NOT EXISTS ai_settings (
+		username TEXT PRIMARY KEY,
+		provider TEXT DEFAULT 'hybrid',
+		api_key TEXT DEFAULT '',
+		model TEXT DEFAULT '',
+		auto_save INTEGER DEFAULT 0,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
 	`
 	if _, err := s.db.Exec(schema); err != nil {
 		return err
@@ -5835,4 +5844,54 @@ func (s *DBStore) GenerateCashFlowForecast(username string, params WhatIfSimulat
 	}
 
 	return forecast, nil
+}
+
+// ─── AI Assistant Settings Methods ─────────────────────────────────────────
+
+func (s *DBStore) GetAISettings(username string) (*AISettings, error) {
+	var provider, apiKey, model string
+	var autoSave int
+	err := s.db.QueryRow(
+		"SELECT provider, api_key, model, auto_save FROM ai_settings WHERE username = ?",
+		username,
+	).Scan(&provider, &apiKey, &model, &autoSave)
+
+	if err != nil {
+		return &AISettings{
+			Username: username,
+			Provider: "hybrid",
+			APIKey:   "",
+			Model:    "",
+			AutoSave: false,
+		}, nil
+	}
+
+	return &AISettings{
+		Username: username,
+		Provider: provider,
+		APIKey:   apiKey,
+		Model:    model,
+		AutoSave: autoSave == 1,
+	}, nil
+}
+
+func (s *DBStore) SaveAISettings(username, provider, apiKey, model string, autoSave bool) error {
+	autoSaveInt := 0
+	if autoSave {
+		autoSaveInt = 1
+	}
+	if provider == "" {
+		provider = "hybrid"
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO ai_settings (username, provider, api_key, model, auto_save, updated_at)
+		VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+		ON CONFLICT(username) DO UPDATE SET
+			provider = excluded.provider,
+			api_key = excluded.api_key,
+			model = excluded.model,
+			auto_save = excluded.auto_save,
+			updated_at = CURRENT_TIMESTAMP
+	`, username, provider, apiKey, model, autoSaveInt)
+	return err
 }

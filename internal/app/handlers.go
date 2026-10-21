@@ -242,6 +242,12 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/forecast/incomes", app.HandleForecastIncomesAPI)
 	app.Mux.HandleFunc("/api/forecast/incomes/", app.HandleForecastIncomeByIDAPI)
 
+	// AI Natural Language & Voice Assistant APIs
+	app.Mux.HandleFunc("/api/ai/parse", app.HandleAIParseTransaction)
+	app.Mux.HandleFunc("/api/ai/quick-save", app.HandleAIQuickSaveTransaction)
+	app.Mux.HandleFunc("/api/ai/settings", app.HandleAISettingsAPI)
+	app.Mux.HandleFunc("/api/ai/test-key", app.HandleAITestKeyAPI)
+
 	// Health check
 	app.Mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -3483,4 +3489,236 @@ func (app *App) HandleForecastIncomeByIDAPI(w http.ResponseWriter, r *http.Reque
 		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
+
+// ─── Step 12: AI Natural Language & Voice Assistant Handlers ─────────────────
+
+func (app *App) HandleAIParseTransaction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		Text string `json:"text"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	accounts, _ := app.DB.GetAccounts(username)
+	aiSettings, _ := app.DB.GetAISettings(username)
+
+	parsed := ParseAITransaction(req.Text, accounts, aiSettings)
+	jsonOK(w, parsed)
+}
+
+func (app *App) HandleAIQuickSaveTransaction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		Text      string  `json:"text"`
+		Note      string  `json:"note"`
+		Amount    float64 `json:"amount"`
+		Category  string  `json:"category"`
+		Type      string  `json:"type"`
+		Date      string  `json:"date"`
+		AccountID int     `json:"account_id"`
+		Tags      string  `json:"tags"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// If amount is not set, parse from text
+	if req.Amount <= 0 && strings.TrimSpace(req.Text) != "" {
+		accounts, _ := app.DB.GetAccounts(username)
+		aiSettings, _ := app.DB.GetAISettings(username)
+		parsed := ParseAITransaction(req.Text, accounts, aiSettings)
+		req.Note = parsed.Note
+		req.Amount = parsed.Amount
+		req.Category = parsed.Category
+		req.Type = parsed.Type
+		req.Date = parsed.Date
+		req.AccountID = parsed.AccountID
+		req.Tags = parsed.Tags
+	}
+
+	if req.Amount <= 0 {
+		jsonError(w, "could not determine a valid transaction amount", http.StatusBadRequest)
+		return
+	}
+	if req.Note == "" {
+		req.Note = "AI Transaction"
+	}
+	if req.Category == "" {
+		req.Category = "other"
+	}
+	if req.Type == "" {
+		req.Type = "expense"
+	}
+
+	txDate := time.Now()
+	if req.Date != "" {
+		if parsed, err := time.Parse("2006-01-02", req.Date); err == nil {
+			now := time.Now()
+			txDate = time.Date(parsed.Year(), parsed.Month(), parsed.Day(), now.Hour(), now.Minute(), now.Second(), 0, time.Local)
+		}
+	}
+
+	curr := "₦"
+	if prof, err := app.DB.GetProfile(username); err == nil && prof != nil && prof.Currency != "" {
+		curr = prof.Currency
+	}
+
+	err := app.DB.AddTransactionFull(username, req.Amount, req.Category, req.Note, req.Type, req.Tags, req.AccountID, txDate)
+	if err != nil {
+		jsonError(w, "failed to save transaction", http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, map[string]any{
+		"status":  "ok",
+		"message": fmt.Sprintf("Saved %s (%s)", req.Note, formatMoney(req.Amount, curr)),
+		"transaction": map[string]any{
+			"note":       req.Note,
+			"amount":     req.Amount,
+			"category":   req.Category,
+			"type":       req.Type,
+			"date":       txDate.Format("2006-01-02"),
+			"account_id": req.AccountID,
+		},
+	})
+}
+
+func (app *App) HandleAISettingsAPI(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		settings, err := app.DB.GetAISettings(username)
+		if err != nil {
+			jsonError(w, "failed to load AI settings", http.StatusInternalServerError)
+			return
+		}
+		maskedKey := ""
+		if len(settings.APIKey) > 8 {
+			maskedKey = settings.APIKey[:4] + "••••••••" + settings.APIKey[len(settings.APIKey)-4:]
+		} else if settings.APIKey != "" {
+			maskedKey = "••••••••"
+		}
+		jsonOK(w, map[string]any{
+			"provider":  settings.Provider,
+			"has_key":   settings.APIKey != "",
+			"api_key":   maskedKey,
+			"model":     settings.Model,
+			"auto_save": settings.AutoSave,
+		})
+
+	case http.MethodPost:
+		var req struct {
+			Provider string `json:"provider"`
+			APIKey   string `json:"api_key"`
+			Model    string `json:"model"`
+			AutoSave bool   `json:"auto_save"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		current, _ := app.DB.GetAISettings(username)
+		apiKey := strings.TrimSpace(req.APIKey)
+		if strings.Contains(apiKey, "••") && current != nil {
+			apiKey = current.APIKey
+		}
+
+		if err := app.DB.SaveAISettings(username, req.Provider, apiKey, req.Model, req.AutoSave); err != nil {
+			jsonError(w, "failed to save AI settings", http.StatusInternalServerError)
+			return
+		}
+		jsonOK(w, map[string]string{"status": "ok"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (app *App) HandleAITestKeyAPI(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		Provider string `json:"provider"`
+		APIKey   string `json:"api_key"`
+		Model    string `json:"model"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	apiKey := strings.TrimSpace(req.APIKey)
+	if strings.Contains(apiKey, "••") {
+		current, _ := app.DB.GetAISettings(username)
+		if current != nil {
+			apiKey = current.APIKey
+		}
+	}
+	if apiKey == "" {
+		jsonError(w, "API key is required to test", http.StatusBadRequest)
+		return
+	}
+
+	accounts, _ := app.DB.GetAccounts(username)
+	testPhrase := "Lunch at KFC 3500 yesterday"
+
+	var parsed *ParsedAITransaction
+	var err error
+	if strings.ToLower(req.Provider) == "openai" || strings.HasPrefix(apiKey, "sk-") {
+		parsed, err = parseWithOpenAI(apiKey, req.Model, testPhrase, accounts)
+	} else {
+		parsed, err = parseWithGemini(apiKey, req.Model, testPhrase, accounts)
+	}
+
+	if err != nil {
+		jsonOK(w, map[string]any{
+			"success": false,
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	jsonOK(w, map[string]any{
+		"success": true,
+		"message": "Connection verified! AI successfully parsed sample phrase.",
+		"parsed":  parsed,
+	})
+}
+
 
