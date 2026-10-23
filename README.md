@@ -65,6 +65,7 @@ This repository is pre-configured for instant **Vercel** serverless deployment w
 3. In **Environment Variables**, add:
    - `TURSO_DATABASE_URL`: `libsql://spendly-db-yourname.turso.io`
    - `TURSO_AUTH_TOKEN`: your generated token
+   - `GROQ_API_KEY`: *(Optional)* your free Groq Cloud API key for server-side AI parsing (`llama-3.3-70b-versatile` with `llama-3.1-8b-instant` fallback)
 4. Click **Deploy**.
 
 Vercel will build the Go serverless function and launch your application at a permanent URL like `https://spendly.vercel.app`!

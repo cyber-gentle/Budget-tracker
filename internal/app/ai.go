@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -24,7 +26,7 @@ type ParsedAITransaction struct {
 	AccountName    string   `json:"account_name"`
 	Tags           string   `json:"tags"`
 	Confidence     float64  `json:"confidence"`
-	Source         string   `json:"source"` // "local_nlp", "gemini", "openai"
+	Source         string   `json:"source"` // "groq:...", "local_nlp", "gemini", "openai"
 	RawText        string   `json:"raw_text"`
 	SuggestedItems []string `json:"suggested_items,omitempty"`
 }
@@ -44,14 +46,23 @@ func ParseAITransaction(text string, accounts []Account, settings *AISettings) P
 	if text == "" {
 		todayStr := time.Now().Format("2006-01-02")
 		return ParsedAITransaction{
-			Note:        "",
-			Amount:      0,
-			Category:    "other",
-			Type:        "expense",
-			Date:        todayStr,
-			Confidence:  0.0,
-			Source:      "empty",
-			RawText:     text,
+			Note:       "",
+			Amount:     0,
+			Category:   "other",
+			Type:       "expense",
+			Date:       todayStr,
+			Confidence: 0.0,
+			Source:     "empty",
+			RawText:    text,
+		}
+	}
+
+	// 1. Server-Side Groq Cloud AI Engine (Primary: llama-3.3-70b-versatile, Alternate fallback: llama-3.1-8b-instant)
+	serverGroqKey := strings.TrimSpace(os.Getenv("GROQ_API_KEY"))
+	if serverGroqKey != "" {
+		if parsed, err := parseWithServerGroq(serverGroqKey, text, accounts); err == nil && parsed != nil && parsed.Amount > 0 {
+			parsed.RawText = text
+			return *parsed
 		}
 	}
 
@@ -66,7 +77,7 @@ func ParseAITransaction(text string, accounts []Account, settings *AISettings) P
 		model = strings.TrimSpace(settings.Model)
 	}
 
-	// 1. If explicit Gemini provider and key provided
+	// 2. If explicit Gemini provider and key provided
 	if (provider == "gemini" || (provider == "hybrid" && strings.HasPrefix(apiKey, "AIza"))) && apiKey != "" {
 		if parsed, err := parseWithGemini(apiKey, model, text, accounts); err == nil && parsed != nil && parsed.Amount > 0 {
 			parsed.Source = "gemini"
@@ -75,7 +86,7 @@ func ParseAITransaction(text string, accounts []Account, settings *AISettings) P
 		}
 	}
 
-	// 2. If explicit OpenAI provider and key provided
+	// 3. If explicit OpenAI provider and key provided
 	if (provider == "openai" || (provider == "hybrid" && strings.HasPrefix(apiKey, "sk-"))) && apiKey != "" {
 		if parsed, err := parseWithOpenAI(apiKey, model, text, accounts); err == nil && parsed != nil && parsed.Amount > 0 {
 			parsed.Source = "openai"
@@ -84,10 +95,209 @@ func ParseAITransaction(text string, accounts []Account, settings *AISettings) P
 		}
 	}
 
-	// 3. Built-in Local Smart NLP Engine (Out of the box, zero external dependency, fast & reliable)
+	// 4. Built-in Local Smart NLP Engine (Out of the box, zero external dependency, fast & reliable)
 	localParsed := parseWithLocalNLP(text, accounts)
 	localParsed.RawText = text
 	return localParsed
+}
+
+// ─── Groq Cloud API Integration (Dual Server-Side Models) ───────────────────
+
+const (
+	GroqPrimaryModel  = "llama-3.3-70b-versatile"
+	GroqFallbackModel = "llama-3.1-8b-instant"
+)
+
+// parseWithServerGroq attempts parsing with the primary model (Llama 3.3 70B),
+// and seamlessly falls back to the high-speed alternate model (Llama 3.1 8B) on failure or rate-limit.
+func parseWithServerGroq(apiKey, text string, accounts []Account) (*ParsedAITransaction, error) {
+	// 1. Primary Attempt: Llama 3.3 70B Versatile ("the best")
+	parsed, err := callGroqModel(apiKey, GroqPrimaryModel, text, accounts)
+	if err == nil && parsed != nil && parsed.Amount > 0 {
+		parsed.Source = "groq:" + GroqPrimaryModel
+		return parsed, nil
+	}
+
+	if err != nil {
+		log.Printf("[Groq AI] Primary model %s failed: %v. Falling back to %s...", GroqPrimaryModel, err, GroqFallbackModel)
+	}
+
+	// 2. Alternate Fallback: Llama 3.1 8B Instant (separate rate-limit pool, fast recovery)
+	fallbackParsed, fallbackErr := callGroqModel(apiKey, GroqFallbackModel, text, accounts)
+	if fallbackErr == nil && fallbackParsed != nil && fallbackParsed.Amount > 0 {
+		fallbackParsed.Source = "groq:" + GroqFallbackModel
+		return fallbackParsed, nil
+	}
+
+	if fallbackErr != nil {
+		log.Printf("[Groq AI] Fallback model %s failed: %v", GroqFallbackModel, fallbackErr)
+		return nil, fallbackErr
+	}
+
+	return nil, fmt.Errorf("groq parsing produced no valid transaction amount")
+}
+
+func callGroqModel(apiKey, model, text string, accounts []Account) (*ParsedAITransaction, error) {
+	url := "https://api.groq.com/openai/v1/chat/completions"
+
+	todayStr := time.Now().Format("2006-01-02")
+	dayOfWeek := time.Now().Weekday().String()
+
+	var accountNames []string
+	for _, acc := range accounts {
+		accountNames = append(accountNames, fmt.Sprintf("%s (ID: %d)", acc.Name, acc.ID))
+	}
+	accountsContext := strings.Join(accountNames, ", ")
+	if accountsContext == "" {
+		accountsContext = "Main Bank (ID: 0)"
+	}
+
+	sysPrompt := fmt.Sprintf(`You are an expert financial transaction parser for the Spendly personal finance app.
+Today is %s (%s).
+Allowed Categories: ["food", "transport", "housing", "entertainment", "shopping", "healthcare", "education", "bills", "personal", "other"].
+Allowed Types: ["expense", "income", "transfer"].
+Available Accounts: [%s].
+
+Extract clean transaction details from user voice transcripts, free-form text, or bank SMS alerts.
+Rules:
+- "note": Clear merchant, payee, or clean description (e.g. "Dinner at KFC", "Uber ride", "Monthly Salary", "Grocery shopping").
+- "amount": Strictly numeric value as a float (e.g. 2500.0). If currency symbols appear, extract only the number.
+- "category": Choose the single most fitting category from the allowed list.
+- "type": "expense", "income", or "transfer".
+- "date": YYYY-MM-DD. Calculate relative dates like "yesterday", "last Friday", or default to today (%s).
+- "account_id": Integer matching one of the Available Accounts if specified, otherwise 0.
+- "account_name": Name of the selected account.
+- "confidence": Float between 0.0 and 1.0.
+
+Return strictly valid JSON only matching this schema:
+{
+  "note": "Dinner at KFC",
+  "amount": 2500.0,
+  "category": "food",
+  "type": "expense",
+  "date": "%s",
+  "account_id": 0,
+  "account_name": "Main Bank",
+  "confidence": 0.95
+}`, todayStr, dayOfWeek, accountsContext, todayStr, todayStr)
+
+	reqPayload := map[string]any{
+		"model": model,
+		"messages": []map[string]string{
+			{"role": "system", "content": sysPrompt},
+			{"role": "user", "content": text},
+		},
+		"response_format": map[string]string{"type": "json_object"},
+		"temperature":     0.1,
+		"max_tokens":       512,
+	}
+
+	payloadBytes, err := json.Marshal(reqPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	defer cancel()
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payloadBytes))
+	if err != nil {
+		return nil, err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+apiKey)
+
+	client := &http.Client{Timeout: 7 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("groq API status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var groqResp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&groqResp); err != nil {
+		return nil, err
+	}
+
+	if len(groqResp.Choices) == 0 {
+		return nil, fmt.Errorf("empty choices from groq")
+	}
+
+	replyContent := groqResp.Choices[0].Message.Content
+	replyContent = strings.TrimPrefix(strings.TrimSpace(replyContent), "```json")
+	replyContent = strings.TrimPrefix(replyContent, "```")
+	replyContent = strings.TrimSuffix(replyContent, "```")
+	replyContent = strings.TrimSpace(replyContent)
+
+	var parsed ParsedAITransaction
+	if err := json.Unmarshal([]byte(replyContent), &parsed); err != nil {
+		return nil, err
+	}
+
+	if parsed.Date == "" {
+		parsed.Date = todayStr
+	}
+	if parsed.Confidence == 0 {
+		parsed.Confidence = 0.95
+	}
+
+	validCategories := map[string]bool{
+		"food": true, "transport": true, "housing": true, "entertainment": true,
+		"shopping": true, "healthcare": true, "education": true, "bills": true,
+		"personal": true, "other": true,
+	}
+	parsed.Category = strings.ToLower(strings.TrimSpace(parsed.Category))
+	if !validCategories[parsed.Category] {
+		parsed.Category = "other"
+	}
+
+	validTypes := map[string]bool{"expense": true, "income": true, "transfer": true}
+	parsed.Type = strings.ToLower(strings.TrimSpace(parsed.Type))
+	if !validTypes[parsed.Type] {
+		parsed.Type = "expense"
+	}
+
+	if len(accounts) > 0 {
+		matched := false
+		for _, acc := range accounts {
+			if parsed.AccountID == acc.ID && acc.ID != 0 {
+				matched = true
+				parsed.AccountName = acc.Name
+				break
+			}
+			if strings.EqualFold(acc.Name, parsed.AccountName) {
+				matched = true
+				parsed.AccountID = acc.ID
+				parsed.AccountName = acc.Name
+				break
+			}
+		}
+		if !matched {
+			defaultAcc := accounts[0]
+			for _, acc := range accounts {
+				if acc.IsDefault {
+					defaultAcc = acc
+					break
+				}
+			}
+			parsed.AccountID = defaultAcc.ID
+			parsed.AccountName = defaultAcc.Name
+		}
+	}
+
+	return &parsed, nil
 }
 
 // ─── Gemini Flash API Integration ──────────────────────────────────────────
