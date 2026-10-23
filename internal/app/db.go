@@ -816,7 +816,7 @@ func (s *DBStore) GetCurrentMonthSpending(username string) (map[string]float64, 
 		SELECT category, SUM(amount)
 		FROM transactions 
 		WHERE username = ? AND type = 'expense' AND date >= ? AND date < ?
-		GROUP BY category`, 
+		GROUP BY category`,
 		username, startOfMonth.Format(time.RFC3339), startOfNextMonth.Format(time.RFC3339))
 	if err != nil {
 		return nil, err
@@ -1409,10 +1409,10 @@ type Debt struct {
 // DebtSummary holds summary metrics for debts and loans.
 type DebtSummary struct {
 	TotalOwedToUser float64 `json:"total_owed_to_user"` // sum of remaining where type == "owing_me"
-	TotalUserOwes   float64 `json:"total_user_owes"`   // sum of remaining where type == "i_owe"
-	NetBalance      float64 `json:"net_balance"`       // total_owed_to_user - total_user_owes
-	CountOwingMe    int     `json:"count_owing_me"`    // active count
-	CountIOwe       int     `json:"count_i_owe"`       // active count
+	TotalUserOwes   float64 `json:"total_user_owes"`    // sum of remaining where type == "i_owe"
+	NetBalance      float64 `json:"net_balance"`        // total_owed_to_user - total_user_owes
+	CountOwingMe    int     `json:"count_owing_me"`     // active count
+	CountIOwe       int     `json:"count_i_owe"`        // active count
 	TotalSettled    int     `json:"total_settled"`
 }
 
@@ -1583,13 +1583,19 @@ func (s *DBStore) DeleteDebt(id int, username string) (bool, error) {
 
 func (s *DBStore) RecordDebtPayment(id int, username string, paymentAmount float64, paymentDate time.Time, logTransaction bool) (*Debt, error) {
 
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	if paymentAmount <= 0 {
 		return nil, fmt.Errorf("payment amount must be greater than zero")
 	}
 
 	var d Debt
 	var dueDate sql.NullTime
-	err := s.db.QueryRow(
+	err = tx.QueryRow(
 		"SELECT id, username, person_name, amount, amount_paid, type, due_date, note, status, created_at FROM debts WHERE id = ? AND username = ?",
 		id, username,
 	).Scan(&d.ID, &d.Username, &d.PersonName, &d.Amount, &d.AmountPaid, &d.Type, &dueDate, &d.Note, &d.Status, &d.CreatedAt)
@@ -1613,7 +1619,7 @@ func (s *DBStore) RecordDebtPayment(id int, username string, paymentAmount float
 		newStatus = "settled"
 	}
 
-	_, err = s.db.Exec(
+	_, err = tx.Exec(
 		"UPDATE debts SET amount_paid = ?, status = ? WHERE id = ? AND username = ?",
 		newPaid, newStatus, id, username,
 	)
@@ -1662,15 +1668,18 @@ func (s *DBStore) RecordDebtPayment(id int, username string, paymentAmount float
 			}
 		}
 
-		_, err = s.db.Exec(
+		_, err = tx.Exec(
 			"INSERT INTO transactions (username, amount, category, note, date, type) VALUES (?, ?, ?, ?, ?, ?)",
 			username, paymentAmount, category, txNote, paymentDate, txnType,
 		)
 		if err != nil {
-			log.Printf("failed to log debt repayment transaction: %v", err)
+			return nil, err
 		}
 	}
 
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
 	return &d, nil
 }
 
@@ -1853,8 +1862,14 @@ func (s *DBStore) DeleteSubscription(id int, username string) (bool, error) {
 
 func (s *DBStore) PaySubscription(id int, username string) (*Subscription, error) {
 
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	var sub Subscription
-	err := s.db.QueryRow(
+	err = tx.QueryRow(
 		"SELECT id, username, name, amount, category, billing_cycle, next_due_date, status, created_at FROM subscriptions WHERE id = ? AND username = ?",
 		id, username,
 	).Scan(&sub.ID, &sub.Username, &sub.Name, &sub.Amount, &sub.Category, &sub.BillingCycle, &sub.NextDueDate, &sub.Status, &sub.CreatedAt)
@@ -1864,7 +1879,7 @@ func (s *DBStore) PaySubscription(id int, username string) (*Subscription, error
 
 	// 1. Record expense transaction
 	txNote := fmt.Sprintf("%s (%s bill)", sub.Name, sub.BillingCycle)
-	_, err = s.db.Exec(
+	_, err = tx.Exec(
 		"INSERT INTO transactions (username, amount, category, note, date, type) VALUES (?, ?, ?, ?, ?, 'expense')",
 		username, sub.Amount, sub.Category, txNote, time.Now(),
 	)
@@ -1895,7 +1910,7 @@ func (s *DBStore) PaySubscription(id int, username string) (*Subscription, error
 		}
 	}
 
-	_, err = s.db.Exec(
+	_, err = tx.Exec(
 		"UPDATE subscriptions SET next_due_date = ? WHERE id = ? AND username = ?",
 		next, id, username,
 	)
@@ -1905,6 +1920,9 @@ func (s *DBStore) PaySubscription(id int, username string) (*Subscription, error
 
 	sub.NextDueDate = next
 	sub.DueDateFmt = next.Format("2006-01-02")
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
 	return &sub, nil
 }
 
@@ -2235,13 +2253,19 @@ func (s *DBStore) DeleteGoal(id int, username string) (bool, error) {
 
 func (s *DBStore) DepositToGoal(id int, username string, amount float64, note string, logTransaction bool) (*Goal, error) {
 
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	if amount <= 0 {
 		return nil, fmt.Errorf("deposit amount must be greater than zero")
 	}
 
 	var g Goal
 	var targetDate sql.NullTime
-	err := s.db.QueryRow(
+	err = tx.QueryRow(
 		"SELECT id, username, name, target_amount, saved_amount, category, target_date, color, emoji, status, created_at FROM goals WHERE id = ? AND username = ?",
 		id, username,
 	).Scan(&g.ID, &g.Username, &g.Name, &g.TargetAmount, &g.SavedAmount, &g.Category, &targetDate, &g.Color, &g.Emoji, &g.Status, &g.CreatedAt)
@@ -2255,7 +2279,7 @@ func (s *DBStore) DepositToGoal(id int, username string, amount float64, note st
 		newStatus = "completed"
 	}
 
-	_, err = s.db.Exec(
+	_, err = tx.Exec(
 		"UPDATE goals SET saved_amount = ?, status = ? WHERE id = ? AND username = ?",
 		newSaved, newStatus, id, username,
 	)
@@ -2267,20 +2291,24 @@ func (s *DBStore) DepositToGoal(id int, username string, amount float64, note st
 	if note == "" {
 		note = "Deposit into savings goal"
 	}
-	_, _ = s.db.Exec(
+	_, err = tx.Exec(
 		"INSERT INTO goal_contributions (goal_id, username, amount, type, note, created_at) VALUES (?, ?, ?, 'deposit', ?, ?)",
 		id, username, amount, note, time.Now(),
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
 	// Log transaction as an expense from main balance if requested
 	if logTransaction {
 		txNote := fmt.Sprintf("Deposit to Goal [%s]: %s", g.Name, note)
-		_, err = s.db.Exec(
+		_, err = tx.Exec(
 			"INSERT INTO transactions (username, amount, category, note, date, type) VALUES (?, ?, 'savings', ?, ?, 'expense')",
 			username, amount, txNote, time.Now(),
 		)
 		if err != nil {
-			log.Printf("failed to log deposit transaction: %v", err)
+			return nil, err
 		}
 	}
 
@@ -2302,10 +2330,19 @@ func (s *DBStore) DepositToGoal(id int, username string, amount float64, note st
 		g.TargetDateFmt = t.Format("2006-01-02")
 	}
 
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
 	return &g, nil
 }
 
 func (s *DBStore) WithdrawFromGoal(id int, username string, amount float64, note string, logTransaction bool) (*Goal, error) {
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
 
 	if amount <= 0 {
 		return nil, fmt.Errorf("withdrawal amount must be greater than zero")
@@ -2313,7 +2350,7 @@ func (s *DBStore) WithdrawFromGoal(id int, username string, amount float64, note
 
 	var g Goal
 	var targetDate sql.NullTime
-	err := s.db.QueryRow(
+	err = tx.QueryRow(
 		"SELECT id, username, name, target_amount, saved_amount, category, target_date, color, emoji, status, created_at FROM goals WHERE id = ? AND username = ?",
 		id, username,
 	).Scan(&g.ID, &g.Username, &g.Name, &g.TargetAmount, &g.SavedAmount, &g.Category, &targetDate, &g.Color, &g.Emoji, &g.Status, &g.CreatedAt)
@@ -2331,7 +2368,7 @@ func (s *DBStore) WithdrawFromGoal(id int, username string, amount float64, note
 		newStatus = "in_progress"
 	}
 
-	_, err = s.db.Exec(
+	_, err = tx.Exec(
 		"UPDATE goals SET saved_amount = ?, status = ? WHERE id = ? AND username = ?",
 		newSaved, newStatus, id, username,
 	)
@@ -2343,20 +2380,24 @@ func (s *DBStore) WithdrawFromGoal(id int, username string, amount float64, note
 	if note == "" {
 		note = "Withdrawal from savings goal"
 	}
-	_, _ = s.db.Exec(
+	_, err = tx.Exec(
 		"INSERT INTO goal_contributions (goal_id, username, amount, type, note, created_at) VALUES (?, ?, ?, 'withdrawal', ?, ?)",
 		id, username, amount, note, time.Now(),
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
 	// Log transaction as an income back into main balance if requested
 	if logTransaction {
 		txNote := fmt.Sprintf("Withdrawal from Goal [%s]: %s", g.Name, note)
-		_, err = s.db.Exec(
+		_, err = tx.Exec(
 			"INSERT INTO transactions (username, amount, category, note, date, type) VALUES (?, ?, 'savings', ?, ?, 'income')",
 			username, amount, txNote, time.Now(),
 		)
 		if err != nil {
-			log.Printf("failed to log withdrawal transaction: %v", err)
+			return nil, err
 		}
 	}
 
@@ -2378,6 +2419,9 @@ func (s *DBStore) WithdrawFromGoal(id int, username string, amount float64, note
 		g.TargetDateFmt = t.Format("2006-01-02")
 	}
 
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
 	return &g, nil
 }
 
@@ -3700,6 +3744,12 @@ func (s *DBStore) CreateSplitExpense(
 	accountID int,
 ) (*SplitExpense, error) {
 
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	username = strings.TrimSpace(username)
 	title = strings.TrimSpace(title)
 	if username == "" || title == "" {
@@ -3766,7 +3816,7 @@ func (s *DBStore) CreateSplitExpense(
 	}
 
 	createdAt := time.Now()
-	res, err := s.db.Exec(
+	res, err := tx.Exec(
 		"INSERT INTO splits (username, title, total_amount, payer_name, payer_is_user, category, date, split_type, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		username, title, totalAmount, payerName, payerIsUserInt, category, date, splitType, note, createdAt,
 	)
@@ -3796,45 +3846,59 @@ func (s *DBStore) CreateSplitExpense(
 
 		var debtID *int
 		if payerIsUser && !p.IsUser && p.ShareAmount > 0 {
-			resD, errD := s.db.Exec(
+			resD, errD := tx.Exec(
 				"INSERT INTO debts (username, person_name, amount, amount_paid, type, due_date, note, status, created_at, split_id) VALUES (?, ?, ?, 0, 'owing_me', NULL, ?, 'unpaid', ?, ?)",
 				username, p.Name, p.ShareAmount, "Split: "+title, createdAt, splitID,
 			)
-			if errD == nil {
-				dID64, _ := resD.LastInsertId()
-				dID := int(dID64)
-				debtID = &dID
+			if errD != nil {
+				return nil, errD
 			}
+			dID64, err := resD.LastInsertId()
+			if err != nil {
+				return nil, err
+			}
+			dID := int(dID64)
+			debtID = &dID
 		} else if !payerIsUser && p.IsUser && p.ShareAmount > 0 {
-			resD, errD := s.db.Exec(
+			resD, errD := tx.Exec(
 				"INSERT INTO debts (username, person_name, amount, amount_paid, type, due_date, note, status, created_at, split_id) VALUES (?, ?, ?, 0, 'i_owe', NULL, ?, 'unpaid', ?, ?)",
 				username, payerName, p.ShareAmount, fmt.Sprintf("Split: %s (paid by %s)", title, payerName), createdAt, splitID,
 			)
-			if errD == nil {
-				dID64, _ := resD.LastInsertId()
-				dID := int(dID64)
-				debtID = &dID
+			if errD != nil {
+				return nil, errD
 			}
+			dID64, err := resD.LastInsertId()
+			if err != nil {
+				return nil, err
+			}
+			dID := int(dID64)
+			debtID = &dID
 		}
 
-		_, err = s.db.Exec(
+		_, err = tx.Exec(
 			"INSERT INTO split_participants (split_id, username, name, share_amount, is_user, debt_id, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')",
 			splitID, username, p.Name, p.ShareAmount, isUserInt, debtID,
 		)
 		if err != nil {
-			log.Printf("failed to insert split participant %s: %v", p.Name, err)
+			return nil, err
 		}
 	}
 
 	// Log transaction if requested
 	if logTx && payerIsUser && userShare > 0 {
 		txNote := fmt.Sprintf("Split: %s (Your share)", title)
-		_, _ = s.db.Exec(
+		_, err = tx.Exec(
 			"INSERT INTO transactions (username, amount, category, note, date, type, tags, account_id) VALUES (?, ?, ?, ?, ?, 'expense', 'split', ?)",
 			username, userShare, category, txNote, date, accountID,
 		)
 	}
 
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
 	return s.getSplitByIDLocked(splitID, username)
 }
 
@@ -4055,12 +4119,18 @@ func (s *DBStore) GetSettlementOverview(username string) (*SettlementOverview, e
 // SettleContactDebts simplifies or completes settlement with a contact.
 func (s *DBStore) SettleContactDebts(username, contactName, mode string, accountID int, logTx bool) (*SettlementResult, error) {
 
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	contactName = strings.TrimSpace(contactName)
 	if contactName == "" {
 		return nil, fmt.Errorf("contact name is required")
 	}
 
-	rows, err := s.db.Query(
+	rows, err := tx.Query(
 		"SELECT id, amount, amount_paid, type FROM debts WHERE username = ? AND LOWER(TRIM(person_name)) = LOWER(?) AND status != 'settled'",
 		username, contactName,
 	)
@@ -4084,7 +4154,7 @@ func (s *DBStore) SettleContactDebts(username, contactName, mode string, account
 	for rows.Next() {
 		var it activeItem
 		if err := rows.Scan(&it.id, &it.amount, &it.amountPaid, &it.debtType); err != nil {
-			continue
+			return nil, err
 		}
 		it.rem = it.amount - it.amountPaid
 		if it.rem <= 0 {
@@ -4099,9 +4169,16 @@ func (s *DBStore) SettleContactDebts(username, contactName, mode string, account
 		}
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+
 	currency := "₦"
 	var userCurr string
-	if err := s.db.QueryRow("SELECT currency FROM users WHERE username = ?", username).Scan(&userCurr); err == nil && userCurr != "" {
+	if err := tx.QueryRow("SELECT currency FROM users WHERE username = ?", username).Scan(&userCurr); err == nil && userCurr != "" {
 		currency = userCurr
 	}
 
@@ -4128,7 +4205,9 @@ func (s *DBStore) SettleContactDebts(username, contactName, mode string, account
 				newPaid = it.amount
 				newStatus = "settled"
 			}
-			_, _ = s.db.Exec("UPDATE debts SET amount_paid = ?, status = ? WHERE id = ?", newPaid, newStatus, it.id)
+			if _, err := tx.Exec("UPDATE debts SET amount_paid = ?, status = ? WHERE id = ?", newPaid, newStatus, it.id); err != nil {
+				return nil, err
+			}
 			remOffset -= deduct
 		}
 
@@ -4144,12 +4223,17 @@ func (s *DBStore) SettleContactDebts(username, contactName, mode string, account
 				newPaid = it.amount
 				newStatus = "settled"
 			}
-			_, _ = s.db.Exec("UPDATE debts SET amount_paid = ?, status = ? WHERE id = ?", newPaid, newStatus, it.id)
+			if _, err := tx.Exec("UPDATE debts SET amount_paid = ?, status = ? WHERE id = ?", newPaid, newStatus, it.id); err != nil {
+				return nil, err
+			}
 			remOffset -= deduct
 		}
 
 		res.OffsetAmount = offset
 		res.Message = fmt.Sprintf("Successfully simplified debts! Offset %s of mutual debt with %s.", formatMoney(offset, currency), contactName)
+		if err := tx.Commit(); err != nil {
+			return nil, err
+		}
 		return res, nil
 	}
 
@@ -4158,26 +4242,34 @@ func (s *DBStore) SettleContactDebts(username, contactName, mode string, account
 	res.NetSettled = net
 
 	for _, it := range append(owingMeList, iOweList...) {
-		_, _ = s.db.Exec("UPDATE debts SET amount_paid = amount, status = 'settled' WHERE id = ?", it.id)
+		if _, err := tx.Exec("UPDATE debts SET amount_paid = amount, status = 'settled' WHERE id = ?", it.id); err != nil {
+			return nil, err
+		}
 	}
 
-	_, _ = s.db.Exec(
+	if _, err := tx.Exec(
 		"UPDATE split_participants SET status = 'settled' WHERE username = ? AND LOWER(TRIM(name)) = LOWER(?)",
 		username, contactName,
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	if logTx && math.Abs(net) > 0.005 {
 		now := time.Now()
 		if net > 0 {
-			_, _ = s.db.Exec(
+			if _, err := tx.Exec(
 				"INSERT INTO transactions (username, amount, category, note, date, type, tags, account_id) VALUES (?, ?, 'Debt Repayment', ?, ?, 'income', 'settlement', ?)",
 				username, net, fmt.Sprintf("Settlement received from %s", contactName), now, accountID,
-			)
+			); err != nil {
+				return nil, err
+			}
 		} else {
-			_, _ = s.db.Exec(
+			if _, err := tx.Exec(
 				"INSERT INTO transactions (username, amount, category, note, date, type, tags, account_id) VALUES (?, ?, 'Debt Repayment', ?, ?, 'expense', 'settlement', ?)",
 				username, -net, fmt.Sprintf("Settlement paid to %s", contactName), now, accountID,
-			)
+			); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -4189,6 +4281,9 @@ func (s *DBStore) SettleContactDebts(username, contactName, mode string, account
 		res.Message = fmt.Sprintf("All debts with %s were fully offset and squared up to %s.", contactName, formatMoney(0, currency))
 	}
 
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 
@@ -4939,8 +5034,8 @@ func ParseReceiptText(text string) ParsedReceiptData {
 	}
 
 	// 3. Date Detection
-	dateRegex1 := regexp.MustCompile(`\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b`)       // 2026-09-15
-	dateRegex2 := regexp.MustCompile(`\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})\b`)       // 09/15/2026
+	dateRegex1 := regexp.MustCompile(`\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b`)   // 2026-09-15
+	dateRegex2 := regexp.MustCompile(`\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})\b`) // 09/15/2026
 	dateRegex3 := regexp.MustCompile(`(?i)\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})\b`)
 
 	now := time.Now()
@@ -5212,7 +5307,7 @@ type CashFlowSettings struct {
 }
 
 type ForecastEvent struct {
-	Date            string  `json:"date"` // YYYY-MM-DD
+	Date            string  `json:"date"`         // YYYY-MM-DD
 	DisplayDate     string  `json:"display_date"` // "Oct 15"
 	Title           string  `json:"title"`
 	Type            string  `json:"type"` // "income", "subscription", "debt_payment", "debt_collection", "planned_expense"
@@ -5225,7 +5320,7 @@ type ForecastEvent struct {
 }
 
 type ForecastDayPoint struct {
-	Date           string          `json:"date"` // YYYY-MM-DD
+	Date           string          `json:"date"`         // YYYY-MM-DD
 	DisplayDate    string          `json:"display_date"` // "Oct 03"
 	DayIndex       int             `json:"day_index"`
 	DayOfWeek      string          `json:"day_of_week"` // "Fri"
@@ -5251,9 +5346,9 @@ type CashFlowForecast struct {
 	NetMonthlyBurn         float64            `json:"net_monthly_burn"` // total monthly expenses - total monthly income
 	NetMonthlyBurnAbs      float64            `json:"net_monthly_burn_abs"`
 	NetMonthlySurplus      float64            `json:"net_monthly_surplus"`
-	RunwayDays             int                `json:"runway_days"`      // -1 for infinite / net positive
+	RunwayDays             int                `json:"runway_days"` // -1 for infinite / net positive
 	RunwayMonths           float64            `json:"runway_months"`
-	RunwayStatus           string             `json:"runway_status"`    // "infinite", "healthy", "caution", "warning", "critical"
+	RunwayStatus           string             `json:"runway_status"` // "infinite", "healthy", "caution", "warning", "critical"
 	RunwayBadgeText        string             `json:"runway_badge_text"`
 	StartingDate           string             `json:"starting_date"`
 	EndingDate             string             `json:"ending_date"`
@@ -5271,7 +5366,7 @@ type CashFlowForecast struct {
 }
 
 type WhatIfSimulationParams struct {
-	TimeframeDays         int     `json:"timeframe_days"` // 30, 60, 90
+	TimeframeDays         int     `json:"timeframe_days"`          // 30, 60, 90
 	DiscretionarySpendPct float64 `json:"discretionary_spend_pct"` // e.g. -20% or +30%
 	IncomeChangeMonthly   float64 `json:"income_change_monthly"`   // e.g. +500 or -300
 	PlannedExpenseAmount  float64 `json:"planned_expense_amount"`

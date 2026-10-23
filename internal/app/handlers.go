@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -125,7 +126,7 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-XSS-Protection", "1; mode=block")
 	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-	w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+	w.Header().Set("Permissions-Policy", "camera=(), microphone=(self), geolocation=(), payment=()")
 	w.Header().Set("Content-Security-Policy", "frame-ancestors 'self' chrome-extension: moz-extension:;")
 
 	if r.Method == http.MethodOptions {
@@ -146,7 +147,7 @@ func (app *App) routes() {
 
 	// Uploaded receipts & documents storage
 	_ = os.MkdirAll("uploads/receipts", 0755)
-	app.Mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
+	app.Mux.HandleFunc("/uploads/", app.HandleReceiptFile)
 
 	// Favicon
 	app.Mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
@@ -2856,6 +2857,58 @@ func (app *App) HandleReceiptsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// HandleReceiptFile preserves receipt URLs while enforcing per-user ownership.
+func (app *App) HandleReceiptFile(w http.ResponseWriter, r *http.Request) {
+	username, ok := app.getSessionUser(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	name := strings.TrimPrefix(r.URL.Path, "/uploads/receipts/")
+	if name == r.URL.Path || name == "" || name == "." || name == ".." || strings.ContainsAny(name, "/\\") {
+		http.NotFound(w, r)
+		return
+	}
+	var owned int
+	err := app.DB.db.QueryRow("SELECT COUNT(*) FROM receipts WHERE username = ? AND file_path = ?", username, r.URL.Path).Scan(&owned)
+	if err != nil {
+		http.Error(w, "failed to load receipt", http.StatusInternalServerError)
+		return
+	}
+	if owned == 0 {
+		http.NotFound(w, r)
+		return
+	}
+	file, err := os.Open(filepath.Join("uploads", "receipts", name))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil || !info.Mode().IsRegular() {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Cache-Control", "private, no-store")
+	http.ServeContent(w, r, name, info.ModTime(), file)
+}
+
+const maxReceiptFileBytes = 10 << 20
+
+func receiptBodyError(w http.ResponseWriter, err error) {
+	var tooLarge *http.MaxBytesError
+	if errors.As(err, &tooLarge) {
+		jsonError(w, "receipt upload exceeds size limit", http.StatusRequestEntityTooLarge)
+	} else {
+		jsonError(w, "invalid receipt payload", http.StatusBadRequest)
+	}
+}
+
 func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 	username, ok := app.getSessionUser(r)
 	if !ok {
@@ -2874,15 +2927,23 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 	var manualMerchant string
 	var manualAmount float64
 	var manualCategory string
+	saved := false
+	defer func() {
+		if !saved && strings.HasPrefix(savedFilePath, "/uploads/receipts/") {
+			_ = os.Remove(filepath.Join("uploads", "receipts", filepath.Base(savedFilePath)))
+		}
+	}()
 
 	contentType := r.Header.Get("Content-Type")
 
 	if strings.Contains(contentType, "multipart/form-data") {
-		// Limit to 10MB
-		if err := r.ParseMultipartForm(10 << 20); err != nil {
-			jsonError(w, "file too large or invalid multipart", http.StatusBadRequest)
+		// Bound the whole request, including multipart overhead and text fields.
+		r.Body = http.MaxBytesReader(w, r.Body, maxReceiptFileBytes+(1<<20))
+		if err := r.ParseMultipartForm(1 << 20); err != nil {
+			receiptBodyError(w, err)
 			return
 		}
+		defer r.MultipartForm.RemoveAll()
 
 		rawOCRText = r.FormValue("raw_ocr_text")
 		manualMerchant = r.FormValue("merchant")
@@ -2894,6 +2955,10 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 		file, header, err := r.FormFile("file")
 		if err == nil && file != nil {
 			defer file.Close()
+			if header.Size > maxReceiptFileBytes {
+				jsonError(w, "receipt file exceeds 10 MiB", http.StatusRequestEntityTooLarge)
+				return
+			}
 			originalFilename = filepath.Base(header.Filename)
 			ext := strings.ToLower(filepath.Ext(originalFilename))
 			allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".webp": true, ".pdf": true}
@@ -2918,11 +2983,15 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			defer out.Close()
+			savedFilePath = "/uploads/receipts/" + safeName
 			if _, err := io.Copy(out, file); err != nil {
 				jsonError(w, "failed to write receipt file", http.StatusInternalServerError)
 				return
 			}
-			savedFilePath = "/uploads/receipts/" + safeName
+			if err := out.Close(); err != nil {
+				jsonError(w, "failed to save receipt file", http.StatusInternalServerError)
+				return
+			}
 		}
 	} else {
 		// JSON payload
@@ -2934,8 +3003,14 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 			Amount      float64 `json:"amount"`
 			Category    string  `json:"category"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			jsonError(w, "invalid JSON payload", http.StatusBadRequest)
+		r.Body = http.MaxBytesReader(w, r.Body, int64(base64.StdEncoding.EncodedLen(maxReceiptFileBytes))+(1<<20))
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			receiptBodyError(w, err)
+			return
+		}
+		if err := json.Unmarshal(body, &req); err != nil {
+			receiptBodyError(w, err)
 			return
 		}
 
@@ -2962,21 +3037,29 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 			}
 
 			decoded, err := base64.StdEncoding.DecodeString(b64Data)
-			if err == nil && len(decoded) > 0 && len(decoded) <= 15<<20 { // Max 15MB
-				cleanUser := strings.Map(func(r rune) rune {
-					if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '-' {
-						return r
-					}
-					return -1
-				}, username)
-				if cleanUser == "" {
-					cleanUser = "user"
+			if err != nil || len(decoded) == 0 {
+				jsonError(w, "invalid receipt image", http.StatusBadRequest)
+				return
+			}
+			if len(decoded) > maxReceiptFileBytes {
+				jsonError(w, "receipt file exceeds 10 MiB", http.StatusRequestEntityTooLarge)
+				return
+			}
+			cleanUser := strings.Map(func(r rune) rune {
+				if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '-' {
+					return r
 				}
-				safeName := fmt.Sprintf("receipt_%s_%d%s", cleanUser, time.Now().UnixNano(), ext)
-				diskPath := filepath.Join("uploads", "receipts", safeName)
-				if err := os.WriteFile(diskPath, decoded, 0644); err == nil {
-					savedFilePath = "/uploads/receipts/" + safeName
-				}
+				return -1
+			}, username)
+			if cleanUser == "" {
+				cleanUser = "user"
+			}
+			safeName := fmt.Sprintf("receipt_%s_%d%s", cleanUser, time.Now().UnixNano(), ext)
+			diskPath := filepath.Join("uploads", "receipts", safeName)
+			savedFilePath = "/uploads/receipts/" + safeName
+			if err := os.WriteFile(diskPath, decoded, 0644); err != nil {
+				jsonError(w, "failed to save receipt file", http.StatusInternalServerError)
+				return
 			}
 		}
 	}
@@ -3023,6 +3106,7 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	saved = true
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(map[string]any{
@@ -3720,5 +3804,3 @@ func (app *App) HandleAITestKeyAPI(w http.ResponseWriter, r *http.Request) {
 		"parsed":  parsed,
 	})
 }
-
-

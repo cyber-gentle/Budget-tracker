@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
 )
 
 func TestDBFlow(t *testing.T) {
@@ -692,7 +691,7 @@ func TestCategoriesAndTagsFlow(t *testing.T) {
 	if len(catsAfter) != defaultCount+1 {
 		t.Fatalf("expected %d categories, got %d", defaultCount+1, len(catsAfter))
 	}
-	var foundCustom *app.Category
+	var foundCustom *Category
 	for i := range catsAfter {
 		if catsAfter[i].ID == customCat.ID {
 			foundCustom = &catsAfter[i]
@@ -792,7 +791,7 @@ func TestAccountsAndTransfersFlow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get updated accounts: %v", err)
 	}
-	var curBank, curMoMo, curSavings *app.Account
+	var curBank, curMoMo, curSavings *Account
 	for i := range accountsAfterTx {
 		if accountsAfterTx[i].ID == bankID {
 			curBank = &accountsAfterTx[i]
@@ -1017,7 +1016,7 @@ func TestReportsAndAnalyticsFlow(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK from /api/reports, got %d: %s", rec.Code, rec.Body.String())
 	}
-	var apiReport app.FinancialReport
+	var apiReport FinancialReport
 	if err := json.Unmarshal(rec.Body.Bytes(), &apiReport); err != nil {
 		t.Fatalf("failed to decode /api/reports response: %v", err)
 	}
@@ -1048,7 +1047,7 @@ func TestReportsAndAnalyticsFlow(t *testing.T) {
 	if recJSON.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK from /api/export?format=json, got %d", recJSON.Code)
 	}
-	var jsonExport []app.Transaction
+	var jsonExport []Transaction
 	if err := json.Unmarshal(recJSON.Body.Bytes(), &jsonExport); err != nil {
 		t.Fatalf("failed to parse JSON export: %v", err)
 	}
@@ -1070,25 +1069,25 @@ func TestSmartBudgetingRulesFlow(t *testing.T) {
 	_ = store.Signup(username, "smart@spendly.app", "pass12345", "Smart Budgeter")
 
 	// 1. Test Category Bucket Classification
-	if app.ClassifyCategoryBucket("food") != "needs" {
-		t.Fatalf("expected food to be 'needs', got '%s'", app.ClassifyCategoryBucket("food"))
+	if ClassifyCategoryBucket("food") != "needs" {
+		t.Fatalf("expected food to be 'needs', got '%s'", ClassifyCategoryBucket("food"))
 	}
-	if app.ClassifyCategoryBucket("housing") != "needs" {
+	if ClassifyCategoryBucket("housing") != "needs" {
 		t.Fatalf("expected housing to be 'needs'")
 	}
-	if app.ClassifyCategoryBucket("entertainment") != "wants" {
+	if ClassifyCategoryBucket("entertainment") != "wants" {
 		t.Fatalf("expected entertainment to be 'wants'")
 	}
-	if app.ClassifyCategoryBucket("shopping") != "wants" {
+	if ClassifyCategoryBucket("shopping") != "wants" {
 		t.Fatalf("expected shopping to be 'wants'")
 	}
-	if app.ClassifyCategoryBucket("savings") != "savings" {
+	if ClassifyCategoryBucket("savings") != "savings" {
 		t.Fatalf("expected savings to be 'savings'")
 	}
-	if app.ClassifyCategoryBucket("crypto_vault") != "savings" {
+	if ClassifyCategoryBucket("crypto_vault") != "savings" {
 		t.Fatalf("expected crypto_vault to be 'savings'")
 	}
-	if app.ClassifyCategoryBucket("pharmacy_bills") != "needs" {
+	if ClassifyCategoryBucket("pharmacy_bills") != "needs" {
 		t.Fatalf("expected pharmacy_bills to be 'needs'")
 	}
 
@@ -1132,7 +1131,7 @@ func TestSmartBudgetingRulesFlow(t *testing.T) {
 		t.Fatalf("expected 3 buckets in 50/30/20 rule, got %d", len(report.Rule503020))
 	}
 
-	var needsBucket, wantsBucket, savingsBucket *app.Rule503020Bucket
+	var needsBucket, wantsBucket, savingsBucket *Rule503020Bucket
 	for i := range report.Rule503020 {
 		switch report.Rule503020[i].Key {
 		case "needs":
@@ -1156,7 +1155,7 @@ func TestSmartBudgetingRulesFlow(t *testing.T) {
 	}
 
 	// Verify Envelopes
-	var foodEnv, entEnv, transEnv *app.BudgetEnvelope
+	var foodEnv, entEnv, transEnv *BudgetEnvelope
 	for i := range report.Envelopes {
 		switch report.Envelopes[i].Category {
 		case "food":
@@ -1223,7 +1222,7 @@ func TestSmartBudgetingRulesFlow(t *testing.T) {
 	if recSmart.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK from /api/budgets/smart, got %d: %s", recSmart.Code, recSmart.Body.String())
 	}
-	var apiSmartReport app.SmartBudgetReport
+	var apiSmartReport SmartBudgetReport
 	if err := json.Unmarshal(recSmart.Body.Bytes(), &apiSmartReport); err != nil {
 		t.Fatalf("failed to parse /api/budgets/smart response: %v", err)
 	}
@@ -1283,7 +1282,7 @@ func TestSplitExpensesAndSettlementFlow(t *testing.T) {
 	}
 
 	// 1. Create a split expense: Dinner at Bistro, Total: 90000, 3 participants (You: 30000, Alice: 30000, Bob: 30000)
-	parts := []app.SplitParticipantInput{
+	parts := []SplitParticipantInput{
 		{Name: "You", ShareAmount: 30000, IsUser: true},
 		{Name: "Alice", ShareAmount: 30000, IsUser: false},
 		{Name: "Bob", ShareAmount: 30000, IsUser: false},
@@ -1333,7 +1332,7 @@ func TestSplitExpensesAndSettlementFlow(t *testing.T) {
 		t.Fatalf("expected 2 contacts with open balances (Alice, Bob), got %d", overview.ContactsCount)
 	}
 
-	var aliceContact *app.ContactSettlement
+	var aliceContact *ContactSettlement
 	for _, c := range overview.Contacts {
 		if strings.EqualFold(c.ContactName, "Alice") {
 			aliceContact = &c
@@ -1430,7 +1429,7 @@ func TestSplitExpensesAndSettlementFlow(t *testing.T) {
 		t.Fatalf("expected 201 from POST /api/splits, got %d: %s", recPostSplit.Code, recPostSplit.Body.String())
 	}
 
-	var createdSplit app.SplitExpense
+	var createdSplit SplitExpense
 	if err := json.Unmarshal(recPostSplit.Body.Bytes(), &createdSplit); err != nil {
 		t.Fatalf("failed to decode created split: %v", err)
 	}
@@ -1562,7 +1561,7 @@ func TestNetWorthAndWealthFlow(t *testing.T) {
 	if recAPI.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK from GET /api/net-worth, got %d: %s", recAPI.Code, recAPI.Body.String())
 	}
-	var apiOverview app.NetWorthOverview
+	var apiOverview NetWorthOverview
 	if err := json.Unmarshal(recAPI.Body.Bytes(), &apiOverview); err != nil {
 		t.Fatalf("failed to decode GET /api/net-worth response: %v", err)
 	}
@@ -1588,8 +1587,8 @@ func TestNetWorthAndWealthFlow(t *testing.T) {
 	}
 
 	var createdAssetRes struct {
-		Success bool                    `json:"success"`
-		Item    app.CustomAssetLiability `json:"item"`
+		Success bool                 `json:"success"`
+		Item    CustomAssetLiability `json:"item"`
 	}
 	if err := json.Unmarshal(recPostAsset.Body.Bytes(), &createdAssetRes); err != nil {
 		t.Fatalf("failed to parse created asset: %v", err)
@@ -1616,8 +1615,8 @@ func TestNetWorthAndWealthFlow(t *testing.T) {
 		t.Fatalf("expected 201 Created from POST /api/net-worth/items (liab), got %d: %s", recPostLiab.Code, recPostLiab.Body.String())
 	}
 	var createdLiabRes struct {
-		Success bool                    `json:"success"`
-		Item    app.CustomAssetLiability `json:"item"`
+		Success bool                 `json:"success"`
+		Item    CustomAssetLiability `json:"item"`
 	}
 	if err := json.Unmarshal(recPostLiab.Body.Bytes(), &createdLiabRes); err != nil {
 		t.Fatalf("failed to parse created liability: %v", err)
@@ -1670,6 +1669,7 @@ func TestNetWorthAndWealthFlow(t *testing.T) {
 }
 
 func TestReceiptOCRAndDocumentScannerFlow(t *testing.T) {
+	t.Chdir(t.TempDir())
 	tmpDir := t.TempDir()
 	dbPath := "file:" + filepath.Join(tmpDir, "receipt_test.db")
 
@@ -1703,7 +1703,7 @@ TIP $1.43
 TOTAL $14.85
 THANK YOU FOR VISITING!`
 
-	parsed1 := app.ParseReceiptText(sampleStarbucks)
+	parsed1 := ParseReceiptText(sampleStarbucks)
 	if parsed1.Merchant != "Starbucks" {
 		t.Fatalf("expected merchant 'Starbucks', got %q", parsed1.Merchant)
 	}
@@ -1728,7 +1728,7 @@ WILD SOCKEYE SALMON $24.50
 SUBTOTAL $31.98
 TOTAL DUE: $31.98
 DATE: 2026-10-01`
-	parsed2 := app.ParseReceiptText(sampleGrocery)
+	parsed2 := ParseReceiptText(sampleGrocery)
 	if parsed2.Merchant != "Whole Foods" {
 		t.Fatalf("expected merchant 'Whole Foods', got %q", parsed2.Merchant)
 	}
@@ -1801,8 +1801,8 @@ DATE: 2026-10-01`
 
 	// 6. Test HTTP API POST /api/receipts/scan (Upload/Scan JSON payload)
 	scanJSON := `{
-		"image_base64": "data:image/svg+xml;utf8,<svg></svg>",
-		"filename": "test_gas.svg",
+		"image_base64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
+		"filename": "test_gas.png",
 		"raw_ocr_text": "SHELL OIL #48102\nPUMP 04 REGULAR\nTOTAL PAID $45.00\nDATE: 2026-09-29",
 		"merchant": "Shell Oil Station",
 		"amount": 45.00,
@@ -1817,8 +1817,8 @@ DATE: 2026-10-01`
 		t.Fatalf("expected 201 Created from POST /api/receipts/scan, got %d: %s", recScan.Code, recScan.Body.String())
 	}
 	var scanRes struct {
-		Success bool        `json:"success"`
-		Receipt app.Receipt `json:"receipt"`
+		Success bool    `json:"success"`
+		Receipt Receipt `json:"receipt"`
 	}
 	if err := json.Unmarshal(recScan.Body.Bytes(), &scanRes); err != nil {
 		t.Fatalf("failed to decode scan response: %v", err)
@@ -1939,7 +1939,7 @@ func TestCashFlowForecastingAndRunwayPredictorFlow(t *testing.T) {
 	}
 
 	// 4. Test GenerateCashFlowForecast default 30 days
-	forecast30, err := store.GenerateCashFlowForecast(username, app.WhatIfSimulationParams{TimeframeDays: 30})
+	forecast30, err := store.GenerateCashFlowForecast(username, WhatIfSimulationParams{TimeframeDays: 30})
 	if err != nil {
 		t.Fatalf("failed to generate 30-day forecast: %v", err)
 	}
@@ -1958,9 +1958,9 @@ func TestCashFlowForecastingAndRunwayPredictorFlow(t *testing.T) {
 	}
 
 	// 5. Test What-If Simulation: Major planned purchase + Reduced income resulting in finite runway
-	whatIfParams := app.WhatIfSimulationParams{
+	whatIfParams := WhatIfSimulationParams{
 		TimeframeDays:         60,
-		DiscretionarySpendPct: 50, // +50% discretionary spend
+		DiscretionarySpendPct: 50,    // +50% discretionary spend
 		IncomeChangeMonthly:   -6000, // loss of salary
 		PlannedExpenseAmount:  20000,
 		PlannedExpenseDate:    now.AddDate(0, 0, 7).Format("2006-01-02"),
@@ -2000,7 +2000,7 @@ func TestCashFlowForecastingAndRunwayPredictorFlow(t *testing.T) {
 	if recAPI.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK from GET /api/forecast, got %d", recAPI.Code)
 	}
-	var apiForecast app.CashFlowForecast
+	var apiForecast CashFlowForecast
 	if err := json.Unmarshal(recAPI.Body.Bytes(), &apiForecast); err != nil {
 		t.Fatalf("failed to unmarshal api forecast: %v", err)
 	}
@@ -2022,7 +2022,7 @@ func TestCashFlowForecastingAndRunwayPredictorFlow(t *testing.T) {
 	if recSim.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK from POST /api/forecast/simulate, got %d", recSim.Code)
 	}
-	var simForecast app.CashFlowForecast
+	var simForecast CashFlowForecast
 	if err := json.Unmarshal(recSim.Body.Bytes(), &simForecast); err != nil {
 		t.Fatalf("failed to unmarshal sim forecast: %v", err)
 	}
@@ -2065,5 +2065,3 @@ func TestCashFlowForecastingAndRunwayPredictorFlow(t *testing.T) {
 		t.Fatalf("failed to delete recurring income: %v", err)
 	}
 }
-
-

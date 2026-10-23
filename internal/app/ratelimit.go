@@ -3,6 +3,7 @@ package app
 import (
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -71,26 +72,40 @@ func (rl *IPRateLimiter) cleanup() {
 	}
 }
 
-// GetClientIP extracts the real client IP, respecting X-Forwarded-For or RemoteAddr.
+// GetClientIP trusts forwarding headers only from explicitly configured proxies.
+// Walk X-Forwarded-For from the nearest hop to avoid trusting a spoofed prefix.
 func GetClientIP(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	trusted := func(ip net.IP) bool {
+		for _, cidr := range strings.Split(os.Getenv("TRUSTED_PROXY_CIDRS"), ",") {
+			_, network, err := net.ParseCIDR(strings.TrimSpace(cidr))
+			if err == nil && network.Contains(ip) {
+				return true
+			}
+		}
+		return false
+	}
+	peer := net.ParseIP(host)
+	if peer == nil || !trusted(peer) {
+		return host
+	}
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		parts := strings.Split(xff, ",")
-		if len(parts) > 0 {
-			ip := strings.TrimSpace(parts[0])
-			if ip != "" {
-				return ip
+		for i := len(parts) - 1; i >= 0; i-- {
+			ip := net.ParseIP(strings.TrimSpace(parts[i]))
+			if ip == nil {
+				return host
+			}
+			if !trusted(ip) || i == 0 {
+				return ip.String()
 			}
 		}
 	}
-	if xri := r.Header.Get("X-Real-IP"); xri != "" {
-		ip := strings.TrimSpace(xri)
-		if ip != "" {
-			return ip
-		}
+	if ip := net.ParseIP(strings.TrimSpace(r.Header.Get("X-Real-IP"))); ip != nil {
+		return ip.String()
 	}
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err == nil {
-		return host
-	}
-	return r.RemoteAddr
+	return host
 }

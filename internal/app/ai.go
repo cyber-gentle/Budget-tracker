@@ -57,15 +57,6 @@ func ParseAITransaction(text string, accounts []Account, settings *AISettings) P
 		}
 	}
 
-	// 1. Server-Side Groq Cloud AI Engine (Primary: llama-3.3-70b-versatile, Alternate fallback: llama-3.1-8b-instant)
-	serverGroqKey := strings.TrimSpace(os.Getenv("GROQ_API_KEY"))
-	if serverGroqKey != "" {
-		if parsed, err := parseWithServerGroq(serverGroqKey, text, accounts); err == nil && parsed != nil && parsed.Amount > 0 {
-			parsed.RawText = text
-			return *parsed
-		}
-	}
-
 	provider := "hybrid"
 	apiKey := ""
 	model := ""
@@ -75,6 +66,15 @@ func ParseAITransaction(text string, accounts []Account, settings *AISettings) P
 		}
 		apiKey = strings.TrimSpace(settings.APIKey)
 		model = strings.TrimSpace(settings.Model)
+	}
+
+	// 1. Server-Side Groq Cloud AI Engine (Primary: llama-3.3-70b-versatile, Alternate fallback: llama-3.1-8b-instant)
+	serverGroqKey := strings.TrimSpace(os.Getenv("GROQ_API_KEY"))
+	if provider == "hybrid" && serverGroqKey != "" {
+		if parsed, err := parseWithServerGroq(serverGroqKey, text, accounts); err == nil && parsed != nil && parsed.Amount > 0 {
+			parsed.RawText = text
+			return *parsed
+		}
 	}
 
 	// 2. If explicit Gemini provider and key provided
@@ -189,7 +189,7 @@ Return strictly valid JSON only matching this schema:
 		},
 		"response_format": map[string]string{"type": "json_object"},
 		"temperature":     0.1,
-		"max_tokens":       512,
+		"max_tokens":      512,
 	}
 
 	payloadBytes, err := json.Marshal(reqPayload)
@@ -727,7 +727,7 @@ func extractAmount(text string) (float64, string) {
 
 	// Look for standard numbers with currency prefix or standalone formatted numbers
 	// Example: ₦4,500.50, $250, 15,000, 3200
-	currAmtRe := regexp.MustCompile(`(?:[₦$€£]|NGN|USD|EUR|GBP)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)`)
+	currAmtRe := regexp.MustCompile(`(?i)(?:[₦$€£]|NGN|USD|EUR|GBP)\s*([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)`)
 	if m := currAmtRe.FindStringSubmatch(text); len(m) > 1 {
 		cleaned := strings.ReplaceAll(m[1], ",", "")
 		if val, err := strconv.ParseFloat(cleaned, 64); err == nil && val > 0 {

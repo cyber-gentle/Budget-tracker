@@ -69,3 +69,17 @@ This repository is pre-configured for instant **Vercel** serverless deployment w
 4. Click **Deploy**.
 
 Vercel will build the Go serverless function and launch your application at a permanent URL like `https://spendly.vercel.app`!
+
+### Reverse proxy configuration
+
+By default, authentication rate limits use the network peer address and ignore
+forwarding headers. If you deploy behind a reverse proxy, set
+`TRUSTED_PROXY_CIDRS` to a comma-separated list of that proxy's IP ranges (for
+example, `127.0.0.1/32,::1/128` for a local proxy). Only include ranges you control;
+the proxy must overwrite `X-Real-IP` and append or overwrite `X-Forwarded-For`.
+The application walks the forwarded chain from right to left to find the client.
+
+Receipt uploads accept files up to 10 MiB. Receipt URLs require the owner's
+session and are not publicly shareable. Selecting **Smart NLP (Offline)** keeps
+parsing local even when `GROQ_API_KEY` is configured; the server key is used only
+for the hybrid provider.

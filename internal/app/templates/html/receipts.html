@@ -1029,7 +1029,7 @@
             card.innerHTML = `
                 <div>
                     <div class="relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 h-36 flex items-center justify-center mb-3 cursor-pointer btn-view-receipt">
-                        <img src="${receipt.file_path}" alt="${receipt.merchant}" class="h-full w-full object-cover group-hover:scale-105 transition-transform" onerror="this.onerror=null; this.src='/static/assets/imgs/sample_receipt.png';">
+                        <img data-receipt-image class="h-full w-full object-cover group-hover:scale-105 transition-transform" onerror="this.onerror=null; this.src='/static/assets/imgs/sample_receipt.png';">
                         <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-2 font-bold text-xs backdrop-blur-xs">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
                             <span>Inspect</span>
@@ -1042,12 +1042,12 @@
                     </div>
                     <div class="space-y-1">
                         <div class="flex items-center justify-between gap-2">
-                            <h4 class="font-heading text-sm font-bold text-slate-800 dark:text-slate-100 truncate">${receipt.merchant}</h4>
-                            <span class="font-heading text-sm font-extrabold text-slate-900 dark:text-white shrink-0">${fmtMoney(receipt.total_amount)}</span>
+                            <h4 class="font-heading text-sm font-bold text-slate-800 dark:text-slate-100 truncate" data-receipt-merchant></h4>
+                            <span class="font-heading text-sm font-extrabold text-slate-900 dark:text-white shrink-0" data-receipt-amount></span>
                         </div>
                         <div class="flex items-center justify-between text-[11px] text-slate-400">
-                            <span>${receipt.receipt_date_str}</span>
-                            <span class="capitalize px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-semibold text-[10px]">${receipt.suggested_category}</span>
+                            <span data-receipt-date></span>
+                            <span class="capitalize px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-semibold text-[10px]" data-receipt-category></span>
                         </div>
                     </div>
                 </div>
@@ -1060,6 +1060,13 @@
                     </button>
                 </div>
             `;
+            const receiptImage = card.querySelector('[data-receipt-image]');
+            receiptImage.setAttribute('src', receipt.file_path);
+            receiptImage.setAttribute('alt', receipt.merchant || 'Receipt');
+            card.querySelector('[data-receipt-merchant]').textContent = receipt.merchant || '';
+            card.querySelector('[data-receipt-amount]').textContent = fmtMoney(receipt.total_amount);
+            card.querySelector('[data-receipt-date]').textContent = receipt.receipt_date_str || '';
+            card.querySelector('[data-receipt-category]').textContent = receipt.suggested_category || '';
             grid.insertBefore(card, grid.firstChild);
             attachCardEvents(card);
         }
