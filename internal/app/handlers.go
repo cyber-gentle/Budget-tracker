@@ -126,7 +126,7 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-XSS-Protection", "1; mode=block")
 	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-	w.Header().Set("Permissions-Policy", "camera=(), microphone=(self), geolocation=(), payment=()")
+	w.Header().Set("Permissions-Policy", "camera=(self), microphone=(self), geolocation=(), payment=()")
 	w.Header().Set("Content-Security-Policy", "frame-ancestors 'self' chrome-extension: moz-extension:;")
 
 	if r.Method == http.MethodOptions {

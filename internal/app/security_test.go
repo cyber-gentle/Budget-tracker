@@ -81,7 +81,7 @@ func TestMicrophonePermissionPolicy(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("dashboard status = %d", w.Code)
 	}
-	want := "camera=(), microphone=(self), geolocation=(), payment=()"
+	want := "camera=(self), microphone=(self), geolocation=(), payment=()"
 	if got := w.Header().Get("Permissions-Policy"); got != want {
 		t.Fatalf("Permissions-Policy = %q, want %q", got, want)
 	}

@@ -54,6 +54,7 @@
             }
         })();
     </script>
+    <script src="/static/js/receipt-tools.js"></script>
     <!-- Tesseract.js OCR library -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
@@ -88,17 +89,7 @@
                 </a>
 
                 <!-- Desktop Navigation Links -->
-                <nav class="hidden md:flex items-center gap-1 ml-6 text-xs font-semibold text-slate-600 dark:text-slate-400">
-                    <a href="/dashboard" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Dashboard</a>
-                    <a href="/transactions" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Transactions</a>
-                    <a href="/debts" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Debts & IOUs</a>
-                    <a href="/subscriptions" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Subscriptions</a>
-                    <a href="/goals" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Savings Goals</a>
-                    <a href="/reports" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Reports & Analytics</a>
-                    <a href="/net-worth" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Net Worth</a>
-                    <a href="/receipts" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">Receipts</a>
-                    <a href="/forecast" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Forecast</a>
-                </nav>
+                <nav aria-label="Main navigation" class="hidden lg:flex items-center gap-1 whitespace-nowrap"><a href="/dashboard" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Dashboard</a><a href="/transactions" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Transactions</a><a href="/reports" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Reports & Analytics</a><details class="relative"><summary class="cursor-pointer px-3 py-2 rounded-lg text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">More</summary><div class="absolute left-0 top-full mt-2 w-48 p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg flex flex-col gap-1"><a href="/debts" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Debts & IOUs</a><a href="/subscriptions" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Subscriptions</a><a href="/goals" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Savings Goals</a><a href="/net-worth" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Net Worth</a><a href="/receipts" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">Receipts</a><a href="/forecast" class="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Forecast</a></div></details></nav>
             </div>
 
             <!-- Right Toolbar & Profile Dropdown -->
@@ -206,7 +197,7 @@
                     </div>
                     <h1 class="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight">Turn Paper Receipts into Organized Expenses</h1>
                     <p class="text-xs sm:text-sm text-slate-300">
-                        Drop receipt images, snap live camera photos, or upload PDF invoices. Spendly automatically extracts merchant names, total amounts, dates, and categories into tracked transactions.
+                        Drop receipt images, snap camera photos, or upload PDF invoices (up to 10 pages and 10 MiB). Spendly automatically extracts merchant names, total amounts, dates, and categories into tracked transactions.
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
@@ -807,39 +798,22 @@
                 const sample = sampleReceipts[sampleKey];
                 if (!sample) return;
                 
-                showProgress(true, "Processing sample receipt with OCR engine...", 35);
-                
-                // Simulate OCR pipeline with realistic progress steps
-                setTimeout(() => setProgress("Extracting merchant & prices...", 70), 300);
-                setTimeout(async () => {
-                    setProgress("Saving receipt metadata...", 90);
-                    
-                    try {
-                        const res = await fetch('/api/receipts/scan', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                image_base64: sample.img,
-                                filename: sampleKey + '_receipt.svg',
-                                raw_ocr_text: sample.rawText,
-                                merchant: sample.merchant,
-                                amount: sample.amount,
-                                category: sample.category
-                            })
-                        });
-                        const data = await res.json();
-                        showProgress(false);
-                        
-                        if (data.success && data.receipt) {
-                            populateReviewForm(data.receipt, sample.img, sample.notes);
-                            showToast(`Extracted ${sample.merchant} receipt (${fmtMoney(sample.amount)})!`, '🧾');
-                            prependGalleryCard(data.receipt);
-                        }
-                    } catch (err) {
-                        showProgress(false);
-                        showToast('Failed to process sample receipt', '⚠️');
-                    }
-                }, 600);
+                showProgress(true, "Preparing sample receipt…", 35);
+                btn.disabled = true;
+                try {
+                    const image = await receiptImageDataURL(sample.img);
+                    const res = await fetch('/api/receipts/scan', {
+                        method: 'POST', headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({image_base64:image, filename:sampleKey+'.png', raw_ocr_text:sample.rawText,
+                            merchant:sample.merchant, amount:sample.amount, category:sample.category})
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.receipt) throw new Error(data.error || 'Could not save sample receipt.');
+                    populateReviewForm(data.receipt, image, sample.notes);
+                    prependGalleryCard(data.receipt);
+                    showToast('Sample receipt added. Review it before recording a transaction.', '🧾');
+                } catch (err) { showToast(err.message || 'Could not prepare sample receipt.', '⚠️'); }
+                finally { showProgress(false); btn.disabled = false; }
             });
         });
 
@@ -861,63 +835,25 @@
         }
 
         // Process File (Upload & OCR)
+        let receiptProcessing = false;
         async function processFile(file) {
-            showProgress(true, "Uploading receipt document...", 20);
-
-            // Read preview
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const dataUrl = e.target.result;
-                setProgress("Analyzing image resolution...", 40);
-
-                let ocrText = "";
-                // If Tesseract is loaded and file is an image, run client-side OCR
-                if (typeof Tesseract !== 'undefined' && file.type.startsWith('image/')) {
-                    try {
-                        setProgress("Running Optical Character Recognition...", 60);
-                        const result = await Tesseract.recognize(dataUrl, 'eng', {
-                            logger: m => {
-                                if (m.status === 'recognizing text' && m.progress) {
-                                    const progressVal = Math.round(50 + (m.progress * 35));
-                                    setProgress(`Detecting characters (${Math.round(m.progress * 100)}%)...`, progressVal);
-                                }
-                            }
-                        });
-                        ocrText = result.data.text;
-                    } catch (ocrErr) {
-                        console.warn("Client OCR fallback:", ocrErr);
-                    }
-                }
-
-                setProgress("Sending to server parser...", 90);
-
-                // Send to backend /api/receipts/scan
-                try {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('raw_ocr_text', ocrText);
-
-                    const res = await fetch('/api/receipts/scan', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const json = await res.json();
-                    showProgress(false);
-
-                    if (json.success && json.receipt) {
-                        const lineItemsText = (json.parsed && json.parsed.line_items) ? json.parsed.line_items.join('\n') : ocrText;
-                        populateReviewForm(json.receipt, dataUrl, lineItemsText);
-                        prependGalleryCard(json.receipt);
-                        showToast(`Extracted ${json.receipt.merchant || 'Receipt'} (${fmtMoney(json.receipt.total_amount)})!`, '🧾');
-                    } else {
-                        showToast(json.error || 'Failed to parse receipt', '⚠️');
-                    }
-                } catch (err) {
-                    showProgress(false);
-                    showToast('Network error processing receipt', '⚠️');
-                }
-            };
-            reader.readAsDataURL(file);
+            if (receiptProcessing) { showToast('Please wait for the current receipt to finish.', '⚠️'); return; }
+            receiptProcessing = true;
+            showProgress(true, "Preparing receipt…", 20);
+            try {
+                const {text, preview} = await readReceiptFile(file, setProgress);
+                setProgress('Saving receipt…', 90);
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('raw_ocr_text', text);
+                const res = await fetch('/api/receipts/scan', {method:'POST', body:formData});
+                const data = await res.json();
+                if (!res.ok || !data.receipt) throw new Error(data.error || 'Could not save receipt.');
+                populateReviewForm(data.receipt, preview, text);
+                prependGalleryCard(data.receipt);
+                showToast(text.trim() ? 'Receipt scanned. Check the details before saving.' : 'No text found. Enter the receipt details manually.', '🧾');
+            } catch (err) { showToast(err.message || 'Could not read receipt. Please try again.', '⚠️'); }
+            finally { showProgress(false); receiptProcessing = false; }
         }
 
         // Populate Review Form
@@ -1073,6 +1009,15 @@
 
         // Attach events to cards
         function attachCardEvents(card) {
+            if ((card.dataset.filepath || '').toLowerCase().endsWith('.pdf')) {
+                const image = card.querySelector('img');
+                if (image) {
+                    const label = document.createElement('span');
+                    label.className = 'text-sm font-semibold text-slate-600 dark:text-slate-300';
+                    label.textContent = 'PDF receipt · Open document';
+                    image.replaceWith(label);
+                }
+            }
             const loadBtn = card.querySelector('.btn-load-review');
             if (loadBtn) {
                 loadBtn.addEventListener('click', () => {
@@ -1098,6 +1043,7 @@
             const viewBtn = card.querySelector('.btn-view-receipt');
             if (viewBtn) {
                 viewBtn.addEventListener('click', () => {
+                    if ((card.dataset.filepath || '').toLowerCase().endsWith('.pdf')) { window.open(card.dataset.filepath, '_blank', 'noopener'); return; }
                     lightboxTitle.textContent = card.getAttribute('data-merchant') || 'Receipt';
                     lightboxImg.src = card.getAttribute('data-filepath');
                     lightboxAmount.textContent = fmtMoney(parseFloat(card.getAttribute('data-amount') || 0));
@@ -1359,5 +1305,6 @@
         </div>
     </div>
 
+<script src="/static/js/dialogs.js"></script>
 </body>
 </html>
