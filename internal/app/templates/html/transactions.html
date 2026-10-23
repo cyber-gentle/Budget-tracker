@@ -210,7 +210,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                     <span>Export</span>
                 </button>
-                <button type="button" id="btn-open-add" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 rounded-xl transition-all shadow-sm cursor-pointer">
+                <button type="button" id="btn-open-add" onclick="openAddModal()" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 rounded-xl transition-all shadow-sm cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                     <span>+ Add Transaction</span>
                 </button>
@@ -391,7 +391,7 @@
     </nav>
 
     <!-- Mobile Floating Action Button (FAB) -->
-    <button type="button" id="btn-mobile-fab" class="lg:hidden fixed right-4 bottom-20 z-40 w-[58px] h-[58px] rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black flex items-center justify-center shadow-xl shadow-emerald-500/40 active:scale-90 transition-all cursor-pointer" title="Add Transaction" aria-label="Add Transaction">
+    <button type="button" id="btn-mobile-fab" onclick="openAddModal()" class="lg:hidden fixed right-4 bottom-20 z-40 w-[58px] h-[58px] rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black flex items-center justify-center shadow-xl shadow-emerald-500/40 active:scale-90 transition-all cursor-pointer" title="Add Transaction" aria-label="Add Transaction">
         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
     </button>
 
@@ -508,28 +508,9 @@
                     </div>
                 </div>
 
-                <!-- Payment Method -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Payment Method</label>
-                    <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3.5 py-2.5 focus-within:border-emerald-500 transition-all">
-                        <svg class="w-4 h-4 text-slate-400 mr-2.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
-                        </svg>
-                        <select id="form-payment-method" name="payment_method"
-                            class="w-full bg-[#0d1627] text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none cursor-pointer appearance-none pr-5 [color-scheme:dark]"
-                            style="color-scheme: dark; background-color: #0d1627; color: #ffffff;">
-                            <option value="wallet" style="background-color: #0d1627; color: #ffffff;">Main Wallet</option>
-                            <option value="bank" style="background-color: #0d1627; color: #ffffff;">Bank Transfer</option>
-                            <option value="card" style="background-color: #0d1627; color: #ffffff;">Debit / Credit Card</option>
-                            <option value="cash" style="background-color: #0d1627; color: #ffffff;">Cash</option>
-                        </select>
-                        <svg class="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-                    </div>
-                </div>
-
                 <!-- Action Buttons: Cancel & Save Transaction -->
                 <div class="pt-2 flex items-center gap-3">
-                    <button type="button" id="btn-cancel-tx"
+                    <button type="button" id="btn-cancel-tx" onclick="closeTxModal()"
                         class="flex-1 py-3 px-4 rounded-2xl border border-slate-700/80 bg-[#0d1627] hover:bg-slate-800 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer text-center">
                         Cancel
                     </button>
@@ -815,20 +796,44 @@
             }
         }
 
-        function populateCategorySelect(type = 'expense') {
+        function populateCategorySelect(selectedCategory) {
             const sel = document.getElementById('form-category');
             if (!sel) return;
+            const curVal = (selectedCategory && selectedCategory !== 'expense' && selectedCategory !== 'income') ? selectedCategory : sel.value;
             sel.innerHTML = '';
+
+            const expGroup = document.createElement('optgroup');
+            expGroup.label = 'Expense Categories';
+            const incGroup = document.createElement('optgroup');
+            incGroup.label = 'Income Categories';
+
             for (const [key, meta] of Object.entries(CATEGORIES)) {
-                if (meta.type === type) {
-                    const opt = document.createElement('option');
-                    opt.value = key;
-                    opt.textContent = `${meta.icon} ${meta.label}`;
-                    opt.style.backgroundColor = '#0d1627';
-                    opt.style.color = '#ffffff';
-                    opt.className = 'bg-[#0d1627] text-white';
-                    sel.appendChild(opt);
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = `${meta.icon} ${meta.label}`;
+                opt.style.backgroundColor = '#0d1627';
+                opt.style.color = '#ffffff';
+                opt.className = 'bg-[#0d1627] text-white';
+                if (meta.type === 'income') {
+                    incGroup.appendChild(opt);
+                } else {
+                    expGroup.appendChild(opt);
                 }
+            }
+            sel.appendChild(expGroup);
+            sel.appendChild(incGroup);
+
+            if (curVal && CATEGORIES[curVal]) {
+                sel.value = curVal;
+                currentFormType = CATEGORIES[curVal].type || currentFormType;
+            } else if (selectedCategory === 'income') {
+                sel.value = 'salary';
+                currentFormType = 'income';
+            } else if (selectedCategory === 'expense') {
+                sel.value = 'food';
+                currentFormType = 'expense';
+            } else if (sel.value && CATEGORIES[sel.value]) {
+                currentFormType = CATEGORIES[sel.value].type || 'expense';
             }
         }
 
@@ -1005,56 +1010,88 @@
         let currentFormType = 'expense';
 
         function setFormType(type) {
-            currentFormType = type;
+            currentFormType = type || 'expense';
             const expBtn = document.getElementById('type-btn-expense');
             const incBtn = document.getElementById('type-btn-income');
 
-            if (type === 'expense') {
-                expBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-rose-500 shadow-xs';
-                incBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
-            } else {
-                incBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-emerald-500 shadow-xs';
-                expBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+            if (expBtn && incBtn) {
+                if (currentFormType === 'expense') {
+                    expBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-rose-500 shadow-xs';
+                    incBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+                } else {
+                    incBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-emerald-500 shadow-xs';
+                    expBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+                }
             }
-            populateCategorySelect(type);
+            populateCategorySelect(currentFormType);
         }
 
         function openAddModal() {
-            document.getElementById('modal-title').textContent = 'Add Transaction';
-            document.getElementById('form-tx-id').value = '';
-            document.getElementById('form-amount').value = '';
-            document.getElementById('form-note').value = '';
-            document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+            const titleEl = document.getElementById('modal-title');
+            if (titleEl) {
+                if (titleEl.tagName === 'INPUT') titleEl.value = 'Add Transaction';
+                else titleEl.textContent = 'Add Transaction';
+            }
+            const txIdEl = document.getElementById('form-tx-id');
+            if (txIdEl) txIdEl.value = '';
+            const amtEl = document.getElementById('form-amount');
+            if (amtEl) amtEl.value = '';
+            const noteEl = document.getElementById('form-note');
+            if (noteEl) noteEl.value = '';
+            const dateEl = document.getElementById('form-date');
+            if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+
             setFormType('expense');
-            document.getElementById('tx-modal').classList.remove('hidden');
+
+            const modal = document.getElementById('tx-modal');
+            if (modal) modal.classList.remove('hidden');
         }
 
         function closeTxModal() {
-            document.getElementById('tx-modal').classList.add('hidden');
+            const modal = document.getElementById('tx-modal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function editTransaction(id) {
             const tx = allTransactions.find(t => t.id === id);
             if (!tx) return;
 
-            document.getElementById('modal-title').textContent = 'Edit Transaction';
-            document.getElementById('form-tx-id').value = tx.id;
+            const titleEl = document.getElementById('modal-title');
+            if (titleEl) {
+                if (titleEl.tagName === 'INPUT') titleEl.value = 'Edit Transaction';
+                else titleEl.textContent = 'Edit Transaction';
+            }
+            const txIdEl = document.getElementById('form-tx-id');
+            if (txIdEl) txIdEl.value = tx.id;
             const editAmt = Number(tx.amount || 0);
-            document.getElementById('form-amount').value = (editAmt % 1 !== 0)
-                ? editAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                : editAmt.toLocaleString('en-US');
-            document.getElementById('form-note').value = tx.note || '';
-            document.getElementById('form-date').value = (tx.date || '').split('T')[0] || new Date().toISOString().split('T')[0];
+            const amtEl = document.getElementById('form-amount');
+            if (amtEl) {
+                amtEl.value = (editAmt % 1 !== 0)
+                    ? editAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : editAmt.toLocaleString('en-US');
+            }
+            const noteEl = document.getElementById('form-note');
+            if (noteEl) noteEl.value = tx.note || '';
+            const dateEl = document.getElementById('form-date');
+            if (dateEl) dateEl.value = (tx.date || '').split('T')[0] || new Date().toISOString().split('T')[0];
 
             setFormType(tx.type || 'expense');
             if (tx.category) {
-                document.getElementById('form-category').value = tx.category;
+                const catEl = document.getElementById('form-category');
+                if (catEl) {
+                    catEl.value = tx.category;
+                    if (CATEGORIES[tx.category]) {
+                        currentFormType = CATEGORIES[tx.category].type || currentFormType;
+                    }
+                }
             }
             if (tx.account_id) {
-                document.getElementById('form-account').value = tx.account_id;
+                const accEl = document.getElementById('form-account');
+                if (accEl) accEl.value = tx.account_id;
             }
 
-            document.getElementById('tx-modal').classList.remove('hidden');
+            const modal = document.getElementById('tx-modal');
+            if (modal) modal.classList.remove('hidden');
         }
 
         function promptDeleteTransaction(id) {
@@ -1088,6 +1125,27 @@
 
         // Event Listeners Setup
         document.addEventListener('DOMContentLoaded', async () => {
+            // Modal Triggers (attached immediately so buttons are responsive without delay)
+            document.getElementById('btn-open-add')?.addEventListener('click', openAddModal);
+            document.getElementById('btn-mobile-fab')?.addEventListener('click', openAddModal);
+            document.getElementById('btn-close-tx-modal')?.addEventListener('click', closeTxModal);
+            document.getElementById('btn-cancel-tx')?.addEventListener('click', closeTxModal);
+
+            // Close modal on clicking backdrop
+            document.getElementById('tx-modal')?.addEventListener('click', (e) => {
+                if (e.target === document.getElementById('tx-modal')) {
+                    closeTxModal();
+                }
+            });
+
+            // Automatically sync transaction type when category changes
+            document.getElementById('form-category')?.addEventListener('change', (e) => {
+                const cat = e.target.value;
+                if (CATEGORIES[cat]) {
+                    currentFormType = CATEGORIES[cat].type || 'expense';
+                }
+            });
+
             updateMonthNavigator();
             await loadAccounts();
             await loadTransactions();
@@ -1140,15 +1198,6 @@
             document.getElementById('filter-category')?.addEventListener('change', applyFilters);
             document.getElementById('filter-account')?.addEventListener('change', applyFilters);
             document.getElementById('sort-order')?.addEventListener('change', applyFilters);
-
-            // Modal Triggers
-            document.getElementById('btn-open-add')?.addEventListener('click', openAddModal);
-            document.getElementById('btn-mobile-fab')?.addEventListener('click', openAddModal);
-            document.getElementById('btn-close-tx-modal')?.addEventListener('click', closeTxModal);
-            document.getElementById('btn-cancel-tx')?.addEventListener('click', closeTxModal);
-
-            document.getElementById('type-btn-expense')?.addEventListener('click', () => setFormType('expense'));
-            document.getElementById('type-btn-income')?.addEventListener('click', () => setFormType('income'));
 
             // Delete modal triggers
             document.getElementById('btn-cancel-delete')?.addEventListener('click', () => {
@@ -1413,15 +1462,16 @@
                         formDate.value = parsed.date;
                     }
 
-                    if (parsed.type === 'income') {
-                        document.getElementById('type-btn-income')?.click();
-                    } else {
-                        document.getElementById('type-btn-expense')?.click();
+                    if (parsed.type) {
+                        setFormType(parsed.type);
                     }
 
                     const formCategory = document.getElementById('form-category');
                     if (formCategory && parsed.category) {
                         formCategory.value = parsed.category;
+                        if (CATEGORIES[parsed.category]) {
+                            currentFormType = CATEGORIES[parsed.category].type || currentFormType;
+                        }
                     }
 
                     const formAccount = document.getElementById('form-account');
