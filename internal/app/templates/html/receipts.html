@@ -128,7 +128,7 @@
 
                 <!-- User Profile Dropdown Button -->
                 <div class="relative">
-                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Account settings">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Account settings">
                         <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-heading font-bold text-xs flex items-center justify-center uppercase shadow-sm">
                             {{if .FullName}}{{printf "%.1s" .FullName}}{{else}}{{printf "%.1s" .Username}}{{end}}
                         </span>
@@ -136,7 +136,6 @@
                             <span class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[100px] truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
                             <span class="text-[10px] text-slate-400 dark:text-slate-500">@{{.Username}}</span>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
 
                     <!-- Dropdown Menu Content -->

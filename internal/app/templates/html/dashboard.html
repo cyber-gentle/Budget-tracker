@@ -63,6 +63,28 @@
     </script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Dark mode select & options across page */
+        html.dark select,
+        html.dark select option,
+        html.dark select optgroup {
+            color-scheme: dark !important;
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+
+        /* Force dark background and white text for modal dropdowns and options */
+        #add-tx-modal select,
+        #add-tx-modal select option,
+        #tx-modal select,
+        #tx-modal select option,
+        select.dark-select,
+        select.dark-select option {
+            color-scheme: dark !important;
+            background-color: #0d1627 !important;
+            color: #ffffff !important;
+        }
+    </style>
 </head>
 
 <body
@@ -210,11 +232,6 @@
                                 id="user-display-name">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
                             <span class="text-[10px] text-slate-400">@{{.Username}}</span>
                         </div>
-                        <svg class="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors"
-                            xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m6 9 6 6 6-6" />
-                        </svg>
                     </button>
 
                     <!-- Dropdown Menu -->
@@ -1672,166 +1689,160 @@
         </div>
     </div>
 
-    <!-- Add Transaction Modal (Mobile Only) -->
+    <!-- Add Transaction Modal -->
     <div id="add-tx-modal"
-        class="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden p-4">
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm hidden p-4">
         <div
-            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-center gap-2.5">
-                    <div
-                        class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
-                        +
+            class="bg-[#0b1329] text-white border border-slate-800/80 rounded-3xl p-5 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
+            
+            <!-- AI Voice Assistant Card -->
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-[#0d182e]/90 border border-emerald-500/25 shadow-lg flex items-center justify-between gap-3">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-amber-400 text-sm">✨</span>
+                        <span class="text-xs sm:text-sm font-extrabold text-white tracking-tight">AI Voice Assistant</span>
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-[9px] uppercase tracking-wider border border-emerald-500/30">AUTO-FILL</span>
                     </div>
-                    <div>
-                        <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Add Transaction</h3>
-                        <p class="text-xs text-slate-400 dark:text-slate-500">Record a new income, expense, or transfer
-                        </p>
-                    </div>
+                    <p class="text-[11px] sm:text-xs text-slate-400 leading-snug">
+                        Say something like: <span class="text-slate-300 italic">"Lunch at KFC for 2500"</span>
+                    </p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <a href="/receipts"
-                        class="px-2 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-lg border border-emerald-200/60 dark:border-emerald-800/60 flex items-center gap-1 transition-colors"
-                        title="Scan receipt with OCR">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2.5">
-                            <path
-                                d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                            <circle cx="12" cy="13" r="3" />
-                        </svg>
-                        <span>Scan</span>
-                    </a>
-                    <button type="button" id="add-modal-close"
-                        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 6 6 18" />
-                            <path d="m6 6 12 12" />
-                        </svg>
+                <div class="flex flex-col items-center gap-1 shrink-0">
+                    <button type="button" id="modal-btn-ai-mic" class="w-12 h-12 rounded-full border-2 border-emerald-400 bg-emerald-950/40 text-emerald-400 hover:text-emerald-300 flex items-center justify-center shadow-[0_0_15px_rgba(52,211,153,0.4)] hover:shadow-[0_0_22px_rgba(52,211,153,0.6)] hover:scale-105 active:scale-95 transition-all cursor-pointer relative" title="Listen (Tap to speak)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                        <span id="modal-mic-pulse-dot" class="hidden absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
                     </button>
+                    <span id="modal-voice-status-label" class="text-[11px] font-bold text-emerald-400 tracking-wide">Listen</span>
                 </div>
-            <!-- Mobile AI Natural Language & Voice Assistant Bar -->
-            <div class="mb-3 p-3 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/25 dark:border-emerald-500/35 rounded-2xl space-y-2">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <span class="text-emerald-500">✨</span>
-                        <span>AI Voice / Smart Fill:</span>
-                    </span>
-                    <span class="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                        Auto-Fills Below
-                    </span>
+            </div>
+
+            <!-- Hidden input for holding voice transcript before parse -->
+            <input type="hidden" id="modal-ai-chat-input">
+
+            <!-- Listening banner -->
+            <div id="modal-voice-banner" class="hidden py-1.5 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="modal-voice-listening-label">Listening... Speak now</span>
                 </div>
-                <div class="relative">
-                    <input type="text" id="modal-ai-chat-input" placeholder='e.g. "Dinner at KFC 4,500" or tap mic...' class="w-full pl-3 pr-20 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-medium">
-                    <div class="absolute right-1.5 top-1.5 flex items-center gap-1">
-                        <button type="button" id="modal-btn-ai-mic" class="p-1 rounded-lg text-slate-500 hover:text-emerald-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-50 transition-all cursor-pointer relative" title="Voice Input (Tap to speak)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-                            <span id="modal-mic-pulse-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-                        </button>
-                        <button type="button" id="modal-btn-run-ai-parse" class="px-2 py-1 text-[11px] font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg transition-all cursor-pointer shadow-xs">
-                            Fill
-                        </button>
-                    </div>
-                </div>
-                <div id="modal-voice-banner" class="hidden py-1 px-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[11px] font-semibold flex items-center justify-between">
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                        <span>Listening... Say your expense</span>
-                    </div>
-                    <button type="button" id="modal-btn-stop-listening" class="text-[9px] font-bold uppercase underline cursor-pointer">Stop</button>
-                </div>
+                <button type="button" id="modal-btn-stop-listening" class="text-[10px] font-bold uppercase underline text-slate-300 hover:text-white cursor-pointer">Stop</button>
             </div>
 
             <form id="modal-add-tx-form" class="space-y-3.5">
                 <input type="hidden" name="type" id="modal-add-tx-type" value="expense">
-
-                <!-- Type Selection Pills [Income] [Expense] [Transfer] -->
-                <div class="flex items-center gap-2 pt-0.5">
-                    <button type="button" id="modal-type-income-btn"
-                        class="px-3 sm:px-4 py-2 rounded-xl text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700">Income</button>
-                    <button type="button" id="modal-type-expense-btn"
-                        class="px-3 sm:px-4 py-2 rounded-xl text-xs font-bold text-center flex-1 transition-all cursor-pointer border border-emerald-500/80 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]">Expense</button>
-                    <button type="button" id="modal-type-transfer-btn"
-                        class="px-3 sm:px-4 py-2 rounded-xl text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700">Transfer</button>
-                </div>
-
-                <!-- Row: Note / Description & Date -->
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1"
-                            id="modal-tx-note-label">Note / Description</label>
-                        <input type="text" id="modal-tx-note-input" name="note"
-                            placeholder="e.g. Lunch at Cafe, Groceries..." required
-                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all font-medium">
-                    </div>
-                    <div>
-                        <label
-                            class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Date</label>
-                        <input type="date" id="modal-date-input" name="date"
-                            class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all font-medium">
-                    </div>
-                </div>
-
-                <!-- Row: Category & Account -->
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label
-                                class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Category</label>
-                            <button type="button" id="modal-btn-quick-manage-cat"
-                                class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">Manage</button>
-                        </div>
-                        <select name="category" id="modal-add-category" required
-                            class="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
-                            <option value="food">🍔 Food</option>
-                            <option value="transport">🚗 Transport</option>
-                            <option value="housing">🏠 Housing</option>
-                            <option value="entertainment">🎬 Entertainment</option>
-                            <option value="shopping">🛍️ Shopping</option>
-                            <option value="healthcare">💊 Healthcare</option>
-                            <option value="education">📚 Education</option>
-                            <option value="bills">💡 Bills</option>
-                            <option value="personal">✨ Personal</option>
-                            <option value="other">📦 Other</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label
-                                class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Account</label>
-                            <button type="button" id="modal-btn-quick-manage-accounts"
-                                class="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">+
-                                Add</button>
-                        </div>
-                        <select name="account_id" id="modal-add-account"
-                            class="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
-                            <option value="0">🏦 Main Bank</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Row: Amount -->
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Amount (<span
-                            class="currency-label">₦</span>)</label>
-                    <input type="text" id="modal-amount-input" name="amount" placeholder="0.00" required
-                        inputmode="numeric"
-                        class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-bold transition-all">
-                </div>
-
                 <input type="hidden" id="modal-add-tags" name="tags" value="">
+
+                <!-- Amount (NGN) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Amount (<span class="currency-label">NGN</span>)</label>
+                    <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3.5 py-2.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all">
+                        <span class="currency-label text-base font-bold text-slate-400 mr-2 select-none">₦</span>
+                        <input type="text" id="modal-amount-input" name="amount" placeholder="0.00" required inputmode="numeric"
+                            class="w-full bg-transparent text-sm sm:text-base font-bold text-slate-100 placeholder:text-slate-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Date -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Date</label>
+                    <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3.5 py-2.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all">
+                        <svg class="w-4 h-4 text-slate-400 mr-2.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                            <line x1="16" x2="16" y1="2" y2="6"/>
+                            <line x1="8" x2="8" y1="2" y2="6"/>
+                            <line x1="3" x2="10" y1="10" y2="10"/>
+                        </svg>
+                        <input type="date" id="modal-date-input" name="date" required
+                            class="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none cursor-pointer [color-scheme:dark]">
+                        <svg class="w-3.5 h-3.5 text-slate-400 pointer-events-none shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                </div>
+
+                <!-- Category & Account Row -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">Category</label>
+                        <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3 py-2.5 focus-within:border-emerald-500 transition-all">
+                            <svg class="w-4 h-4 text-slate-400 mr-2 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/>
+                                <path d="M7 7h.01"/>
+                            </svg>
+                            <select name="category" id="modal-add-category" required
+                                class="w-full bg-[#0d1627] text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none cursor-pointer appearance-none pr-5 [color-scheme:dark]"
+                                style="color-scheme: dark; background-color: #0d1627; color: #ffffff;">
+                                <option value="food" style="background-color: #0d1627; color: #ffffff;">🍴 Food & Dining</option>
+                                <option value="transport" style="background-color: #0d1627; color: #ffffff;">🚗 Transportation</option>
+                                <option value="housing" style="background-color: #0d1627; color: #ffffff;">🏠 Housing & Rent</option>
+                                <option value="bills" style="background-color: #0d1627; color: #ffffff;">💡 Bills & Utilities</option>
+                                <option value="shopping" style="background-color: #0d1627; color: #ffffff;">🛍️ Shopping</option>
+                                <option value="entertainment" style="background-color: #0d1627; color: #ffffff;">🎬 Entertainment</option>
+                                <option value="healthcare" style="background-color: #0d1627; color: #ffffff;">💊 Healthcare</option>
+                                <option value="education" style="background-color: #0d1627; color: #ffffff;">📚 Education</option>
+                                <option value="personal" style="background-color: #0d1627; color: #ffffff;">✨ Personal</option>
+                                <option value="other" style="background-color: #0d1627; color: #ffffff;">📦 Other</option>
+                            </select>
+                            <svg class="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">Account</label>
+                        <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3 py-2.5 focus-within:border-emerald-500 transition-all">
+                            <svg class="w-4 h-4 text-slate-400 mr-2 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>
+                            </svg>
+                            <select name="account_id" id="modal-add-account"
+                                class="w-full bg-[#0d1627] text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none cursor-pointer appearance-none pr-5 [color-scheme:dark]"
+                                style="color-scheme: dark; background-color: #0d1627; color: #ffffff;">
+                                <option value="0" style="background-color: #0d1627; color: #ffffff;">Main Bank</option>
+                            </select>
+                            <svg class="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Merchant / Note (optional) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Merchant / Note (optional)</label>
+                    <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3.5 py-2.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all">
+                        <svg class="w-4 h-4 text-slate-400 mr-2.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        <input type="text" id="modal-tx-note-input" name="note" placeholder="e.g. Lunch at KFC"
+                            class="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Payment Method</label>
+                    <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3.5 py-2.5 focus-within:border-emerald-500 transition-all">
+                        <svg class="w-4 h-4 text-slate-400 mr-2.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+                        </svg>
+                        <select id="modal-payment-method" name="payment_method"
+                            class="w-full bg-[#0d1627] text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none cursor-pointer appearance-none pr-5 [color-scheme:dark]"
+                            style="color-scheme: dark; background-color: #0d1627; color: #ffffff;">
+                            <option value="wallet" style="background-color: #0d1627; color: #ffffff;">Main Wallet</option>
+                            <option value="bank" style="background-color: #0d1627; color: #ffffff;">Bank Transfer</option>
+                            <option value="card" style="background-color: #0d1627; color: #ffffff;">Debit / Credit Card</option>
+                            <option value="cash" style="background-color: #0d1627; color: #ffffff;">Cash</option>
+                        </select>
+                        <svg class="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                </div>
+
                 <p class="text-xs text-rose-500 font-medium hidden" id="modal-tx-error"></p>
 
-                <!-- Glowing Emerald CTA Button & Cancel -->
-                <div class="pt-1 flex items-center gap-2">
+                <!-- Action Buttons: Cancel & Save Transaction -->
+                <div class="pt-2 flex items-center gap-3">
                     <button type="button" id="add-modal-cancel"
-                        class="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition-colors cursor-pointer">
+                        class="flex-1 py-3 px-4 rounded-2xl border border-slate-700/80 bg-[#0d1627] hover:bg-slate-800 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer text-center">
                         Cancel
                     </button>
                     <button type="submit" id="modal-btn-submit-tx"
-                        class="flex-[2] bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-bold text-xs sm:text-sm py-2.5 rounded-xl transition-all shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
-                        <span>Add Transaction</span>
+                        class="flex-[1.8] py-3 px-4 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs sm:text-sm transition-all shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
+                        <span>Save Transaction</span>
                     </button>
                 </div>
             </form>
@@ -3097,6 +3108,9 @@
                 const icn = c.icon || c.emoji || '📦';
                 opt.value = k;
                 opt.textContent = `${icn} ${lbl}`;
+                opt.style.backgroundColor = '#0d1627';
+                opt.style.color = '#ffffff';
+                opt.className = 'bg-[#0d1627] text-white';
                 if (selectedVal && opt.value === selectedVal) {
                     opt.selected = true;
                 }
@@ -3109,6 +3123,9 @@
                     const customOpt = document.createElement('option');
                     customOpt.value = selectedVal;
                     customOpt.textContent = `${meta.icon || '📦'} ${meta.label || selectedVal}`;
+                    customOpt.style.backgroundColor = '#0d1627';
+                    customOpt.style.color = '#ffffff';
+                    customOpt.className = 'bg-[#0d1627] text-white';
                     customOpt.selected = true;
                     selectEl.appendChild(customOpt);
                 }
@@ -3969,15 +3986,7 @@
         const btnOpenAddTx = document.getElementById('btn-open-add-tx');
         if (btnOpenAddTx) {
             btnOpenAddTx.addEventListener('click', () => {
-                if (window.innerWidth < 1024) {
-                    openAddTxModal();
-                } else {
-                    const noteInp = document.getElementById('tx-note-input');
-                    if (noteInp) {
-                        noteInp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        setTimeout(() => noteInp.focus(), 300);
-                    }
-                }
+                openAddTxModal();
             });
         }
 
@@ -5925,7 +5934,7 @@
                 if (sel) {
                     const prev = sel.value;
                     sel.innerHTML = userAccounts.map(a => `
-                        <option value="${a.id}" ${a.id === defaultAcc.id ? 'selected' : ''}>${a.icon || '🏦'} ${esc(a.name)} (${isBalanceHidden ? '••••••' : (a.formatted_balance || fmtMoney(a.current_balance))})</option>
+                        <option value="${a.id}" ${a.id === defaultAcc.id ? 'selected' : ''} style="background-color: #0d1627; color: #ffffff;" class="bg-[#0d1627] text-white">${a.icon || '🏦'} ${esc(a.name)} (${isBalanceHidden ? '••••••' : (a.formatted_balance || fmtMoney(a.current_balance))})</option>
                     `).join('');
                     if (prev && userAccounts.some(a => String(a.id) === prev)) {
                         sel.value = prev;
@@ -6646,6 +6655,11 @@
                     isListeningSpeech = true;
                     if (bannerEl) bannerEl.classList.remove('hidden');
                     if (dotEl) dotEl.classList.remove('hidden');
+                    const modalStatusLabel = document.getElementById('modal-voice-status-label');
+                    if (modalStatusLabel && targetInputId === 'modal-ai-chat-input') {
+                        modalStatusLabel.textContent = 'Listening...';
+                        modalStatusLabel.classList.add('animate-pulse');
+                    }
                 };
 
                 aiSpeechRecognition.onresult = (event) => {
@@ -6654,6 +6668,10 @@
                         transcript += event.results[i][0].transcript;
                     }
                     if (inputEl) inputEl.value = transcript;
+                    const listeningLabel = document.getElementById('modal-voice-listening-label');
+                    if (listeningLabel && targetInputId === 'modal-ai-chat-input') {
+                        listeningLabel.textContent = transcript ? `"${transcript}"` : 'Listening... Speak now';
+                    }
                 };
 
                 aiSpeechRecognition.onerror = async (event) => {
@@ -6698,6 +6716,11 @@
             const dotEl = document.getElementById(pulseDotId);
             if (bannerEl) bannerEl.classList.add('hidden');
             if (dotEl) dotEl.classList.add('hidden');
+            const modalStatusLabel = document.getElementById('modal-voice-status-label');
+            if (modalStatusLabel) {
+                modalStatusLabel.textContent = 'Listen';
+                modalStatusLabel.classList.remove('animate-pulse');
+            }
             if (aiSpeechRecognition) {
                 try { aiSpeechRecognition.stop(); } catch (e) {}
             }
@@ -6930,6 +6953,12 @@
                 const accSelect = document.getElementById('modal-add-account');
                 if (accSelect && parsed.account_id) {
                     accSelect.value = parsed.account_id;
+                }
+
+                const modalStatusLabel = document.getElementById('modal-voice-status-label');
+                if (modalStatusLabel) {
+                    modalStatusLabel.textContent = 'Auto-filled!';
+                    setTimeout(() => { modalStatusLabel.textContent = 'Listen'; }, 2500);
                 }
 
                 showToast(`✨ Auto-filled: ${parsed.note} (${fmtMoney(parsed.amount)})`, 'success');

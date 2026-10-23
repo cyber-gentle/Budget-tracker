@@ -117,7 +117,7 @@
 
                 <!-- User Dropdown Menu -->
                 <div class="relative">
-                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Account settings">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Account settings">
                         <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-heading font-bold text-xs flex items-center justify-center uppercase shadow-sm">
                             {{if .FullName}}{{printf "%.1s" .FullName}}{{else}}{{printf "%.1s" .Username}}{{end}}
                         </span>
@@ -125,7 +125,6 @@
                             <span class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[100px] truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
                             <span class="text-[10px] text-slate-400 dark:text-slate-500">@{{.Username}}</span>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
 
                     <!-- Dropdown Content -->
@@ -745,10 +744,25 @@
             heroEl.textContent = (data.net_worth < 0 ? '-' : '') + fmtMoney(Math.abs(data.net_worth));
             heroEl.className = 'text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight ' + (data.net_worth >= 0 ? 'text-white' : 'text-rose-400');
 
-            document.getElementById('stat-total-assets').textContent = '+' + fmtMoney(data.total_assets);
-            document.getElementById('stat-total-liabilities').textContent = '-' + fmtMoney(data.total_liabilities);
-            document.getElementById('footer-total-assets').textContent = '+' + fmtMoney(data.total_assets);
-            document.getElementById('footer-total-liabilities').textContent = '-' + fmtMoney(data.total_liabilities);
+            const isAssetsNeg = (data.total_assets || 0) < 0;
+            const assetsPrefix = isAssetsNeg ? '' : '+';
+            const assetsText = assetsPrefix + fmtMoney(data.total_assets);
+            const assetsColorClass = isAssetsNeg ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+
+            const statAssets = document.getElementById('stat-total-assets');
+            if (statAssets) {
+                statAssets.textContent = assetsText;
+                statAssets.className = 'text-xs font-bold ' + assetsColorClass;
+            }
+
+            const footerAssets = document.getElementById('footer-total-assets');
+            if (footerAssets) {
+                footerAssets.textContent = assetsText;
+                footerAssets.className = 'text-sm font-extrabold ' + assetsColorClass;
+            }
+
+            document.getElementById('stat-total-liabilities').textContent = '-' + fmtMoney(Math.abs(data.total_liabilities || 0));
+            document.getElementById('footer-total-liabilities').textContent = '-' + fmtMoney(Math.abs(data.total_liabilities || 0));
             document.getElementById('stat-debt-ratio').textContent = (data.debt_to_asset_ratio || 0).toFixed(1) + '%';
 
             // Solvency badge
@@ -784,7 +798,11 @@
             if (!data.assets_list || data.assets_list.length === 0) {
                 assetsContainer.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">No assets recorded yet. Add wallets, savings goals or custom holdings!</div>';
             } else {
-                assetsContainer.innerHTML = data.assets_list.map(it => `
+                assetsContainer.innerHTML = data.assets_list.map(it => {
+                    const isNeg = it.amount < 0;
+                    const sign = isNeg ? '' : '+';
+                    const colorClass = isNeg ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+                    return `
                     <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/20 transition-all">
                         <div class="flex items-center gap-3 min-w-0">
                             <span class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base shrink-0 shadow-2xs">
@@ -796,7 +814,7 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 shrink-0 ml-3">
-                            <span class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">+${fmtMoney(it.amount)}</span>
+                            <span class="text-xs font-extrabold ${colorClass}">${sign}${fmtMoney(it.amount)}</span>
                             ${it.source === 'custom' ? `
                                 <div class="flex items-center gap-1">
                                     <button type="button" onclick="editCustomItem(${it.id})" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer" title="Edit">
@@ -809,7 +827,7 @@
                             ` : ''}
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             }
 
             // Render Liabilities List

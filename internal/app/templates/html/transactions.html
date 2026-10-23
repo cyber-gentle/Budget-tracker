@@ -32,6 +32,24 @@
         .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Dark mode select & options across page */
+        html.dark select,
+        html.dark select option,
+        html.dark select optgroup {
+            color-scheme: dark !important;
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+
+        /* Modal specific deep dark selects and options */
+        #tx-modal select,
+        #tx-modal select option,
+        #tx-modal select optgroup {
+            color-scheme: dark !important;
+            background-color: #0d1627 !important;
+            color: #ffffff !important;
+        }
     </style>
     <script>
         // Synchronous Anti-Flash Theme Initializer
@@ -126,15 +144,14 @@
 
                 <!-- User Dropdown Menu -->
                 <div class="relative">
-                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-                        <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center uppercase">
+                    <button type="button" id="btn-user-menu" class="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Account settings">
+                        <span class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center uppercase shadow-sm">
                             {{if .FullName}}{{printf "%.1s" .FullName}}{{else}}{{printf "%.1s" .Username}}{{end}}
                         </span>
                         <div class="hidden md:flex flex-col text-left">
                             <span class="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[100px] truncate">{{if .FullName}}{{.FullName}}{{else}}{{.Username}}{{end}}</span>
                             <span class="text-[10px] text-slate-400 dark:text-slate-500">@{{.Username}}</span>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
 
                     <!-- Dropdown Content -->
@@ -237,7 +254,7 @@
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     </span>
-                    <input type="text" id="tx-search" placeholder="Search transactions..." class="w-full pl-8.5 pr-8 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium">
+                    <input type="text" id="tx-search" placeholder="Search transactions..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium" style="padding-left: 2.25rem;">
                     <button type="button" id="btn-clear-search" class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
                         ✕
                     </button>
@@ -295,17 +312,17 @@
             </div>
 
             <!-- Secondary Filter Row: Wallet + Sort -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-[11px] font-semibold text-slate-400">Wallet:</span>
-                    <select id="filter-account" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none cursor-pointer font-medium">
+            <div class="grid grid-cols-2 gap-2 sm:gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 items-center">
+                <div class="flex items-center gap-1 min-w-0">
+                    <span class="text-[10px] sm:text-[11px] font-semibold text-slate-400 shrink-0">Wallet:</span>
+                    <select id="filter-account" class="w-full px-1.5 sm:px-2 py-1 text-[10px] sm:text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none cursor-pointer font-medium truncate [color-scheme:dark]">
                         <option value="all">💳 All Wallets</option>
                     </select>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <span class="text-[11px] font-semibold text-slate-400">Sort:</span>
-                    <select id="sort-order" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none cursor-pointer font-medium">
+                <div class="flex items-center gap-1 min-w-0">
+                    <span class="text-[10px] sm:text-[11px] font-semibold text-slate-400 shrink-0">Sort:</span>
+                    <select id="sort-order" class="w-full px-1.5 sm:px-2 py-1 text-[10px] sm:text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none cursor-pointer font-medium truncate [color-scheme:dark]">
                         <option value="date-desc">Newest First</option>
                         <option value="date-asc">Oldest First</option>
                         <option value="amount-desc">Highest Amount</option>
@@ -379,105 +396,146 @@
     </button>
 
     <!-- ─── Add / Edit Transaction Modal ────────────────────────────────────── -->
-    <div id="tx-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs hidden p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                <h3 id="modal-title" class="font-heading font-extrabold text-base text-slate-900 dark:text-white">Add Transaction</h3>
-                <button type="button" id="btn-close-tx-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
-                    ✕
-                </button>
-            <!-- AI Voice & Quick Fill Assistant Bar -->
-            <div id="tx-modal-ai-bar" class="p-3 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/25 dark:border-emerald-500/35 rounded-2xl space-y-2">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <span class="text-emerald-500">✨</span>
-                        <span>AI Voice / Conversational Fill:</span>
-                    </span>
-                    <span class="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                        Auto-Fills Form
-                    </span>
-                </div>
-                <div class="relative">
-                    <input type="text" id="tx-modal-ai-input" placeholder='Speak or type: e.g. "Dinner at KFC 4,500 yesterday" or tap mic...' class="w-full pl-3 pr-20 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-medium">
-                    <div class="absolute right-1.5 top-1.5 flex items-center gap-1">
-                        <button type="button" id="tx-modal-btn-ai-mic" class="p-1 rounded-lg text-slate-500 hover:text-emerald-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-50 transition-all cursor-pointer relative" title="Voice Input (Tap to speak)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-                            <span id="tx-modal-mic-pulse" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-                        </button>
-                        <button type="button" id="tx-modal-btn-ai-parse" class="px-2 py-1 text-[11px] font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg transition-all cursor-pointer shadow-xs">
-                            Fill
-                        </button>
+    <div id="tx-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm hidden p-4">
+        <div class="bg-[#0b1329] text-white border border-slate-800/80 rounded-3xl w-full max-w-md p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
+            
+            <!-- AI Voice Assistant Card -->
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-[#0d182e]/90 border border-emerald-500/25 shadow-lg flex items-center justify-between gap-3">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-amber-400 text-sm">✨</span>
+                        <span class="text-xs sm:text-sm font-extrabold text-white tracking-tight">AI Voice Assistant</span>
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-[9px] uppercase tracking-wider border border-emerald-500/30">AUTO-FILL</span>
                     </div>
+                    <p class="text-[11px] sm:text-xs text-slate-400 leading-snug">
+                        Say something like: <span class="text-slate-300 italic">"Lunch at KFC for 2500"</span>
+                    </p>
                 </div>
-                <div id="tx-modal-voice-banner" class="hidden py-1 px-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[11px] font-semibold flex items-center justify-between">
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                        <span>Listening... Speak your expense</span>
-                    </div>
-                    <button type="button" id="tx-modal-btn-stop-voice" class="text-[9px] font-bold uppercase underline cursor-pointer">Stop</button>
+                <div class="flex flex-col items-center gap-1 shrink-0">
+                    <button type="button" id="tx-modal-btn-ai-mic" class="w-12 h-12 rounded-full border-2 border-emerald-400 bg-emerald-950/40 text-emerald-400 hover:text-emerald-300 flex items-center justify-center shadow-[0_0_15px_rgba(52,211,153,0.4)] hover:shadow-[0_0_22px_rgba(52,211,153,0.6)] hover:scale-105 active:scale-95 transition-all cursor-pointer relative" title="Listen (Tap to speak)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                        <span id="tx-modal-mic-pulse" class="hidden absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+                    </button>
+                    <span id="tx-modal-voice-status-label" class="text-[11px] font-bold text-emerald-400 tracking-wide">Listen</span>
                 </div>
             </div>
 
-            <form id="tx-form" class="space-y-4">
+            <!-- Hidden input for holding voice transcript before parse -->
+            <input type="hidden" id="tx-modal-ai-input">
+
+            <!-- Listening banner -->
+            <div id="tx-modal-voice-banner" class="hidden py-1.5 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="tx-modal-voice-listening-label">Listening... Speak now</span>
+                </div>
+                <button type="button" id="tx-modal-btn-stop-voice" class="text-[10px] font-bold uppercase underline text-slate-300 hover:text-white cursor-pointer">Stop</button>
+            </div>
+
+            <form id="tx-form" class="space-y-3.5">
                 <input type="hidden" id="form-tx-id" value="">
+                <input type="hidden" id="modal-title" value="Add Transaction">
 
-                <!-- Type Selector (Income vs Expense) -->
+                <!-- Amount (NGN) -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Type</label>
-                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                        <button type="button" id="type-btn-expense" class="py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-rose-500 shadow-xs">
-                            − Expense
-                        </button>
-                        <button type="button" id="type-btn-income" class="py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900">
-                            + Income
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Amount -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Amount (<span class="currency-label">{{.Currency}}</span>)</label>
-                    <div class="relative">
-                        <span class="currency-label absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">{{.Currency}}</span>
-                        <input type="text" inputmode="decimal" id="form-amount" required placeholder="0.00" class="w-full pl-8 pr-3 py-2.5 text-base font-extrabold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                </div>
-
-                <!-- Note / Merchant -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Note / Description</label>
-                    <input type="text" id="form-note" placeholder="e.g., Grocery shopping at Trader Joe's" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
-                </div>
-
-                <!-- Category & Account Row -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Category</label>
-                        <select id="form-category" required class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer font-medium">
-                            <!-- Populated dynamically based on type -->
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Wallet / Account</label>
-                        <select id="form-account" required class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer font-medium">
-                            <!-- Populated from accounts API -->
-                        </select>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Amount (<span class="currency-label">{{.Currency}}</span>)</label>
+                    <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3.5 py-2.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all">
+                        <span class="currency-label text-base font-bold text-slate-400 mr-2 select-none">{{.Currency}}</span>
+                        <input type="text" inputmode="decimal" id="form-amount" required placeholder="0.00"
+                            class="w-full bg-transparent text-sm sm:text-base font-bold text-slate-100 placeholder:text-slate-500 focus:outline-none">
                     </div>
                 </div>
 
                 <!-- Date -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Date</label>
-                    <input type="date" id="form-date" required class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Date</label>
+                    <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3.5 py-2.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all">
+                        <svg class="w-4 h-4 text-slate-400 mr-2.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                            <line x1="16" x2="16" y1="2" y2="6"/>
+                            <line x1="8" x2="8" y1="2" y2="6"/>
+                            <line x1="3" x2="10" y1="10" y2="10"/>
+                        </svg>
+                        <input type="date" id="form-date" required
+                            class="w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none cursor-pointer [color-scheme:dark]">
+                        <svg class="w-3.5 h-3.5 text-slate-400 pointer-events-none shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <button type="button" id="btn-cancel-tx" class="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                <!-- Category & Account Row -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">Category</label>
+                        <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3 py-2.5 focus-within:border-emerald-500 transition-all">
+                            <svg class="w-4 h-4 text-slate-400 mr-2 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/>
+                                <path d="M7 7h.01"/>
+                            </svg>
+                            <select id="form-category" required
+                                class="w-full bg-[#0d1627] text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none cursor-pointer appearance-none pr-5 [color-scheme:dark]"
+                                style="color-scheme: dark; background-color: #0d1627; color: #ffffff;">
+                                <!-- Populated dynamically based on type -->
+                            </select>
+                            <svg class="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">Account</label>
+                        <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3 py-2.5 focus-within:border-emerald-500 transition-all">
+                            <svg class="w-4 h-4 text-slate-400 mr-2 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>
+                            </svg>
+                            <select id="form-account" required
+                                class="w-full bg-[#0d1627] text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none cursor-pointer appearance-none pr-5 [color-scheme:dark]"
+                                style="color-scheme: dark; background-color: #0d1627; color: #ffffff;">
+                                <!-- Populated from accounts API -->
+                            </select>
+                            <svg class="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Merchant / Note (optional) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Merchant / Note (optional)</label>
+                    <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3.5 py-2.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all">
+                        <svg class="w-4 h-4 text-slate-400 mr-2.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        <input type="text" id="form-note" placeholder="e.g. Lunch at KFC"
+                            class="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Payment Method</label>
+                    <div class="relative flex items-center bg-[#0d1627] border border-slate-700/80 rounded-2xl px-3.5 py-2.5 focus-within:border-emerald-500 transition-all">
+                        <svg class="w-4 h-4 text-slate-400 mr-2.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+                        </svg>
+                        <select id="form-payment-method" name="payment_method"
+                            class="w-full bg-[#0d1627] text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none cursor-pointer appearance-none pr-5 [color-scheme:dark]"
+                            style="color-scheme: dark; background-color: #0d1627; color: #ffffff;">
+                            <option value="wallet" style="background-color: #0d1627; color: #ffffff;">Main Wallet</option>
+                            <option value="bank" style="background-color: #0d1627; color: #ffffff;">Bank Transfer</option>
+                            <option value="card" style="background-color: #0d1627; color: #ffffff;">Debit / Credit Card</option>
+                            <option value="cash" style="background-color: #0d1627; color: #ffffff;">Cash</option>
+                        </select>
+                        <svg class="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                </div>
+
+                <!-- Action Buttons: Cancel & Save Transaction -->
+                <div class="pt-2 flex items-center gap-3">
+                    <button type="button" id="btn-cancel-tx"
+                        class="flex-1 py-3 px-4 rounded-2xl border border-slate-700/80 bg-[#0d1627] hover:bg-slate-800 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer text-center">
                         Cancel
                     </button>
-                    <button type="submit" id="btn-submit-tx" class="px-5 py-2 text-xs font-bold rounded-xl bg-slate-900 dark:bg-emerald-600 text-white hover:bg-black dark:hover:bg-emerald-500 transition-colors shadow-sm cursor-pointer">
-                        Save Transaction
+                    <button type="submit" id="btn-submit-tx"
+                        class="flex-[1.8] py-3 px-4 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs sm:text-sm transition-all shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]">
+                        <span>Save Transaction</span>
                     </button>
                 </div>
             </form>
@@ -749,6 +807,9 @@
                     const opt = document.createElement('option');
                     opt.value = a.id;
                     opt.textContent = `${a.name} (${fmtMoney(a.balance)})`;
+                    opt.style.backgroundColor = '#0d1627';
+                    opt.style.color = '#ffffff';
+                    opt.className = 'bg-[#0d1627] text-white';
                     formAcc.appendChild(opt);
                 });
             }
@@ -763,6 +824,9 @@
                     const opt = document.createElement('option');
                     opt.value = key;
                     opt.textContent = `${meta.icon} ${meta.label}`;
+                    opt.style.backgroundColor = '#0d1627';
+                    opt.style.color = '#ffffff';
+                    opt.className = 'bg-[#0d1627] text-white';
                     sel.appendChild(opt);
                 }
             }
@@ -1246,6 +1310,11 @@
                         isTxListening = true;
                         txVoiceBanner?.classList.remove('hidden');
                         txMicPulse?.classList.remove('hidden');
+                        const statusLabel = document.getElementById('tx-modal-voice-status-label');
+                        if (statusLabel) {
+                            statusLabel.textContent = 'Listening...';
+                            statusLabel.classList.add('animate-pulse');
+                        }
                     };
                     txSpeechRec.onresult = (e) => {
                         let text = '';
@@ -1253,6 +1322,10 @@
                             text += e.results[i][0].transcript;
                         }
                         if (txAiInput) txAiInput.value = text;
+                        const listenText = document.getElementById('tx-modal-voice-listening-label');
+                        if (listenText) {
+                            listenText.textContent = text ? `"${text}"` : 'Listening... Speak now';
+                        }
                     };
                     txSpeechRec.onerror = async (event) => {
                         stopTxVoice();
@@ -1287,6 +1360,11 @@
                 isTxListening = false;
                 txVoiceBanner?.classList.add('hidden');
                 txMicPulse?.classList.add('hidden');
+                const statusLabel = document.getElementById('tx-modal-voice-status-label');
+                if (statusLabel) {
+                    statusLabel.textContent = 'Listen';
+                    statusLabel.classList.remove('animate-pulse');
+                }
                 if (txSpeechRec) {
                     try { txSpeechRec.stop(); } catch (e) {}
                 }
@@ -1349,6 +1427,12 @@
                     const formAccount = document.getElementById('form-account');
                     if (formAccount && parsed.account_id) {
                         formAccount.value = parsed.account_id;
+                    }
+
+                    const statusLabel = document.getElementById('tx-modal-voice-status-label');
+                    if (statusLabel) {
+                        statusLabel.textContent = 'Auto-filled!';
+                        setTimeout(() => { statusLabel.textContent = 'Listen'; }, 2500);
                     }
 
                     showToast(`✨ Auto-filled: ${parsed.note} (${currentCurrency}${parsed.amount})`, 'success');
