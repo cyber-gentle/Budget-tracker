@@ -15,7 +15,18 @@
     <link rel="stylesheet" href="/static/css/globals.css">
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+        const themeToggleDropdownBtn = document.getElementById('btn-toggle-theme-dropdown');
+        const themeLabelDropdown = document.getElementById('theme-label-dropdown');
+        if (themeToggleDropdownBtn) {
+            themeToggleDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const btn = document.getElementById('theme-toggle-btn');
+                if (btn) btn.click();
+            });
+        }
+    
+</script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -31,7 +42,18 @@
                 }
             }
         }
-    </script>
+    
+        const themeToggleDropdownBtn = document.getElementById('btn-toggle-theme-dropdown');
+        const themeLabelDropdown = document.getElementById('theme-label-dropdown');
+        if (themeToggleDropdownBtn) {
+            themeToggleDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const btn = document.getElementById('theme-toggle-btn');
+                if (btn) btn.click();
+            });
+        }
+    
+</script>
     <script>
         // Synchronous anti-flash theme script
         (function() {
@@ -53,7 +75,18 @@
                 } catch (e) {}
             }
         })();
-    </script>
+    
+        const themeToggleDropdownBtn = document.getElementById('btn-toggle-theme-dropdown');
+        const themeLabelDropdown = document.getElementById('theme-label-dropdown');
+        if (themeToggleDropdownBtn) {
+            themeToggleDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const btn = document.getElementById('theme-toggle-btn');
+                if (btn) btn.click();
+            });
+        }
+    
+</script>
 </head>
 <body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200">
 
@@ -173,7 +206,7 @@
                         </div>
                     </button>
 
-                    <!-- Dropdown Menu -->
+                                        <!-- Dropdown Menu -->
                     <div id="user-dropdown-menu"
                         class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xl z-50 py-1.5 divide-y divide-slate-100 dark:divide-slate-800">
                         <div class="px-4 py-2.5">
@@ -215,6 +248,18 @@
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                                 </svg>
                                 <span>Debts & IOUs</span>
+                            </a>
+                            <a href="/debts?tab=splits"
+                                class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="m16 3 4 4-4 4" />
+                                    <path d="M20 7H4" />
+                                    <path d="m8 21-4-4 4-4" />
+                                    <path d="M4 17h16" />
+                                </svg>
+                                <span>Split Expenses & Netting</span>
                             </a>
                             <a href="/subscriptions"
                                 class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
@@ -265,7 +310,7 @@
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
                                     <path
-                                        d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+                                        d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
                                     <path d="M14 8H8" />
                                     <path d="M16 12H8" />
                                     <path d="M13 16H8" />
@@ -281,6 +326,51 @@
                                     <path d="m13 13 6 6" />
                                 </svg>
                                 <span>Cash Flow Forecast</span>
+                            </a>
+                            <a href="/dashboard?action=export" id="btn-dropdown-export"
+                                class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" x2="12" y1="15" y2="3" />
+                                </svg>
+                                <span>Export Data (CSV / JSON)</span>
+                            </a>
+                            <a href="/dashboard?action=categories" id="btn-open-category-modal-menu"
+                                class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path
+                                        d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <span>Categories & Tags</span>
+                            </a>
+                            <button type="button" id="btn-toggle-theme-dropdown"
+                                class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-between transition-colors cursor-pointer">
+                                <span class="flex items-center gap-2.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                                    </svg>
+                                    <span>Theme</span>
+                                </span>
+                                <span id="theme-label-dropdown"
+                                    class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Light</span>
+                            </button>
+                            <a href="/dashboard?action=profile" id="btn-open-profile-modal"
+                                class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                <span>Edit Profile</span>
                             </a>
                         </div>
                         <div class="py-1">
@@ -746,6 +836,7 @@
         const sunIcon = document.getElementById('theme-icon-sun');
         const moonIcon = document.getElementById('theme-icon-moon');
         function updateThemeIcons() {
+            const lbl = document.getElementById('theme-label-dropdown'); if (lbl) lbl.textContent = document.documentElement.classList.contains('dark') ? 'Dark' : 'Light';
             if (document.documentElement.classList.contains('dark')) {
                 sunIcon.classList.remove('hidden');
                 moonIcon.classList.add('hidden');
@@ -1304,6 +1395,17 @@
         } else {
             initMobileMoreSheet();
         }
+
+        const themeToggleDropdownBtn = document.getElementById('btn-toggle-theme-dropdown');
+        const themeLabelDropdown = document.getElementById('theme-label-dropdown');
+        if (themeToggleDropdownBtn) {
+            themeToggleDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const btn = document.getElementById('theme-toggle-btn');
+                if (btn) btn.click();
+            });
+        }
+    
 </script>
     <!-- ─── Fixed Mobile Bottom Navigation Bar ────────────────────────────── -->
     <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 h-16 px-2 flex items-center justify-around shadow-lg transition-colors">

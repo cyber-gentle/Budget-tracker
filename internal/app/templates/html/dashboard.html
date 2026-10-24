@@ -5525,6 +5525,18 @@
             });
         }
 
+        // Open modal if directed by query parameters (e.g., from other pages' profile dropdown)
+        const initActionParams = new URLSearchParams(window.location.search);
+        const modalAction = initActionParams.get('action') || initActionParams.get('modal');
+        if (modalAction === 'profile' && btnOpenProfileModal) {
+            setTimeout(() => btnOpenProfileModal.click(), 150);
+        } else if (modalAction === 'categories') {
+            const catModal = document.getElementById('category-modal');
+            if (catModal) catModal.classList.remove('hidden');
+        } else if (modalAction === 'export' && typeof openExportModal === 'function') {
+            setTimeout(() => openExportModal(), 150);
+        }
+
         // Dynamically adjust note input label & placeholder based on transaction type
         const noteLabel = document.getElementById('tx-note-label');
         const noteInput = document.getElementById('tx-note-input');
