@@ -597,8 +597,6 @@
                         <span class="text-amber-400 text-sm">✨</span>
                         <span class="text-xs sm:text-sm font-extrabold text-white tracking-tight">AI Voice
                             Assistant</span>
-                        <span
-                            class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-[9px] uppercase tracking-wider border border-emerald-500/30">AUTO-FILL</span>
                     </div>
                     <p class="text-[11px] sm:text-xs text-slate-400 leading-snug">
                         Say something like: <span class="text-slate-300 italic">"Lunch at KFC for 2500"</span>
@@ -639,6 +637,20 @@
             <form id="tx-form" class="space-y-3.5">
                 <input type="hidden" id="form-tx-id" value="">
                 <input type="hidden" id="modal-title" value="Add Transaction">
+
+                <!-- Type Selector -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-[#0d1627] border border-slate-700/80 rounded-2xl">
+                    <button type="button" id="type-btn-expense" onclick="setFormType('expense')"
+                        class="py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-xs">
+                        <span class="text-base font-bold">−</span>
+                        <span>Expense</span>
+                    </button>
+                    <button type="button" id="type-btn-income" onclick="setFormType('income')"
+                        class="py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent">
+                        <span class="text-base font-bold">+</span>
+                        <span>Income</span>
+                    </button>
+                </div>
 
                 <!-- Amount (NGN) -->
                 <div>
@@ -1281,11 +1293,11 @@
 
             if (expBtn && incBtn) {
                 if (currentFormType === 'expense') {
-                    expBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-rose-500 shadow-xs';
-                    incBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+                    expBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-xs';
+                    incBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent';
                 } else {
-                    incBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-900 text-emerald-500 shadow-xs';
-                    expBtn.className = 'py-2 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+                    incBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs';
+                    expBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent';
                 }
             }
             populateCategorySelect(currentFormType);

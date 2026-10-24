@@ -420,7 +420,7 @@
                 <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5"
                     id="mobile-greeting-text"
                     data-firstname="{{if .FirstName}}{{.FirstName}}{{else}}{{.Username}}{{end}}">
-                    Good morning, {{if .FirstName}}{{.FirstName}}{{else}}{{.Username}}{{end}} 👋
+                    Good morning, {{if .FirstName}}{{.FirstName}}{{else}}{{.Username}}{{end}}
                 </h1>
             </div>
 
@@ -1316,7 +1316,6 @@
                     <div class="flex items-center gap-2">
                         <span class="text-amber-400 text-sm">✨</span>
                         <span class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">AI Voice Assistant</span>
-                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-[9px] uppercase tracking-wider border border-emerald-500/30">AUTO-FILL</span>
                     </div>
                     <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-snug">
                         Say something like: <span class="text-slate-600 dark:text-slate-300 italic">"Lunch at KFC for 2500"</span>
@@ -1346,6 +1345,20 @@
             <form id="modal-add-tx-form" class="space-y-3.5">
                 <input type="hidden" name="type" id="modal-add-tx-type" value="expense">
                 <input type="hidden" id="modal-add-tags" name="tags" value="">
+
+                <!-- Type Selector -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-[#0d1627] border border-slate-200 dark:border-slate-700/80 rounded-2xl">
+                    <button type="button" id="modal-type-btn-expense" onclick="setModalAddType('expense')"
+                        class="py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/40 shadow-xs">
+                        <span class="text-base font-bold">−</span>
+                        <span>Expense</span>
+                    </button>
+                    <button type="button" id="modal-type-btn-income" onclick="setModalAddType('income')"
+                        class="py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent">
+                        <span class="text-base font-bold">+</span>
+                        <span>Income</span>
+                    </button>
+                </div>
 
                 <!-- Amount (NGN) -->
                 <div>
@@ -3150,13 +3163,29 @@
             }
         });
 
+        function setModalAddType(type) {
+            const hiddenType = document.getElementById('modal-add-tx-type');
+            if (hiddenType) hiddenType.value = type;
+            const expBtn = document.getElementById('modal-type-btn-expense');
+            const incBtn = document.getElementById('modal-type-btn-income');
+            if (expBtn && incBtn) {
+                if (type === 'expense') {
+                    expBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/40 shadow-xs';
+                    incBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent';
+                } else {
+                    incBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shadow-xs';
+                    expBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent';
+                }
+            }
+            populateCategorySelect(document.getElementById('modal-add-category'), type);
+        }
+
         // Add Transaction Modal Controls (Mobile Only)
         function openAddTxModal() {
             const m = document.getElementById('add-tx-modal');
             if (m) {
                 m.classList.remove('hidden');
-                // Ensure categories & accounts are freshly populated in modal
-                populateCategorySelect(document.getElementById('modal-add-category'), document.getElementById('modal-add-tx-type')?.value || 'expense');
+                setModalAddType('expense');
                 populateAccountSelects();
                 const dateInp = document.getElementById('modal-date-input');
                 if (dateInp && !dateInp.value) {
