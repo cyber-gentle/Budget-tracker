@@ -4579,6 +4579,7 @@
             const currentDark = document.documentElement.classList.contains('dark');
             const newDark = !currentDark;
             localStorage.setItem('spendly-theme', newDark ? 'dark' : 'light');
+            localStorage.setItem('spendly_theme', newDark ? 'dark' : 'light');
             updateThemeUI(newDark);
         }
 
