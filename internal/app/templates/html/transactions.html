@@ -2330,12 +2330,6 @@
                     runTxAiParse(txAiInput.value);
                 }
             });
-
-            document.addEventListener('click', (e) => {
-                if (userDropdown && !userDropdown.contains(e.target) && !userMenuBtn?.contains(e.target)) {
-                    userDropdown.classList.add('hidden');
-                }
-            });
         });
     </script>
     <script src="/static/js/assistant.js" defer></script>

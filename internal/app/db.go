@@ -315,6 +315,10 @@ func (s *DBStore) migrate() error {
 	// transactions is the busiest table and almost every query filters by user and sorts by date.
 	_, _ = s.db.Exec("CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON transactions(username, date)")
 
+	if err := s.migrateAssistant(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
