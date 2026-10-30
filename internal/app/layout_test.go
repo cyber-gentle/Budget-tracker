@@ -63,7 +63,7 @@ func TestPagesUseCompiledCSSAndPinnedScripts(t *testing.T) {
 		if strings.Contains(body, "cdn.tailwindcss.com") || strings.Contains(body, "tailwind.config") {
 			t.Errorf("/%s still uses the Tailwind Play CDN", page)
 		}
-		if !strings.Contains(body, `href="/static/css/tailwind.css"`) {
+		if !strings.Contains(body, `href="/static/css/tailwind.css?v=`) {
 			t.Errorf("/%s doesn't link the compiled stylesheet", page)
 		}
 		for _, tag := range scriptTag.FindAllString(body, -1) {
