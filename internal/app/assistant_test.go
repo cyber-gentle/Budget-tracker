@@ -425,3 +425,139 @@ func TestAssistantLiveGemini(t *testing.T) {
 		t.Error("live chat changed records without confirmation")
 	}
 }
+
+// ─── Memory & language (spec §2) ────────────────────────────────────────────
+
+func assistantReq(app *App, token, method, path string, body any) *httptest.ResponseRecorder {
+	var rdr io.Reader
+	if body != nil {
+		b, _ := json.Marshal(body)
+		rdr = bytes.NewReader(b)
+	}
+	req := httptest.NewRequest(method, path, rdr)
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{Name: "session", Value: token})
+	rec := httptest.NewRecorder()
+	app.ServeHTTP(rec, req)
+	return rec
+}
+
+func TestAssistantMemoriesAreUserControlledAndPrivate(t *testing.T) {
+	app, alice := assistantTestApp(t)
+	bob, err := app.DB.Login("bob", "secret1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rec := assistantReq(app, alice, http.MethodPost, "/api/assistant/memories", map[string]string{"content": "Saving for a car by December 2027", "kind": "goal"})
+	if rec.Code != 200 {
+		t.Fatalf("add: %d %s", rec.Code, rec.Body)
+	}
+	var m AssistantMemory
+	json.NewDecoder(rec.Body).Decode(&m)
+
+	// Credentials and card numbers are refused.
+	for _, bad := range []string{"My PIN is 4821", "card 4111 1111 1111 1111", "my bank password is hunter2"} {
+		if rec := assistantReq(app, alice, http.MethodPost, "/api/assistant/memories", map[string]string{"content": bad}); rec.Code != 400 {
+			t.Errorf("sensitive memory %q accepted: %d", bad, rec.Code)
+		}
+	}
+
+	// Bob can't see, edit or delete Alice's memory.
+	rec = assistantReq(app, bob, http.MethodGet, "/api/assistant/memories", nil)
+	if strings.Contains(rec.Body.String(), "car") {
+		t.Fatal("another user's memory was listed")
+	}
+	if rec := assistantReq(app, bob, http.MethodPut, "/api/assistant/memories/"+jsonInt(m.ID), map[string]string{"content": "hacked"}); rec.Code != 404 {
+		t.Fatalf("bob edited alice's memory: %d", rec.Code)
+	}
+	if rec := assistantReq(app, bob, http.MethodDelete, "/api/assistant/memories/"+jsonInt(m.ID), nil); rec.Code != 404 {
+		t.Fatalf("bob deleted alice's memory: %d", rec.Code)
+	}
+
+	// Alice can correct and delete it.
+	if rec := assistantReq(app, alice, http.MethodPut, "/api/assistant/memories/"+jsonInt(m.ID), map[string]string{"content": "Saving for a car by March 2028", "kind": "goal"}); rec.Code != 200 {
+		t.Fatalf("edit: %d %s", rec.Code, rec.Body)
+	}
+	mems, _ := app.DB.GetAssistantMemories("alice")
+	if len(mems) != 1 || mems[0].Content != "Saving for a car by March 2028" {
+		t.Fatalf("edit not applied: %+v", mems)
+	}
+	if rec := assistantReq(app, alice, http.MethodDelete, "/api/assistant/memories/"+jsonInt(m.ID), nil); rec.Code != 200 {
+		t.Fatalf("delete: %d", rec.Code)
+	}
+	if mems, _ := app.DB.GetAssistantMemories("alice"); len(mems) != 0 {
+		t.Fatal("memory not deleted")
+	}
+}
+
+func TestAssistantMemoryProposalNeedsApproval(t *testing.T) {
+	app, token := assistantTestApp(t)
+	f := &fakeModel{responses: []string{
+		geminiTurn(`{"functionCall":{"name":"propose_memory","args":{"content":"Prefers short answers","kind":"preference"}}}`),
+		geminiTurn(`{"text":"Want me to remember that you prefer short answers?"}`),
+		geminiTurn(`{"functionCall":{"name":"propose_memory","args":{"content":"Her card PIN is 1234"}}}`),
+		geminiTurn(`{"text":"I won't store PINs."}`),
+	}}
+	useFakeGemini(t, f)
+
+	out := chat(t, app, token, user("keep answers short please"))
+	if out.Action == nil || out.Action.Kind != "save_memory" {
+		t.Fatalf("expected save_memory draft, got %+v", out.Action)
+	}
+	if mems, _ := app.DB.GetAssistantMemories("alice"); len(mems) != 0 {
+		t.Fatal("memory saved without approval")
+	}
+	if rec := assistantPost(app, token, "/api/assistant/confirm", out.Action); rec.Code != 200 {
+		t.Fatalf("confirm: %d %s", rec.Code, rec.Body)
+	}
+	if mems, _ := app.DB.GetAssistantMemories("alice"); len(mems) != 1 || mems[0].Kind != "preference" {
+		t.Fatalf("memory not saved after approval: %+v", mems)
+	}
+
+	out = chat(t, app, token, user("remember my PIN"))
+	if out.Action != nil {
+		t.Fatalf("sensitive memory draft created: %+v", out.Action)
+	}
+	if !strings.Contains(f.requests[2+0], "propose_memory") || !strings.Contains(f.requests[3], "PINs") {
+		t.Fatal("model was not told the sensitive memory was refused")
+	}
+}
+
+func TestAssistantPromptIncludesOwnMemoriesAndLanguage(t *testing.T) {
+	app, token := assistantTestApp(t)
+	app.DB.AddAssistantMemory("alice", "Saving for a car", "goal")
+	app.DB.AddAssistantMemory("bob", "Bob's secret plan", "goal")
+	if rec := assistantReq(app, token, http.MethodPost, "/api/assistant/settings", map[string]string{"language": "yo"}); rec.Code != 200 {
+		t.Fatalf("set language: %d %s", rec.Code, rec.Body)
+	}
+	f := &fakeModel{responses: []string{geminiTurn(`{"text":"Ẹ kú àbọ̀!"}`)}}
+	useFakeGemini(t, f)
+
+	chat(t, app, token, user("hello"))
+	prompt := f.requests[0]
+	if !strings.Contains(prompt, "Yoruba") || !strings.Contains(prompt, "Saving for a car") {
+		t.Fatal("prompt missing language or the user's memories")
+	}
+	if strings.Contains(prompt, "Bob's secret plan") {
+		t.Fatal("another user's memory reached the prompt")
+	}
+}
+
+func TestAssistantLanguageSettings(t *testing.T) {
+	app, token := assistantTestApp(t)
+	if rec := assistantReq(app, token, http.MethodPost, "/api/assistant/settings", map[string]string{"language": "klingon"}); rec.Code != 400 {
+		t.Fatalf("unsupported language accepted: %d", rec.Code)
+	}
+	rec := assistantReq(app, token, http.MethodGet, "/api/assistant/settings", nil)
+	if !strings.Contains(rec.Body.String(), `"language":"en"`) || !strings.Contains(rec.Body.String(), "Hausa") {
+		t.Fatalf("settings: %s", rec.Body)
+	}
+
+	// Offline mode can't reply in the chosen language and says so.
+	app.DB.SetAssistantLanguage("alice", "fr")
+	out := chat(t, app, token, user("how am I doing?"))
+	if out.Source != "local" || !strings.Contains(out.Reply, "only supports English, not French") {
+		t.Fatalf("offline language notice missing: %q", out.Reply)
+	}
+}
