@@ -58,6 +58,10 @@ var assistantTools = []toolDef{
 		Params: obj(map[string]any{"goal_id": prop("integer", "Goal id from get_goals"), "amount": prop("number", "Amount, positive"), "direction": prop("string", "deposit or withdraw")}, "goal_id", "amount", "direction")},
 	{Name: "propose_debt_payment", Description: "Draft recording a payment against a debt for the user to confirm. Does not save.",
 		Params: obj(map[string]any{"debt_id": prop("integer", "Debt id from get_debts"), "amount": prop("number", "Payment amount, positive")}, "debt_id", "amount")},
+	{Name: "propose_memory", Description: "Ask the user to approve remembering a useful long-term fact: a financial goal, a preference (e.g. how they like advice), or helpful context. Never for passwords, PINs, card numbers or other secrets. Does not save until approved.",
+		Params: obj(map[string]any{"content": prop("string", "One short sentence, written about the user, e.g. 'Saving for a car by December 2027'"), "kind": prop("string", "goal, preference or context")}, "content")},
+	{Name: "propose_forget_memory", Description: "Ask the user to approve deleting one of their saved memories (by id from the memory list).",
+		Params: obj(map[string]any{"memory_id": prop("integer", "Memory id")}, "memory_id")},
 }
 
 // assistantSession executes tool calls for one chat request.
@@ -464,6 +468,10 @@ func (s *assistantSession) propose(c toolCall) any {
 		a.GoalID, a.Amount = argInt(c.Args, "goal_id"), argNum(c.Args, "amount")
 	case "propose_debt_payment":
 		a.Kind, a.DebtID, a.Amount = "debt_payment", argInt(c.Args, "debt_id"), argNum(c.Args, "amount")
+	case "propose_memory":
+		a.Kind, a.Note, a.Category = "save_memory", argStr(c.Args, "content"), argStr(c.Args, "kind")
+	case "propose_forget_memory":
+		a.Kind, a.MemoryID = "delete_memory", argInt(c.Args, "memory_id")
 	default:
 		return map[string]any{"error": "unknown tool " + c.Name}
 	}
@@ -656,6 +664,28 @@ func (app *App) normalizeAssistantAction(username string, a *AssistantAction) (*
 		out.Summary = fmt.Sprintf("Record %s payment %s %s", money(out.Amount), dir, d.PersonName)
 		out.Details = []string{fmt.Sprintf("Remaining: %s → %s", money(d.Remaining), money(d.Remaining-out.Amount)), "Also records a matching transaction."}
 
+	case "save_memory":
+		content, kind, err := cleanMemory(a.Note, a.Category)
+		if err != nil {
+			return nil, err
+		}
+		out.Note, out.Category = content, kind
+		out.Summary = "Remember: " + content
+		out.Details = []string{"Type: " + kind, "You can view, edit or delete memories anytime from 🧠 in the assistant."}
+
+	case "delete_memory":
+		mems, _ := app.DB.GetAssistantMemories(username)
+		for _, m := range mems {
+			if m.ID == a.MemoryID {
+				out.MemoryID, out.Danger = m.ID, true
+				out.Summary = "Forget: " + m.Content
+				out.Details = []string{"This memory will be deleted."}
+			}
+		}
+		if out.MemoryID == 0 {
+			return nil, fmt.Errorf("memory %d not found", a.MemoryID)
+		}
+
 	default:
 		return nil, fmt.Errorf("unsupported action %q", a.Kind)
 	}
@@ -706,6 +736,11 @@ func (app *App) executeAssistantAction(username string, a *AssistantAction) erro
 	case "debt_payment":
 		_, err := app.DB.RecordDebtPayment(a.DebtID, username, a.Amount, now, true)
 		return err
+	case "save_memory":
+		_, err := app.DB.AddAssistantMemory(username, a.Note, a.Category)
+		return err
+	case "delete_memory":
+		return app.DB.DeleteAssistantMemory(username, a.MemoryID)
 	}
 	return fmt.Errorf("unsupported action")
 }

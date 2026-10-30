@@ -275,6 +275,9 @@ func (app *App) routes() {
 	// Spendly Assistant (chat over the user's own data; changes need explicit confirmation)
 	app.Mux.HandleFunc("/api/assistant/chat", app.HandleAssistantChat)
 	app.Mux.HandleFunc("/api/assistant/confirm", app.HandleAssistantConfirm)
+	app.Mux.HandleFunc("/api/assistant/memories", app.HandleAssistantMemories)
+	app.Mux.HandleFunc("/api/assistant/memories/", app.HandleAssistantMemoryByID)
+	app.Mux.HandleFunc("/api/assistant/settings", app.HandleAssistantSettings)
 
 	// Health check
 	app.Mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
