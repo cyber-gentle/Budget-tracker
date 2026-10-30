@@ -208,6 +208,7 @@
             if (!res.ok) throw new Error(data.error || 'The assistant is unavailable right now.');
             const botMsg = { role: 'assistant', content: data.reply || '…' };
             renderMessage(botMsg);
+            speak(data.reply);
             // Keep the draft in the conversation so follow-ups like "make it 4,500" have context.
             if (data.action && data.action.summary) {
                 botMsg.content += '\n[Draft awaiting the user\'s confirmation: ' + data.action.summary + ']';
@@ -227,8 +228,191 @@
         }
     }
 
-    function open() { panel.classList.add('sa-open'); fab.style.display = 'none'; input.focus(); scrollDown(); }
-    function close() { panel.classList.remove('sa-open'); fab.style.display = ''; }
+    let languageLoaded = false;
+    function open() {
+        panel.classList.add('sa-open'); fab.style.display = 'none'; input.focus(); scrollDown();
+        if (!languageLoaded) { languageLoaded = true; loadLanguage(); }
+    }
+    function close() {
+        panel.classList.remove('sa-open'); fab.style.display = '';
+        stopSpeaking();
+        if (recognition) recognition.abort();
+    }
+
+    // ─── Voice (browser speech APIs) ───────────────────────────────────────
+    // Speech recognition fills and sends the message box; speech synthesis reads
+    // replies aloud. Typing always keeps working, and every limitation is stated.
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const TTS = 'speechSynthesis' in window ? window.speechSynthesis : null;
+    const SPEECH_LANG = {
+        en: 'en-US', fr: 'fr-FR', es: 'es-ES', pt: 'pt-BR', de: 'de-DE', ar: 'ar-SA', sw: 'sw-KE',
+        zh: 'zh-CN', hi: 'hi-IN', ha: 'ha-NG', yo: 'yo-NG', ig: 'ig-NG', pcm: 'en-NG',
+    };
+    const VOICE_KEY = 'spendly_assistant_voice';
+    let assistantLang = 'en';
+    let languageNames = {};
+    let recognition = null;
+    let micBtn;
+
+    function voicePrefs() {
+        try { return Object.assign({ speak: false, voiceURI: '' }, JSON.parse(localStorage.getItem(VOICE_KEY) || '{}')); }
+        catch (e) { return { speak: false, voiceURI: '' }; }
+    }
+    function saveVoicePrefs(p) {
+        try { localStorage.setItem(VOICE_KEY, JSON.stringify(p)); } catch (e) { }
+    }
+    function langName() { return languageNames[assistantLang] || 'this language'; }
+
+    // Voices installed on this device for the reply language (prefix match, e.g. "fr").
+    function voicesForLang() {
+        if (!TTS) return [];
+        const prefix = SPEECH_LANG[assistantLang].split('-')[0].toLowerCase();
+        return TTS.getVoices().filter(v => (v.lang || '').toLowerCase().startsWith(prefix));
+    }
+    // Label a voice's gender only when its name says so; never guess.
+    function voiceLabel(v) {
+        const g = /\bfemale\b/i.test(v.name) ? ' (female)' : /\bmale\b/i.test(v.name) ? ' (male)' : '';
+        return v.name + g + ' · ' + v.lang;
+    }
+
+    function stopSpeaking() { if (TTS) TTS.cancel(); }
+
+    function speak(text) {
+        const prefs = voicePrefs();
+        if (!prefs.speak || !TTS || !text) return;
+        stopSpeaking();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = SPEECH_LANG[assistantLang];
+        const chosen = TTS.getVoices().find(v => v.voiceURI === prefs.voiceURI);
+        if (chosen) u.voice = chosen;
+        TTS.speak(u);
+    }
+
+    function setMicState(listening) {
+        micBtn.textContent = listening ? '■' : '🎤';
+        micBtn.setAttribute('aria-pressed', listening ? 'true' : 'false');
+        micBtn.setAttribute('aria-label', listening ? 'Stop listening' : 'Speak your question');
+        micBtn.classList.toggle('sa-mic-on', listening);
+    }
+
+    function voiceNotice(text) {
+        body.appendChild(el('div', 'sa-msg sa-err', text));
+        scrollDown();
+    }
+
+    function toggleListening() {
+        if (recognition) { recognition.stop(); return; }
+        if (!SR) {
+            voiceNotice("Voice input isn't available in this browser (try Chrome, Edge or Safari). You can keep typing.");
+            return;
+        }
+        stopSpeaking();
+        const rec = new SR();
+        recognition = rec;
+        rec.lang = SPEECH_LANG[assistantLang];
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
+        let finalText = '';
+        rec.onresult = e => {
+            let interim = '';
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                const t = e.results[i][0].transcript;
+                if (e.results[i].isFinal) finalText += t; else interim += t;
+            }
+            input.value = (finalText + interim).trim();
+        };
+        rec.onerror = e => {
+            const msgs = {
+                'not-allowed': 'Microphone access is blocked. Allow it in your browser settings, or keep typing.',
+                'service-not-allowed': 'Voice input is turned off in this browser. You can keep typing.',
+                'language-not-supported': "Voice input doesn't support " + langName() + ' in this browser. You can type instead, or choose another language in 🧠.',
+                'no-speech': "I didn't hear anything. Tap 🎤 to try again, or type your question.",
+                'audio-capture': 'No microphone was found. You can keep typing.',
+                'network': "Voice input couldn't reach the browser's speech service. You can keep typing.",
+            };
+            if (e.error !== 'aborted') voiceNotice(msgs[e.error] || 'Voice input stopped unexpectedly. You can keep typing.');
+        };
+        rec.onend = () => {
+            recognition = null;
+            setMicState(false);
+            if (finalText.trim()) send(finalText.trim());
+        };
+        try {
+            rec.start();
+            setMicState(true);
+        } catch (err) {
+            recognition = null;
+            voiceNotice('Voice input could not start. You can keep typing.');
+        }
+    }
+
+    async function loadLanguage() {
+        try {
+            const s = await api('GET', '/api/assistant/settings');
+            assistantLang = s.language;
+            languageNames = s.languages;
+        } catch (e) { }
+    }
+
+    function renderVoiceSettings(container) {
+        container.appendChild(el('div', 'sa-section', 'Voice'));
+        container.appendChild(el('div', 'sa-sub', SR
+            ? "🎤 Voice input: available. It uses your browser's speech service (in Chrome, audio is processed by Google)."
+            : "🎤 Voice input isn't available in this browser (try Chrome, Edge or Safari). Typing always works."));
+        if (!TTS) {
+            container.appendChild(el('div', 'sa-sub', "🔊 Spoken replies aren't supported in this browser."));
+            return;
+        }
+        const prefs = voicePrefs();
+        const speakRow = el('label', 'sa-check');
+        const speakBox = el('input');
+        speakBox.type = 'checkbox';
+        speakBox.checked = prefs.speak;
+        speakRow.append(speakBox, el('span', null, ' Read replies aloud'));
+        container.appendChild(speakRow);
+
+        const voiceSel = el('select', 'sa-input sa-select');
+        voiceSel.setAttribute('aria-label', 'Voice');
+        const note = el('div', 'sa-sub');
+        const fill = () => {
+            const own = voicesForLang();
+            const list = own.length ? own : TTS.getVoices();
+            voiceSel.replaceChildren();
+            const def = el('option', null, 'Browser default');
+            def.value = '';
+            voiceSel.appendChild(def);
+            list.forEach(v => {
+                const o = el('option', null, voiceLabel(v));
+                o.value = v.voiceURI;
+                voiceSel.appendChild(o);
+            });
+            voiceSel.value = list.some(v => v.voiceURI === prefs.voiceURI) ? prefs.voiceURI : '';
+            if (!TTS.getVoices().length) note.textContent = 'No voices are installed on this device yet.';
+            else if (!own.length) note.textContent = 'This device has no ' + langName() + ' voice, so replies may be read with another voice. Showing all voices.';
+            else note.textContent = own.length + ' ' + langName() + ' voice' + (own.length === 1 ? '' : 's') + ' on this device.';
+        };
+        fill();
+        TTS.addEventListener('voiceschanged', fill, { once: true });
+
+        const sample = el('button', 'sa-btn sa-btn-ghost', 'Play sample');
+        sample.type = 'button';
+        const save = () => {
+            prefs.speak = speakBox.checked;
+            prefs.voiceURI = voiceSel.value;
+            saveVoicePrefs(prefs);
+        };
+        speakBox.addEventListener('change', () => { save(); if (!speakBox.checked) stopSpeaking(); });
+        voiceSel.addEventListener('change', save);
+        sample.addEventListener('click', () => {
+            const was = prefs.speak;
+            prefs.speak = true; saveVoicePrefs(prefs);
+            speak("Hi, I'm your Spendly Assistant.");
+            prefs.speak = was; saveVoicePrefs(prefs);
+        });
+        const row = el('div', 'sa-voice-row');
+        row.append(voiceSel, sample);
+        container.append(row, note);
+    }
 
     // ─── Memory & language management view ───────────────────────────────
     let manageView, chatFoot;
@@ -274,13 +458,21 @@
             langSel.appendChild(o);
         });
         langSel.value = settings.language;
+        assistantLang = settings.language;
+        languageNames = settings.languages;
+        const voiceBox = el('div', 'sa-manage-group');
         langSel.addEventListener('change', async () => {
             try {
                 await api('POST', '/api/assistant/settings', { language: langSel.value });
+                assistantLang = langSel.value;
                 status.textContent = '✓ The assistant will now reply in ' + settings.languages[langSel.value] + '.';
+                voiceBox.replaceChildren();
+                renderVoiceSettings(voiceBox); // voices and speech language follow the reply language
             } catch (err) { status.textContent = err.message; }
         });
         manageView.append(langSel, status);
+        renderVoiceSettings(voiceBox);
+        manageView.appendChild(voiceBox);
 
         // Memories
         manageView.appendChild(el('div', 'sa-section', 'What the assistant remembers (' + mems.memories.length + '/' + mems.limit + ')'));
@@ -368,6 +560,13 @@
     .sa-mem-text{white-space:pre-wrap;word-wrap:break-word}
     .sa-mem-btns{display:flex;gap:2px}
     .sa-mem-add{display:flex;gap:8px}
+    .sa-manage-group{display:flex;flex-direction:column;gap:8px}
+    .sa-voice-row{display:flex;gap:8px;align-items:center}
+    .sa-voice-row .sa-select{flex:1;width:auto;min-width:0}
+    .sa-voice-row .sa-btn{flex:none;white-space:nowrap}
+    .sa-check{display:flex;align-items:center;gap:6px;cursor:pointer}
+    .sa-mic{padding:6px 10px}
+    .sa-mic-on{background:#e11d48;border-color:#e11d48;color:#fff}
     html.dark .sa-mem{border-color:#334155}`));
 
         fab = el('button', 'sa-fab', '✨');
@@ -388,15 +587,15 @@
         clearBtn.type = 'button';
         clearBtn.title = 'New conversation';
         clearBtn.setAttribute('aria-label', 'New conversation');
-        clearBtn.addEventListener('click', () => { history = []; saveHistory(); renderAll(); showManage(false); });
+        clearBtn.addEventListener('click', () => { history = []; saveHistory(); stopSpeaking(); renderAll(); showManage(false); });
         const closeBtn = el('button', 'sa-icon-btn', '×');
         closeBtn.type = 'button';
         closeBtn.setAttribute('aria-label', 'Close assistant');
         closeBtn.addEventListener('click', close);
         const memBtn = el('button', 'sa-icon-btn', '🧠');
         memBtn.type = 'button';
-        memBtn.title = 'Memory & language';
-        memBtn.setAttribute('aria-label', 'Memory and language settings');
+        memBtn.title = 'Memory, language & voice';
+        memBtn.setAttribute('aria-label', 'Memory, language and voice settings');
         memBtn.addEventListener('click', () => showManage(manageView.style.display !== 'flex'));
         actions.append(memBtn, clearBtn, closeBtn);
         head.append(titles, actions);
@@ -416,7 +615,13 @@
         sendBtn = el('button', 'sa-btn sa-btn-primary', 'Send');
         sendBtn.type = 'submit';
         foot.addEventListener('submit', e => { e.preventDefault(); send(input.value); });
-        foot.append(input, sendBtn);
+        micBtn = el('button', 'sa-btn sa-btn-ghost sa-mic', '🎤');
+        micBtn.type = 'button';
+        micBtn.title = SR ? 'Speak your question' : "Voice input isn't available in this browser";
+        micBtn.setAttribute('aria-label', 'Speak your question');
+        micBtn.setAttribute('aria-pressed', 'false');
+        micBtn.addEventListener('click', toggleListening);
+        foot.append(input, micBtn, sendBtn);
         chatFoot = foot;
         manageView = el('div', 'sa-manage');
 
