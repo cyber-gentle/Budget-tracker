@@ -17,7 +17,8 @@ Spendly is a fast, responsive, and intuitive personal budget tracking web applic
 - **Data Portability**: 1-click CSV export (`/api/export`) for spreadsheets.
 - **Multi-Currency**: Toggle between `₦` (NGN), `$` (USD), `€` (EUR), and `£` (GBP).
 - **Turso / libSQL Cloud Database**: Permanent serverless database that never sleeps or wipes data.
-- **Hardened Security**: Salted SHA-256 password hashing with persistent sessions across server reboots.
+- **Spendly Assistant**: A ✨ chat button on every page answers questions about your own spending, budgets, goals, bills and debts, and prepares entries (transactions, budgets) that are saved only after you tap **Confirm**. Runs free on Groq's server-side models (see `GROQ_API_KEY`), uses a user's own Gemini/OpenAI key from AI settings if they set one, and falls back to the offline parser when no model is reachable. Limited to 30 messages per 10 minutes per user to protect the shared key.
+- **Hardened Security**: bcrypt password hashing (older hashes upgrade on login), with persistent sessions across server reboots.
 
 ---
 
@@ -25,7 +26,7 @@ Spendly is a fast, responsive, and intuitive personal budget tracking web applic
 
 ### Local Development
 
-1. Ensure Go 1.22+ is installed.
+1. Ensure Go 1.25+ is installed.
 2. Run the application:
    ```bash
    go run .
@@ -65,7 +66,8 @@ This repository is pre-configured for instant **Vercel** serverless deployment w
 3. In **Environment Variables**, add:
    - `TURSO_DATABASE_URL`: `libsql://spendly-db-yourname.turso.io`
    - `TURSO_AUTH_TOKEN`: your generated token
-   - `GROQ_API_KEY`: *(Optional)* your free Groq Cloud API key for server-side AI parsing (`llama-3.3-70b-versatile` with `llama-3.1-8b-instant` fallback)
+   - `GROQ_API_KEY`: *(Optional)* your free Groq Cloud API key for server-side AI parsing and the Spendly Assistant (`llama-3.3-70b-versatile` with `llama-3.1-8b-instant` fallback)
+   - `ALLOWED_ORIGINS`: *(Optional)* comma-separated exact origins allowed to call the API cross-origin (e.g. `https://app.example.com`). The app's own host and `spendly.app` are always allowed.
 4. Click **Deploy**.
 
 Vercel will build the Go serverless function and launch your application at a permanent URL like `https://spendly.vercel.app`!
