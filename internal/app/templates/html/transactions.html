@@ -1164,6 +1164,14 @@
     </div>
 
 <script>
+        // Escape untrusted text for HTML text and attribute contexts.
+        function esc(s) {
+            return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        // Quoted JS string literal that is safe inside an HTML attribute such as onclick="fn(${jsArg(name)})".
+        function jsArg(s) {
+            return esc(JSON.stringify(String(s ?? '')));
+        }
         let currentCurrency = '{{.Currency}}' || '₦';
         let allTransactions = [];
         let filteredTransactions = [];
@@ -1198,7 +1206,7 @@
             const el = document.createElement('div');
             el.className = `px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold text-white transition-all transform translate-y-2 opacity-0 flex items-center gap-2 ${type === 'error' ? 'bg-rose-600' : 'bg-slate-900 dark:bg-emerald-600'
                 }`;
-            el.innerHTML = `<span>${msg}</span>`;
+            el.innerHTML = `<span>${esc(msg)}</span>`;
             container.appendChild(el);
             setTimeout(() => {
                 el.classList.remove('translate-y-2', 'opacity-0');
@@ -1501,15 +1509,15 @@
 
                         <div class="min-w-0 flex-1 py-0.5">
                             <p class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate leading-tight">
-                                ${tx.note || meta.label}
+                                ${esc(tx.note || meta.label)}
                             </p>
                             <div class="flex items-center gap-1.5 mt-1 text-[10px] text-slate-400 overflow-x-hidden leading-tight">
                                 <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                                    ${meta.label}
+                                    ${esc(meta.label)}
                                 </span>
                                 <span class="whitespace-nowrap">${fmtDate(tx.date)}</span>
                                 <span class="text-slate-300 dark:text-slate-600">•</span>
-                                <span class="whitespace-nowrap text-slate-500 dark:text-slate-400 font-medium">💳 ${accName}</span>
+                                <span class="whitespace-nowrap text-slate-500 dark:text-slate-400 font-medium">💳 ${esc(accName)}</span>
                             </div>
                         </div>
 
@@ -2330,6 +2338,7 @@
             });
         });
     </script>
+    <script src="/static/js/assistant.js" defer></script>
 </body>
 
 </html>

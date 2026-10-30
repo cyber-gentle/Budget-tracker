@@ -230,19 +230,8 @@
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) { errEl.textContent = data.error || 'Signup failed.'; errEl.classList.remove('hidden'); return; }
-                if (data.token) {
-                    try {
-                        localStorage.setItem('spendly_token', data.token);
-                        document.cookie = `session=${data.token}; path=/; max-age=604800; SameSite=Lax`;
-                    } catch(e) {}
-                }
                 const target = data.redirect || '/dashboard';
-                const inIframe = window.self !== window.top;
-                if (inIframe && data.token) {
-                    window.location.href = target + (target.includes('?') ? '&' : '?') + 'session=' + encodeURIComponent(data.token);
-                } else {
-                    window.location.href = target;
-                }
+                window.location.href = target;
             } catch (err) {
                 console.warn('Fetch submission failed, submitting natively', err);
                 form.submit();
