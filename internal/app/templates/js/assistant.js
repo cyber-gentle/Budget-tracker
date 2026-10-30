@@ -230,8 +230,145 @@
     function open() { panel.classList.add('sa-open'); fab.style.display = 'none'; input.focus(); scrollDown(); }
     function close() { panel.classList.remove('sa-open'); fab.style.display = ''; }
 
+    // ─── Memory & language management view ───────────────────────────────
+    let manageView, chatFoot;
+
+    async function api(method, url, payload) {
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: payload ? JSON.stringify(payload) : undefined,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Something went wrong');
+        return data;
+    }
+
+    function showManage(on) {
+        manageView.style.display = on ? 'flex' : 'none';
+        body.style.display = on ? 'none' : 'flex';
+        chatFoot.style.display = on ? 'none' : 'flex';
+        if (on) renderManage();
+        else input.focus();
+    }
+
+    async function renderManage() {
+        manageView.replaceChildren(el('div', 'sa-sub', 'Loading…'));
+        let settings, mems;
+        try {
+            [settings, mems] = await Promise.all([api('GET', '/api/assistant/settings'), api('GET', '/api/assistant/memories')]);
+        } catch (err) {
+            manageView.replaceChildren(el('div', 'sa-msg sa-err', err.message));
+            return;
+        }
+        manageView.replaceChildren();
+        const status = el('div', 'sa-sub');
+
+        // Language
+        manageView.appendChild(el('div', 'sa-section', 'Reply language'));
+        const langSel = el('select', 'sa-input sa-select');
+        langSel.setAttribute('aria-label', 'Reply language');
+        Object.entries(settings.languages).sort((a, b) => a[1].localeCompare(b[1])).forEach(([code, name]) => {
+            const o = el('option', null, name);
+            o.value = code;
+            langSel.appendChild(o);
+        });
+        langSel.value = settings.language;
+        langSel.addEventListener('change', async () => {
+            try {
+                await api('POST', '/api/assistant/settings', { language: langSel.value });
+                status.textContent = '✓ The assistant will now reply in ' + settings.languages[langSel.value] + '.';
+            } catch (err) { status.textContent = err.message; }
+        });
+        manageView.append(langSel, status);
+
+        // Memories
+        manageView.appendChild(el('div', 'sa-section', 'What the assistant remembers (' + mems.memories.length + '/' + mems.limit + ')'));
+        manageView.appendChild(el('div', 'sa-sub', "Only things you approved. Edit or delete anything; it never stores PINs, passwords or card numbers."));
+        const list = el('div', 'sa-mem-list');
+        if (!mems.memories.length) list.appendChild(el('div', 'sa-sub', 'Nothing saved yet.'));
+        mems.memories.forEach(m => list.appendChild(memoryRow(m)));
+        manageView.appendChild(list);
+
+        // Add
+        const addRow = el('form', 'sa-mem-add');
+        const addInput = el('input', 'sa-input');
+        addInput.maxLength = 300;
+        addInput.placeholder = 'e.g. I prefer short answers';
+        addInput.setAttribute('aria-label', 'New memory');
+        const addBtn = el('button', 'sa-btn sa-btn-primary', 'Add');
+        addBtn.type = 'submit';
+        addRow.addEventListener('submit', async e => {
+            e.preventDefault();
+            try {
+                await api('POST', '/api/assistant/memories', { content: addInput.value, kind: 'preference' });
+                renderManage();
+            } catch (err) { status.textContent = err.message; langSel.scrollIntoView({ block: 'nearest' }); }
+        });
+        addRow.append(addInput, addBtn);
+        manageView.appendChild(addRow);
+
+        if (mems.memories.length) {
+            const clearAll = el('button', 'sa-btn sa-btn-ghost', 'Delete all memories');
+            clearAll.type = 'button';
+            clearAll.addEventListener('click', async () => {
+                if (!window.confirm('Delete everything the assistant remembers? This can\'t be undone.')) return;
+                try { await api('DELETE', '/api/assistant/memories'); renderManage(); } catch (err) { status.textContent = err.message; }
+            });
+            manageView.appendChild(clearAll);
+        }
+    }
+
+    function memoryRow(m) {
+        const row = el('div', 'sa-mem');
+        const text = el('div', 'sa-mem-text', m.content);
+        const meta = el('div', 'sa-sub', m.kind + ' · ' + m.updated_at);
+        const btns = el('div', 'sa-mem-btns');
+        const edit = el('button', 'sa-icon-btn', '✎');
+        const del = el('button', 'sa-icon-btn', '🗑');
+        edit.type = del.type = 'button';
+        edit.setAttribute('aria-label', 'Edit memory');
+        del.setAttribute('aria-label', 'Delete memory');
+        del.addEventListener('click', async () => {
+            try { await api('DELETE', '/api/assistant/memories/' + m.id); renderManage(); }
+            catch (err) { meta.textContent = err.message; }
+        });
+        edit.addEventListener('click', () => {
+            const box = el('input', 'sa-input');
+            box.value = m.content;
+            box.maxLength = 300;
+            box.setAttribute('aria-label', 'Edit memory');
+            const save = el('button', 'sa-btn sa-btn-primary', 'Save');
+            const cancel = el('button', 'sa-btn sa-btn-ghost', 'Cancel');
+            save.type = cancel.type = 'button';
+            save.addEventListener('click', async () => {
+                try { await api('PUT', '/api/assistant/memories/' + m.id, { content: box.value, kind: m.kind }); renderManage(); }
+                catch (err) { meta.textContent = err.message; }
+            });
+            cancel.addEventListener('click', () => row.replaceWith(memoryRow(m)));
+            row.replaceChildren(box, el('div', 'sa-card-actions'));
+            row.lastChild.append(save, cancel, meta);
+            box.focus();
+        });
+        btns.append(edit, del);
+        const left = el('div');
+        left.style.flex = '1';
+        left.append(text, meta);
+        row.append(left, btns);
+        return row;
+    }
+
     function build() {
-        document.head.appendChild(el('style', null, css));
+        document.head.appendChild(el('style', null, css + `
+    .sa-manage{flex:1;overflow-y:auto;padding:12px 14px;display:none;flex-direction:column;gap:8px}
+    .sa-section{font-weight:700;font-size:12px;margin-top:6px}
+    .sa-select{flex:none;width:100%}
+    .sa-mem-list{display:flex;flex-direction:column;gap:6px}
+    .sa-mem{display:flex;gap:8px;align-items:flex-start;border:1px solid #e2e8f0;border-radius:12px;padding:8px 10px}
+    .sa-mem-text{white-space:pre-wrap;word-wrap:break-word}
+    .sa-mem-btns{display:flex;gap:2px}
+    .sa-mem-add{display:flex;gap:8px}
+    html.dark .sa-mem{border-color:#334155}`));
 
         fab = el('button', 'sa-fab', '✨');
         fab.type = 'button';
@@ -251,12 +388,17 @@
         clearBtn.type = 'button';
         clearBtn.title = 'New conversation';
         clearBtn.setAttribute('aria-label', 'New conversation');
-        clearBtn.addEventListener('click', () => { history = []; saveHistory(); renderAll(); });
+        clearBtn.addEventListener('click', () => { history = []; saveHistory(); renderAll(); showManage(false); });
         const closeBtn = el('button', 'sa-icon-btn', '×');
         closeBtn.type = 'button';
         closeBtn.setAttribute('aria-label', 'Close assistant');
         closeBtn.addEventListener('click', close);
-        actions.append(clearBtn, closeBtn);
+        const memBtn = el('button', 'sa-icon-btn', '🧠');
+        memBtn.type = 'button';
+        memBtn.title = 'Memory & language';
+        memBtn.setAttribute('aria-label', 'Memory and language settings');
+        memBtn.addEventListener('click', () => showManage(manageView.style.display !== 'flex'));
+        actions.append(memBtn, clearBtn, closeBtn);
         head.append(titles, actions);
 
         body = el('div', 'sa-body');
@@ -275,8 +417,10 @@
         sendBtn.type = 'submit';
         foot.addEventListener('submit', e => { e.preventDefault(); send(input.value); });
         foot.append(input, sendBtn);
+        chatFoot = foot;
+        manageView = el('div', 'sa-manage');
 
-        panel.append(head, body, foot);
+        panel.append(head, body, manageView, foot);
         document.body.append(fab, panel);
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape' && panel.classList.contains('sa-open')) close();

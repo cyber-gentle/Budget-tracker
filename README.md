@@ -18,6 +18,7 @@ Spendly is a fast, responsive, and intuitive personal budget tracking web applic
 - **Multi-Currency**: Toggle between `₦` (NGN), `$` (USD), `€` (EUR), and `£` (GBP).
 - **Turso / libSQL Cloud Database**: Permanent serverless database that never sleeps or wipes data.
 - **Spendly Assistant**: A ✨ chat on every page that explains your spending, budgets, goals, debts and bills, compares periods and runs what-if checks. All figures come from the app's own calculations, not the model's guesses. It can draft changes (add, edit or delete transactions, set budgets, goal deposits/withdrawals, debt payments), but nothing is saved until you tap **Confirm**, and the server re-checks every change. Built to the AI Behaviour Specification. It uses Gemini 3.8 Flash, falls back to Groq's free models and then an offline parser, and is limited to 30 messages per 10 minutes per user.
+- **Assistant memory & language**: The assistant remembers goals and preferences only after you approve them, and never stores PINs, passwords or card numbers. You can view, edit or delete what it remembers from 🧠 in the chat. The same panel sets its reply language (13 languages, including Hausa, Yoruba, Igbo and Nigerian Pidgin).
 - **Hardened Security**: bcrypt password hashing (older hashes upgrade on login), with persistent sessions across server reboots.
 
 ---
