@@ -368,7 +368,11 @@ func (s *DBStore) Signup(username, email, password string, optFullName ...string
 
 	_, err = s.db.Exec("INSERT INTO users (username, full_name, email, password, currency, created_at) VALUES (?, ?, ?, ?, '₦', ?)",
 		username, fullName, email, hash, time.Now())
-	return err
+	if err != nil {
+		return err
+	}
+	// Create the starter wallets now rather than racing to create them on first page load.
+	return s.ensureDefaultAccounts(username)
 }
 
 func (s *DBStore) Login(identifier, password string) (string, error) {
@@ -2745,16 +2749,11 @@ type AccountTransfer struct {
 	CreatedAt       time.Time `json:"created_at"`
 }
 
+// ensureDefaultAccounts gives a user the three starter wallets if they have none.
+// It is one INSERT ... SELECT ... WHERE NOT EXISTS statement, so concurrent first
+// requests (the dashboard fires several at once) can't create duplicates or a
+// partial set: the statement inserts all three wallets or nothing.
 func (s *DBStore) ensureDefaultAccounts(username string) error {
-	var count int
-	err := s.db.QueryRow("SELECT COUNT(1) FROM accounts WHERE username = ?", username).Scan(&count)
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		return nil
-	}
-
 	curr := "₦"
 	var userCurr sql.NullString
 	_ = s.db.QueryRow("SELECT currency FROM users WHERE username = ?", username).Scan(&userCurr)
@@ -2762,30 +2761,19 @@ func (s *DBStore) ensureDefaultAccounts(username string) error {
 		curr = userCurr.String
 	}
 
-	now := time.Now()
-	defaults := []struct {
-		name      string
-		accType   string
-		color     string
-		icon      string
-		isDefault bool
-	}{
-		{"Main Bank", "bank", "#3B82F6", "🏦", true},
-		{"Mobile Money", "mobile_money", "#10B981", "📱", false},
-		{"Cash / Wallet", "cash", "#F59E0B", "💵", false},
-	}
-
-	for _, d := range defaults {
-		isDefVal := 0
-		if d.isDefault {
-			isDefVal = 1
-		}
-		_, _ = s.db.Exec(
-			"INSERT INTO accounts (username, name, type, currency, initial_balance, color, icon, is_default, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			username, d.name, d.accType, curr, 0.0, d.color, d.icon, isDefVal, now,
-		)
-	}
-	return nil
+	_, err := s.db.Exec(`
+		INSERT INTO accounts (username, name, type, currency, initial_balance, color, icon, is_default, created_at)
+		SELECT ?, d.name, d.type, ?, 0, d.color, d.icon, d.is_default, ?
+		FROM (
+			SELECT 1 AS ord, 'Main Bank' AS name, 'bank' AS type, '#3B82F6' AS color, '🏦' AS icon, 1 AS is_default
+			UNION ALL SELECT 2, 'Mobile Money', 'mobile_money', '#10B981', '📱', 0
+			UNION ALL SELECT 3, 'Cash / Wallet', 'cash', '#F59E0B', '💵', 0
+		) AS d
+		WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE username = ?)
+		ORDER BY d.ord`,
+		username, curr, time.Now(), username,
+	)
+	return err
 }
 
 func (s *DBStore) GetAccounts(username string) ([]Account, error) {
