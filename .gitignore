@@ -16,3 +16,6 @@ cookies*.txt
 .env.*
 .DS_Store
 uploads/
+
+# Build tool downloads (scripts/build-css.sh)
+.cache/
