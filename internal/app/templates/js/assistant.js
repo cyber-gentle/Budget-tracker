@@ -36,6 +36,13 @@
     .sa-card{align-self:stretch;border:1px solid #a7f3d0;background:#ecfdf5;border-radius:14px;padding:10px 12px}
     .sa-card-title{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#047857;margin-bottom:4px}
     .sa-card-actions{display:flex;gap:8px;margin-top:8px}
+    .sa-card-summary{font-weight:700}
+    .sa-card-details{margin:6px 0 0;padding-left:16px;color:#334155}
+    .sa-card-details li{margin:2px 0}
+    .sa-card.sa-danger{border-color:#fecdd3;background:#fff1f2}
+    .sa-card.sa-danger .sa-card-title{color:#be123c}
+    .sa-btn-danger{background:#e11d48;color:#fff} .sa-btn-danger:hover{background:#be123c}
+    .sa-card.sa-stale{opacity:.55}
     .sa-btn{border:0;border-radius:10px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer}
     .sa-btn-primary{background:#10B981;color:#fff} .sa-btn-primary:hover{background:#059669}
     .sa-btn-ghost{background:transparent;color:#475569;border:1px solid #cbd5e1}
@@ -54,6 +61,9 @@
     html.dark .sa-err{background:#4c0519;color:#fecdd3}
     html.dark .sa-card{background:#022c22;border-color:#065f46}
     html.dark .sa-card-title{color:#6ee7b7}
+    html.dark .sa-card-details{color:#cbd5e1}
+    html.dark .sa-card.sa-danger{background:#4c0519;border-color:#881337}
+    html.dark .sa-card.sa-danger .sa-card-title{color:#fda4af}
     html.dark .sa-chip{background:#0f172a;border-color:#334155;color:#cbd5e1}
     html.dark .sa-btn-ghost{color:#cbd5e1;border-color:#334155}
     html.dark .sa-input{background:#020617;border-color:#334155}`;
@@ -77,6 +87,7 @@
 
     let history = loadHistory();
     let busy = false;
+    let pendingCard = null; // only the newest draft can be confirmed
     let fab, panel, body, input, sendBtn;
 
     function scrollDown() { body.scrollTop = body.scrollHeight; }
@@ -87,7 +98,7 @@
 
     function renderWelcome() {
         body.appendChild(el('div', 'sa-msg sa-bot',
-            "Hi! I can answer questions about your spending, budgets, goals and bills, and prepare entries for you to confirm."));
+            "Hi! I can explain your spending, budgets, goals, debts and bills, and help you plan. I'll only change your records after you confirm each change."));
         const chips = el('div', 'sa-chips');
         SUGGESTIONS.forEach(s => {
             const c = el('button', 'sa-chip', s);
@@ -101,20 +112,42 @@
     function renderAll() {
         body.replaceChildren();
         renderWelcome();
-        history.forEach(renderMessage);
+        history.forEach(m => {
+            if (m.role === 'assistant' && m.content.startsWith('[')) return;
+            renderMessage({ role: m.role, content: m.content.replace(/\n\[Draft awaiting[^\]]*\]$/, '') });
+        });
         scrollDown();
     }
 
+    function noteOutcome(text) {
+        history.push({ role: 'assistant', content: text });
+        saveHistory();
+    }
+
     function renderActionCard(action) {
-        const card = el('div', 'sa-card');
-        card.appendChild(el('div', 'sa-card-title', 'Confirm change'));
-        card.appendChild(el('div', null, action.summary));
+        if (pendingCard) {
+            pendingCard.classList.add('sa-stale');
+            const old = pendingCard.querySelector('.sa-card-actions');
+            if (old) old.replaceChildren(el('span', 'sa-sub', 'Replaced by a newer draft.'));
+        }
+        const card = el('div', 'sa-card' + (action.danger ? ' sa-danger' : ''));
+        pendingCard = card;
+        card.appendChild(el('div', 'sa-card-title', action.danger ? 'Please review carefully' : 'Confirm change'));
+        card.appendChild(el('div', 'sa-card-summary', action.summary));
+        if (Array.isArray(action.details) && action.details.length) {
+            const ul = el('ul', 'sa-card-details');
+            action.details.forEach(d => ul.appendChild(el('li', null, d)));
+            card.appendChild(ul);
+        }
         const row = el('div', 'sa-card-actions');
-        const ok = el('button', 'sa-btn sa-btn-primary', 'Confirm');
+        const confirmLabel = action.kind === 'delete_transaction' ? 'Delete' : 'Confirm';
+        const ok = el('button', 'sa-btn ' + (action.danger ? 'sa-btn-danger' : 'sa-btn-primary'), confirmLabel);
         const no = el('button', 'sa-btn sa-btn-ghost', 'Cancel');
         ok.type = no.type = 'button';
         no.addEventListener('click', () => {
-            row.replaceChildren(el('span', 'sa-sub', 'Cancelled, nothing was saved.'));
+            if (pendingCard === card) pendingCard = null;
+            row.replaceChildren(el('span', 'sa-sub', 'Cancelled. Nothing was changed.'));
+            noteOutcome('[The user cancelled the draft: ' + action.summary + '. Nothing was changed.]');
         });
         ok.addEventListener('click', async () => {
             ok.disabled = no.disabled = true;
@@ -126,7 +159,8 @@
                     body: JSON.stringify(action),
                 });
                 const data = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(data.error || 'Could not save');
+                if (!res.ok) throw new Error(data.error || 'Not saved: something went wrong.');
+                if (pendingCard === card) pendingCard = null;
                 const done = el('span', 'sa-sub', '✓ Saved. ');
                 const refresh = el('a', null, 'Refresh page');
                 refresh.href = '#';
@@ -134,10 +168,11 @@
                 refresh.addEventListener('click', e => { e.preventDefault(); location.reload(); });
                 done.appendChild(refresh);
                 row.replaceChildren(done);
+                noteOutcome('[The app confirmed this change was saved: ' + action.summary + '.]');
                 window.dispatchEvent(new CustomEvent('spendly:data-changed', { detail: action }));
             } catch (err) {
                 ok.disabled = no.disabled = false;
-                ok.textContent = 'Confirm';
+                ok.textContent = confirmLabel;
                 body.appendChild(el('div', 'sa-msg sa-err', err.message));
                 scrollDown();
             }
@@ -172,9 +207,13 @@
             if (res.status === 401) { location.href = '/login'; return; }
             if (!res.ok) throw new Error(data.error || 'The assistant is unavailable right now.');
             const botMsg = { role: 'assistant', content: data.reply || '…' };
-            history.push(botMsg);
             renderMessage(botMsg);
-            if (data.action && data.action.summary) renderActionCard(data.action);
+            // Keep the draft in the conversation so follow-ups like "make it 4,500" have context.
+            if (data.action && data.action.summary) {
+                botMsg.content += '\n[Draft awaiting the user\'s confirmation: ' + data.action.summary + ']';
+                renderActionCard(data.action);
+            }
+            history.push(botMsg);
             saveHistory();
         } catch (err) {
             typing.remove();
