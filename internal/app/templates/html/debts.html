@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Debts & IOUs — Spendly</title>
     
-    <link rel="icon" type="image/svg+xml" href="/static/assets/imgs/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="{{asset "/static/assets/imgs/favicon.svg"}}">
     <link rel="alternate icon" href="/favicon.ico">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/globals.css">
+    <link rel="stylesheet" href="{{asset "/static/css/globals.css"}}">
 
     <!-- Tailwind CSS -->
     <script>
@@ -37,7 +37,7 @@
             }
         })();
     </script>
-    <link rel="stylesheet" href="/static/css/tailwind.css">
+    <link rel="stylesheet" href="{{asset "/static/css/tailwind.css"}}">
 </head>
 <body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200 overflow-x-hidden w-full">
 
@@ -1795,7 +1795,7 @@
     <!-- ─── Mobile More Navigation Drawer / Sheet ───────────────────────────── -->
     {{template "more-sheet" (layout "debts" .)}}
 
-    <script src="/static/js/layout.js"></script>
-    <script src="/static/js/assistant.js" defer></script>
+    <script src="{{asset "/static/js/layout.js"}}"></script>
+    <script src="{{asset "/static/js/assistant.js"}}" defer></script>
 </body>
 </html>

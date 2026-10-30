@@ -34,6 +34,8 @@ type App struct {
 	signupLimiter *IPRateLimiter
 	// assistantLimiter is keyed by username, not IP: it meters the shared free AI key per account.
 	assistantLimiter *IPRateLimiter
+	assets           *assetStore
+	handler          http.Handler // Mux wrapped with response compression
 }
 
 // isAllowedOrigin validates if an origin is permitted for CORS.
@@ -98,7 +100,17 @@ func (app *App) setSessionCookie(w http.ResponseWriter, r *http.Request, token s
 
 // NewApp creates an App, parses templates, and registers all routes.
 func NewApp(db *DBStore) *App {
+	staticFS, err := fs.Sub(embeddedFS, "templates")
+	if err != nil {
+		log.Fatalf("failed to create static sub fs: %v", err)
+	}
+	assets, err := newAssetStore(staticFS)
+	if err != nil {
+		log.Fatalf("failed to index static assets: %v", err)
+	}
+
 	funcMap := template.FuncMap{
+		"asset":        assets.url,
 		"formatMoney":  formatMoney,
 		"formatAmount": formatAmount,
 		"layout":       layoutData,
@@ -124,7 +136,9 @@ func NewApp(db *DBStore) *App {
 		loginLimiter:     NewIPRateLimiter(20, time.Minute),    // max 20 login attempts per minute per IP
 		signupLimiter:    NewIPRateLimiter(10, 10*time.Minute), // max 10 signups per 10 minutes per IP
 		assistantLimiter: NewIPRateLimiter(30, 10*time.Minute), // max 30 assistant messages per 10 minutes per user
+		assets:           assets,
 	}
+	app.handler = withGzip(app.Mux)
 
 	app.routes()
 	return app
@@ -158,16 +172,12 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.Mux.ServeHTTP(w, r)
+	app.handler.ServeHTTP(w, r)
 }
 
 func (app *App) routes() {
-	// Static assets from embedded FS
-	staticFS, err := fs.Sub(embeddedFS, "templates")
-	if err != nil {
-		log.Fatalf("failed to create static sub fs: %v", err)
-	}
-	app.Mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
+	// Static assets from the embedded templates folder (versioned, cacheable)
+	app.Mux.Handle("/static/", app.assets)
 
 	// Uploaded receipts & documents storage
 	_ = os.MkdirAll("uploads/receipts", 0755)
