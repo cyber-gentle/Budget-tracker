@@ -15,22 +15,6 @@
     <link rel="stylesheet" href="/static/css/globals.css">
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        offwhite: '#F8FAFC',
-                    }
-                }
-            }
-        }</script>
     <script>
         // Synchronous anti-flash theme script
         (function() {
@@ -52,6 +36,7 @@
                 } catch (e) {}
             }
         })();</script>
+    <link rel="stylesheet" href="/static/css/tailwind.css">
 </head>
 <body class="bg-offwhite dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col antialiased selection:bg-slate-200 dark:selection:bg-slate-800 transition-colors duration-200">
 
