@@ -310,9 +310,7 @@ func normalizeAIParsed(parsed *ParsedAITransaction, accounts []Account, todayStr
 // ─── Gemini Flash API Integration ──────────────────────────────────────────
 
 func parseWithGemini(apiKey, model, text string, accounts []Account) (*ParsedAITransaction, error) {
-	if model == "" {
-		model = "gemini-3.5-flash-lite"
-	}
+	model = geminiModelFor(model)
 
 	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 
@@ -359,7 +357,6 @@ Return strictly valid JSON only without markdown code blocks, matching this sche
 		},
 		"generationConfig": map[string]any{
 			"responseMimeType": "application/json",
-			"temperature":      0.1,
 		},
 	}
 

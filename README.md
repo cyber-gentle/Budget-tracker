@@ -17,7 +17,7 @@ Spendly is a fast, responsive, and intuitive personal budget tracking web applic
 - **Data Portability**: 1-click CSV export (`/api/export`) for spreadsheets.
 - **Multi-Currency**: Toggle between `₦` (NGN), `$` (USD), `€` (EUR), and `£` (GBP).
 - **Turso / libSQL Cloud Database**: Permanent serverless database that never sleeps or wipes data.
-- **Spendly Assistant**: A ✨ chat button on every page answers questions about your own spending, budgets, goals, bills and debts, and prepares entries (transactions, budgets) that are saved only after you tap **Confirm**. Runs free on Groq's server-side models (see `GROQ_API_KEY`), uses a user's own Gemini/OpenAI key from AI settings if they set one, and falls back to the offline parser when no model is reachable. Limited to 30 messages per 10 minutes per user to protect the shared key.
+- **Spendly Assistant**: A ✨ chat on every page that explains your spending, budgets, goals, debts and bills, compares periods and runs what-if checks. All figures come from the app's own calculations, not the model's guesses. It can draft changes (add, edit or delete transactions, set budgets, goal deposits/withdrawals, debt payments), but nothing is saved until you tap **Confirm**, and the server re-checks every change. Built to the AI Behaviour Specification. It uses Gemini 3.8 Flash, falls back to Groq's free models and then an offline parser, and is limited to 30 messages per 10 minutes per user.
 - **Hardened Security**: bcrypt password hashing (older hashes upgrade on login), with persistent sessions across server reboots.
 
 ---
@@ -38,6 +38,12 @@ Spendly is a fast, responsive, and intuitive personal budget tracking web applic
 
 ```bash
 go test -v ./...
+```
+
+To also run the assistant's behaviour checks against the real Gemini model (the spec's example scenarios; costs a few API calls):
+
+```bash
+SPENDLY_LIVE_AI=1 GEMINI_API_KEY=your-key go test -run TestAssistantLiveGemini -v ./internal/app/
 ```
 
 ---
@@ -66,7 +72,9 @@ This repository is pre-configured for instant **Vercel** serverless deployment w
 3. In **Environment Variables**, add:
    - `TURSO_DATABASE_URL`: `libsql://spendly-db-yourname.turso.io`
    - `TURSO_AUTH_TOKEN`: your generated token
-   - `GROQ_API_KEY`: *(Optional)* your free Groq Cloud API key for server-side AI parsing and the Spendly Assistant (`llama-3.3-70b-versatile` with `llama-3.1-8b-instant` fallback)
+   - `GEMINI_API_KEY`: *(Recommended)* Gemini API key for the Spendly Assistant. Use a **paid-tier** key: on Google's free tier, prompts (users' financial data) may be used to improve Google's products and read by human reviewers.
+   - `GEMINI_MODEL`: *(Optional)* overrides the assistant's Gemini model (default `gemini-3.8-flash`).
+   - `GROQ_API_KEY`: *(Optional)* free Groq Cloud API key, used for server-side AI parsing and as the assistant's fallback (`llama-3.3-70b-versatile`, then `llama-3.1-8b-instant`)
    - `ALLOWED_ORIGINS`: *(Optional)* comma-separated exact origins allowed to call the API cross-origin (e.g. `https://app.example.com`). The app's own host and `spendly.app` are always allowed.
 4. Click **Deploy**.
 
