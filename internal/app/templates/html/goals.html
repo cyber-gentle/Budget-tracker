@@ -845,6 +845,14 @@
     </div>
 
 <script>
+        // Escape untrusted text for HTML text and attribute contexts.
+        function esc(s) {
+            return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        // Quoted JS string literal that is safe inside an HTML attribute such as onclick="fn(${jsArg(name)})".
+        function jsArg(s) {
+            return esc(JSON.stringify(String(s ?? '')));
+        }
         let allGoals = [];
         let goalSummary = {};
         let currentFilter = 'all';
@@ -913,7 +921,7 @@
                 ? 'bg-slate-900 dark:bg-emerald-600 text-white' 
                 : 'bg-rose-600 text-white';
             toast.className = `${bgClass} pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 transition-all transform duration-200 translate-y-2 opacity-0`;
-            toast.innerHTML = `<span>${message}</span>`;
+            toast.innerHTML = `<span>${esc(message)}</span>`;
             container.appendChild(toast);
             requestAnimationFrame(() => {
                 toast.classList.remove('translate-y-2', 'opacity-0');
@@ -1351,9 +1359,9 @@
                                         ${g.emoji || '🎯'}
                                     </div>
                                     <div class="min-w-0">
-                                        <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">${g.name}</h3>
+                                        <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">${esc(g.name)}</h3>
                                         <div class="flex items-center gap-1.5 mt-0.5">
-                                            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">${g.category || 'Savings'}</span>
+                                            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">${esc(g.category || 'Savings')}</span>
                                             <span class="text-slate-300 dark:text-slate-700">•</span>
                                             ${daysBadge}
                                         </div>
@@ -1365,7 +1373,7 @@
                                     <button type="button" onclick="openEditModal(${g.id})" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit goal">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                                     </button>
-                                    <button type="button" onclick="deleteGoal(${g.id}, '${g.name}')" class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete goal">
+                                    <button type="button" onclick="deleteGoal(${g.id}, ${jsArg(g.name)})" class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete goal">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                     </button>
                                 </div>
@@ -1689,7 +1697,7 @@
                                     ${prefix}
                                 </div>
                                 <div class="min-w-0">
-                                    <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate capitalize">${c.note || (isDeposit ? 'Deposit' : 'Withdrawal')}</h4>
+                                    <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate capitalize">${esc(c.note || (isDeposit ? 'Deposit' : 'Withdrawal'))}</h4>
                                     <p class="text-[10px] text-slate-400">${c.date_fmt}</p>
                                 </div>
                             </div>
@@ -1849,5 +1857,6 @@
         </div>
     </div>
 
+    <script src="/static/js/assistant.js" defer></script>
 </body>
 </html>

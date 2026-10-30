@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"log"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -31,6 +32,8 @@ type App struct {
 	Mux           *http.ServeMux
 	loginLimiter  *IPRateLimiter
 	signupLimiter *IPRateLimiter
+	// assistantLimiter is keyed by username, not IP: it meters the shared free AI key per account.
+	assistantLimiter *IPRateLimiter
 }
 
 // isAllowedOrigin validates if an origin is permitted for CORS.
@@ -50,14 +53,33 @@ func isAllowedOrigin(origin, host string) bool {
 	if u.Host == host {
 		return true
 	}
+	// Loopback origins only while the server itself is local; otherwise any local
+	// dev server on the visitor's machine could read their data with credentials.
 	hostname := u.Hostname()
-	if hostname == "localhost" || hostname == "127.0.0.1" || hostname == "0.0.0.0" {
+	if isLoopbackHost(hostname) && isLoopbackHost(hostOnly(host)) {
 		return true
 	}
-	if strings.HasSuffix(hostname, ".vercel.app") || hostname == "spendly.app" || strings.HasSuffix(hostname, ".spendly.app") {
+	if hostname == "spendly.app" || strings.HasSuffix(hostname, ".spendly.app") {
 		return true
+	}
+	// Extra exact origins (e.g. a custom domain), comma-separated: ALLOWED_ORIGINS=https://a.com,https://b.com
+	for _, allowed := range strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",") {
+		if allowed = strings.TrimSpace(allowed); allowed != "" && strings.EqualFold(allowed, origin) {
+			return true
+		}
 	}
 	return false
+}
+
+func isLoopbackHost(h string) bool {
+	return h == "localhost" || h == "127.0.0.1" || h == "0.0.0.0" || h == "::1"
+}
+
+func hostOnly(hostport string) string {
+	if h, _, err := net.SplitHostPort(hostport); err == nil {
+		return h
+	}
+	return hostport
 }
 
 // setSessionCookie sets an HttpOnly session cookie, marking Secure when on HTTPS.
@@ -95,11 +117,12 @@ func NewApp(db *DBStore) *App {
 	tmpl := template.Must(template.New("").Funcs(funcMap).ParseFS(embeddedFS, "templates/html/*.html"))
 
 	app := &App{
-		DB:            db,
-		Tmpl:          tmpl,
-		Mux:           http.NewServeMux(),
-		loginLimiter:  NewIPRateLimiter(20, time.Minute),    // max 20 login attempts per minute per IP
-		signupLimiter: NewIPRateLimiter(10, 10*time.Minute), // max 10 signups per 10 minutes per IP
+		DB:               db,
+		Tmpl:             tmpl,
+		Mux:              http.NewServeMux(),
+		loginLimiter:     NewIPRateLimiter(20, time.Minute),    // max 20 login attempts per minute per IP
+		signupLimiter:    NewIPRateLimiter(10, 10*time.Minute), // max 10 signups per 10 minutes per IP
+		assistantLimiter: NewIPRateLimiter(30, 10*time.Minute), // max 30 assistant messages per 10 minutes per user
 	}
 
 	app.routes()
@@ -249,6 +272,10 @@ func (app *App) routes() {
 	app.Mux.HandleFunc("/api/ai/settings", app.HandleAISettingsAPI)
 	app.Mux.HandleFunc("/api/ai/test-key", app.HandleAITestKeyAPI)
 
+	// Spendly Assistant (chat over the user's own data; changes need explicit confirmation)
+	app.Mux.HandleFunc("/api/assistant/chat", app.HandleAssistantChat)
+	app.Mux.HandleFunc("/api/assistant/confirm", app.HandleAssistantConfirm)
+
 	// Health check
 	app.Mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -265,13 +292,12 @@ func (app *App) renderTemplate(w http.ResponseWriter, name string, data any) {
 	}
 }
 
-// getSessionUser extracts the username from the session cookie, query param, or header.
+// getSessionUser extracts the username from the session cookie or Bearer header.
+// Tokens are never accepted from the URL, where they leak into history and logs.
 func (app *App) getSessionUser(r *http.Request) (string, bool) {
 	token := ""
 	if c, err := r.Cookie("session"); err == nil && c.Value != "" {
 		token = c.Value
-	} else if q := r.URL.Query().Get("session"); q != "" {
-		token = q
 	} else if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
 		token = strings.TrimPrefix(auth, "Bearer ")
 	}
@@ -522,7 +548,7 @@ func (app *App) HandleLoginAPI(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	http.Redirect(w, r, "/dashboard?session="+token, http.StatusSeeOther)
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 func (app *App) HandleLogoutAPI(w http.ResponseWriter, r *http.Request) {
@@ -569,9 +595,13 @@ func (app *App) HandleTransactions(w http.ResponseWriter, r *http.Request) {
 		if category == "" {
 			category = "other"
 		}
-		amount, err := strconv.ParseFloat(amountStr, 64)
+		amount, err := parseMoney(amountStr)
 		if err != nil || amount <= 0 {
 			jsonError(w, "invalid amount", http.StatusBadRequest)
+			return
+		}
+		if txnType != "income" && txnType != "expense" {
+			jsonError(w, "type must be income or expense", http.StatusBadRequest)
 			return
 		}
 
@@ -624,9 +654,13 @@ func (app *App) HandleTransactionByID(w http.ResponseWriter, r *http.Request) {
 		if category == "" {
 			category = "other"
 		}
-		amount, err := strconv.ParseFloat(amountStr, 64)
+		amount, err := parseMoney(amountStr)
 		if err != nil || amount <= 0 {
 			jsonError(w, "invalid amount", http.StatusBadRequest)
+			return
+		}
+		if txnType != "income" && txnType != "expense" {
+			jsonError(w, "type must be income or expense", http.StatusBadRequest)
 			return
 		}
 
@@ -686,7 +720,7 @@ func (app *App) HandleBudgets(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "category is required", http.StatusBadRequest)
 			return
 		}
-		limit, err := strconv.ParseFloat(limitStr, 64)
+		limit, err := parseMoney(limitStr)
 		if err != nil {
 			jsonError(w, "invalid limit", http.StatusBadRequest)
 			return
@@ -746,7 +780,7 @@ func (app *App) HandleAuto503020API(w http.ResponseWriter, r *http.Request) {
 	var baseIncome float64
 	incomeStr := strings.TrimSpace(r.FormValue("base_income"))
 	if incomeStr != "" {
-		baseIncome, _ = strconv.ParseFloat(incomeStr, 64)
+		baseIncome, _ = parseMoney(incomeStr)
 	}
 
 	budgets, err := app.DB.Apply503020AutoBudget(username, baseIncome)
@@ -1068,6 +1102,28 @@ func (app *App) HandleCurrencyAPI(w http.ResponseWriter, r *http.Request) {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
+// maxMoneyAmount caps user-supplied amounts so sums can never overflow to ±Inf,
+// which encoding/json refuses to encode.
+const maxMoneyAmount = 1e12
+
+var errInvalidMoney = errors.New("amount must be a finite number within range")
+
+// parseMoney is strconv.ParseFloat restricted to finite values of sane magnitude.
+func parseMoney(s string) (float64, error) {
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, err
+	}
+	if !validMoney(v) {
+		return 0, errInvalidMoney
+	}
+	return v, nil
+}
+
+func validMoney(v float64) bool {
+	return !math.IsNaN(v) && !math.IsInf(v, 0) && math.Abs(v) <= maxMoneyAmount
+}
+
 func formatMoney(v float64, symbol string) string {
 	if symbol == "" {
 		symbol = "₦"
@@ -1181,6 +1237,12 @@ func (app *App) HandleProfileAPI(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if newPass != "" {
+			// UpdateProfile revoked every session; keep this browser signed in.
+			if token, err := app.DB.Login(username, newPass); err == nil {
+				app.setSessionCookie(w, r, token)
+			}
+		}
 
 		prof, _ := app.DB.GetProfile(username)
 		jsonOK(w, map[string]any{
@@ -1261,7 +1323,7 @@ func (app *App) HandleDebtsAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		amount, err := strconv.ParseFloat(amountStr, 64)
+		amount, err := parseMoney(amountStr)
 		if err != nil || amount <= 0 {
 			jsonError(w, "invalid amount", http.StatusBadRequest)
 			return
@@ -1320,7 +1382,7 @@ func (app *App) HandleDebtByID(w http.ResponseWriter, r *http.Request) {
 		paymentDateStr := strings.TrimSpace(r.FormValue("date"))
 		logTxnStr := strings.TrimSpace(r.FormValue("log_transaction"))
 
-		amount, err := strconv.ParseFloat(amountStr, 64)
+		amount, err := parseMoney(amountStr)
 		if err != nil || amount <= 0 {
 			jsonError(w, "invalid payment amount", http.StatusBadRequest)
 			return
@@ -1374,7 +1436,7 @@ func (app *App) HandleDebtByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		amount, err := strconv.ParseFloat(amountStr, 64)
+		amount, err := parseMoney(amountStr)
 		if err != nil || amount <= 0 {
 			jsonError(w, "invalid amount", http.StatusBadRequest)
 			return
@@ -1483,7 +1545,7 @@ func (app *App) HandleSubscriptionsAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		amount, err := strconv.ParseFloat(amountStr, 64)
+		amount, err := parseMoney(amountStr)
 		if err != nil || amount <= 0 {
 			jsonError(w, "invalid amount", http.StatusBadRequest)
 			return
@@ -1576,7 +1638,7 @@ func (app *App) HandleSubscriptionByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		amount, err := strconv.ParseFloat(amountStr, 64)
+		amount, err := parseMoney(amountStr)
 		if err != nil || amount <= 0 {
 			jsonError(w, "invalid amount", http.StatusBadRequest)
 			return
@@ -1688,7 +1750,7 @@ func (app *App) HandleGoalsAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		targetAmount, err := strconv.ParseFloat(targetAmountStr, 64)
+		targetAmount, err := parseMoney(targetAmountStr)
 		if err != nil || targetAmount <= 0 {
 			jsonError(w, "target amount must be greater than zero", http.StatusBadRequest)
 			return
@@ -1751,7 +1813,7 @@ func (app *App) HandleGoalByID(w http.ResponseWriter, r *http.Request) {
 		note := strings.TrimSpace(r.FormValue("note"))
 		logTx := r.FormValue("log_transaction") == "true" || r.FormValue("log_transaction") == "1"
 
-		amount, err := strconv.ParseFloat(amountStr, 64)
+		amount, err := parseMoney(amountStr)
 		if err != nil || amount <= 0 {
 			jsonError(w, "deposit amount must be greater than zero", http.StatusBadRequest)
 			return
@@ -1788,7 +1850,7 @@ func (app *App) HandleGoalByID(w http.ResponseWriter, r *http.Request) {
 		note := strings.TrimSpace(r.FormValue("note"))
 		logTx := r.FormValue("log_transaction") == "true" || r.FormValue("log_transaction") == "1"
 
-		amount, err := strconv.ParseFloat(amountStr, 64)
+		amount, err := parseMoney(amountStr)
 		if err != nil || amount <= 0 {
 			jsonError(w, "withdrawal amount must be greater than zero", http.StatusBadRequest)
 			return
@@ -1850,7 +1912,7 @@ func (app *App) HandleGoalByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		targetAmount, err := strconv.ParseFloat(targetAmountStr, 64)
+		targetAmount, err := parseMoney(targetAmountStr)
 		if err != nil || targetAmount <= 0 {
 			jsonError(w, "target amount must be greater than zero", http.StatusBadRequest)
 			return
@@ -2160,7 +2222,7 @@ func (app *App) HandleAccountsAPI(w http.ResponseWriter, r *http.Request) {
 
 		initialBalance := 0.0
 		if initBalStr != "" {
-			if parsed, err := strconv.ParseFloat(initBalStr, 64); err == nil {
+			if parsed, err := parseMoney(initBalStr); err == nil {
 				initialBalance = parsed
 			}
 		}
@@ -2276,7 +2338,7 @@ func (app *App) HandleAccountByID(w http.ResponseWriter, r *http.Request) {
 
 		initialBalance := 0.0
 		if initBalStr != "" {
-			if parsed, err := strconv.ParseFloat(initBalStr, 64); err == nil {
+			if parsed, err := parseMoney(initBalStr); err == nil {
 				initialBalance = parsed
 			}
 		}
@@ -2367,7 +2429,7 @@ func (app *App) HandleAccountTransferAPI(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	amount, err := strconv.ParseFloat(amountStr, 64)
+	amount, err := parseMoney(amountStr)
 	if err != nil || amount <= 0 {
 		jsonError(w, "transfer amount must be greater than zero", http.StatusBadRequest)
 		return
@@ -2452,7 +2514,7 @@ func (app *App) HandleSplitsAPI(w http.ResponseWriter, r *http.Request) {
 		} else {
 			_ = r.ParseMultipartForm(1 << 20)
 			req.Title = r.FormValue("title")
-			req.TotalAmount, _ = strconv.ParseFloat(r.FormValue("total_amount"), 64)
+			req.TotalAmount, _ = parseMoney(r.FormValue("total_amount"))
 			req.PayerName = r.FormValue("payer_name")
 			req.PayerIsUser = (r.FormValue("payer_is_user") == "1" || r.FormValue("payer_is_user") == "true")
 			req.Category = r.FormValue("category")
@@ -2705,7 +2767,7 @@ func (app *App) HandleCustomAssetLiabilityAPI(w http.ResponseWriter, r *http.Req
 			item.Category = r.FormValue("category")
 			item.Institution = r.FormValue("institution")
 			item.Notes = r.FormValue("notes")
-			item.Amount, _ = strconv.ParseFloat(r.FormValue("amount"), 64)
+			item.Amount, _ = parseMoney(r.FormValue("amount"))
 		}
 
 		if strings.TrimSpace(item.Name) == "" {
@@ -2766,7 +2828,7 @@ func (app *App) HandleCustomAssetLiabilityByIDAPI(w http.ResponseWriter, r *http
 			item.Category = r.FormValue("category")
 			item.Institution = r.FormValue("institution")
 			item.Notes = r.FormValue("notes")
-			item.Amount, _ = strconv.ParseFloat(r.FormValue("amount"), 64)
+			item.Amount, _ = parseMoney(r.FormValue("amount"))
 		}
 
 		saved, err := app.DB.UpdateCustomAssetLiability(username, id, item)
@@ -2949,7 +3011,7 @@ func (app *App) HandleReceiptScanAPI(w http.ResponseWriter, r *http.Request) {
 		manualMerchant = r.FormValue("merchant")
 		manualCategory = r.FormValue("category")
 		if amtStr := r.FormValue("amount"); amtStr != "" {
-			manualAmount, _ = strconv.ParseFloat(amtStr, 64)
+			manualAmount, _ = parseMoney(amtStr)
 		}
 
 		file, header, err := r.FormFile("file")
@@ -3179,6 +3241,10 @@ func (app *App) HandleReceiptByIDAPI(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "receipt not found", http.StatusNotFound)
 			return
 		}
+		if receipt.TransactionID != 0 {
+			jsonError(w, "receipt already converted to a transaction", http.StatusConflict)
+			return
+		}
 
 		amount := req.Amount
 		if amount <= 0 {
@@ -3338,24 +3404,24 @@ func (app *App) HandleForecastAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	discretionaryPct := 0.0
-	if pct, err := strconv.ParseFloat(q.Get("discretionary_pct"), 64); err == nil {
+	if pct, err := parseMoney(q.Get("discretionary_pct")); err == nil {
 		discretionaryPct = pct
 	}
 
 	incomeChange := 0.0
-	if inc, err := strconv.ParseFloat(q.Get("income_change"), 64); err == nil {
+	if inc, err := parseMoney(q.Get("income_change")); err == nil {
 		incomeChange = inc
 	}
 
 	plannedAmt := 0.0
-	if pa, err := strconv.ParseFloat(q.Get("planned_expense_amount"), 64); err == nil {
+	if pa, err := parseMoney(q.Get("planned_expense_amount")); err == nil {
 		plannedAmt = pa
 	}
 	plannedDate := q.Get("planned_expense_date")
 	plannedTitle := q.Get("planned_expense_title")
 
 	safetyOverride := 0.0
-	if so, err := strconv.ParseFloat(q.Get("safety_buffer"), 64); err == nil {
+	if so, err := parseMoney(q.Get("safety_buffer")); err == nil {
 		safetyOverride = so
 	}
 
@@ -3478,7 +3544,7 @@ func (app *App) HandleForecastIncomesAPI(w http.ResponseWriter, r *http.Request)
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			req.Name = r.FormValue("name")
-			req.Amount, _ = strconv.ParseFloat(r.FormValue("amount"), 64)
+			req.Amount, _ = parseMoney(r.FormValue("amount"))
 			req.Frequency = r.FormValue("frequency")
 			req.NextPayDate = r.FormValue("next_pay_date")
 			req.Category = r.FormValue("category")
@@ -3642,7 +3708,7 @@ func (app *App) HandleAIQuickSaveTransaction(w http.ResponseWriter, r *http.Requ
 		req.Tags = parsed.Tags
 	}
 
-	if req.Amount <= 0 {
+	if req.Amount <= 0 || !validMoney(req.Amount) {
 		jsonError(w, "could not determine a valid transaction amount", http.StatusBadRequest)
 		return
 	}
