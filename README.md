@@ -36,6 +36,16 @@ Spendly is a fast, responsive, and intuitive personal budget tracking web applic
    *(Without environment variables, Spendly automatically falls back to a local SQLite database `spendly.db`)*
 3. Open [http://localhost:8080](http://localhost:8080) in your browser.
 
+### Styles (Tailwind CSS)
+
+Pages use a compiled stylesheet, `internal/app/templates/css/tailwind.css`, built from `tailwind.config.js` with the Tailwind standalone CLI (no Node project needed). After changing classes in any template or script, rebuild and commit it:
+
+```bash
+./scripts/build-css.sh
+```
+
+The script downloads a pinned, checksum-verified Tailwind CLI (v3.4.17) into `.cache/` the first time.
+
 ### Running Tests
 
 ```bash
