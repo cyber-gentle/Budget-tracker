@@ -101,6 +101,7 @@ func NewApp(db *DBStore) *App {
 	funcMap := template.FuncMap{
 		"formatMoney":  formatMoney,
 		"formatAmount": formatAmount,
+		"layout":       layoutData,
 		"comma": func(n any) string {
 			switch v := n.(type) {
 			case int:
