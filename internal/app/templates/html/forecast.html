@@ -1057,6 +1057,14 @@
     </div>
 
 <script>
+        // Escape untrusted text for HTML text and attribute contexts.
+        function esc(s) {
+            return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        // Quoted JS string literal that is safe inside an HTML attribute such as onclick="fn(${jsArg(name)})".
+        function jsArg(s) {
+            return esc(JSON.stringify(String(s ?? '')));
+        }
         // ─── Global State & Baseline Data ──────────────────────────────────────
         let activeTimeframe = 30;
         let currencySymbol = {{if .Currency}}"{{.Currency}}"{{else}}"₦"{{end}};
@@ -1563,7 +1571,7 @@
                 const evsDiv = document.getElementById('tooltipEvents');
                 if (d.events && d.events.length > 0) {
                     evsDiv.innerHTML = d.events.map(ev => `
-                        <div class="truncate">${ev.icon} ${ev.title}: ${currencySymbol}${Number(ev.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div class="truncate">${esc(ev.icon)} ${esc(ev.title)}: ${currencySymbol}${Number(ev.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     `).join('');
                     evsDiv.classList.remove('hidden');
                 } else {
@@ -1721,14 +1729,14 @@
                     <div class="event-feed-card flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs" data-type="${ev.type}">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg ${iconBg}">
-                                ${ev.icon}
+                                ${esc(ev.icon)}
                             </div>
                             <div class="space-y-0.5">
-                                <div class="text-xs font-bold text-slate-900 dark:text-white">${ev.title}</div>
+                                <div class="text-xs font-bold text-slate-900 dark:text-white">${esc(ev.title)}</div>
                                 <div class="flex items-center gap-2 text-[10px] text-slate-400">
                                     <span class="font-semibold text-slate-600 dark:text-slate-400">${ev.display_date}</span>
                                     <span>•</span>
-                                    <span class="capitalize">${ev.category}</span>
+                                    <span class="capitalize">${esc(ev.category)}</span>
                                 </div>
                             </div>
                         </div>
@@ -2200,5 +2208,6 @@
         </div>
     </div>
 
+    <script src="/static/js/assistant.js" defer></script>
 </body>
 </html>

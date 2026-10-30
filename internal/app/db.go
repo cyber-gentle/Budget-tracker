@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -311,6 +312,8 @@ func (s *DBStore) migrate() error {
 	_, _ = s.db.Exec("ALTER TABLE transactions ADD COLUMN receipt_url TEXT DEFAULT ''")
 	_, _ = s.db.Exec("ALTER TABLE debts ADD COLUMN split_id INTEGER DEFAULT NULL")
 	_, _ = s.db.Exec("ALTER TABLE receipts ADD COLUMN transaction_id INTEGER DEFAULT 0")
+	// transactions is the busiest table and almost every query filters by user and sorts by date.
+	_, _ = s.db.Exec("CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON transactions(username, date)")
 
 	return nil
 }
@@ -541,12 +544,44 @@ func (s *DBStore) UpdateProfile(username, fullName, email, currency, currentPass
 
 		_, err = s.db.Exec("UPDATE users SET full_name = ?, email = ?, currency = ?, password = ? WHERE username = ?",
 			fullName, email, currency, newHash, username)
+		if err != nil {
+			return err
+		}
+		// A password change must sign out every existing session, including stolen ones.
+		_, err = s.db.Exec("DELETE FROM sessions WHERE username = ?", username)
 		return err
 	}
 
 	_, err := s.db.Exec("UPDATE users SET full_name = ?, email = ?, currency = ? WHERE username = ?",
 		fullName, email, currency, username)
 	return err
+}
+
+var hexColorRe = regexp.MustCompile(`^#[0-9A-Fa-f]{3,8}$`)
+
+// sanitizeColor accepts only hex colors: the frontend interpolates colors into
+// style attributes, so anything else could break out of the attribute.
+func sanitizeColor(c string) string {
+	c = strings.TrimSpace(c)
+	if !hexColorRe.MatchString(c) {
+		return ""
+	}
+	return c
+}
+
+// sanitizeIcon keeps emoji/icon values short and free of markup characters,
+// since the frontend renders them unescaped into HTML.
+func sanitizeIcon(s string) string {
+	s = strings.Map(func(r rune) rune {
+		if strings.ContainsRune("<>\"'&`\\", r) {
+			return -1
+		}
+		return r
+	}, strings.TrimSpace(s))
+	if r := []rune(s); len(r) > 16 {
+		s = string(r[:16])
+	}
+	return s
 }
 
 // ─── Transaction Methods ───────────────────────────────────────────────────
@@ -573,7 +608,22 @@ func parseTags(tags string) (string, []string) {
 	return strings.Join(cleaned, ","), cleaned
 }
 
+// validateTransaction guards every user-driven transaction write: a non-finite amount
+// would make the user's transaction list unencodable as JSON.
+func validateTransaction(amount float64, txnType string) error {
+	if !validMoney(amount) || amount <= 0 {
+		return errInvalidMoney
+	}
+	if txnType != "income" && txnType != "expense" {
+		return fmt.Errorf("type must be income or expense")
+	}
+	return nil
+}
+
 func (s *DBStore) AddTransactionFull(username string, amount float64, category, note, txnType, tags string, accountID int, optDate ...time.Time) error {
+	if err := validateTransaction(amount, txnType); err != nil {
+		return err
+	}
 
 	txDate := time.Now()
 	if len(optDate) > 0 && !optDate[0].IsZero() {
@@ -598,6 +648,9 @@ func (s *DBStore) AddTransaction(username string, amount float64, category, note
 }
 
 func (s *DBStore) AddTransactionWithReceipt(username string, amount float64, category, note, txnType, tags string, accountID int, receiptURL string, optDate ...time.Time) (int, error) {
+	if err := validateTransaction(amount, txnType); err != nil {
+		return 0, err
+	}
 
 	txDate := time.Now()
 	if len(optDate) > 0 && !optDate[0].IsZero() {
@@ -624,6 +677,9 @@ func (s *DBStore) AttachReceiptToTransaction(id int, username string, receiptURL
 }
 
 func (s *DBStore) UpdateTransactionFull(id int, username string, amount float64, category, note, txnType, tags string, accountID int, optDate ...time.Time) (bool, error) {
+	if err := validateTransaction(amount, txnType); err != nil {
+		return false, err
+	}
 
 	cleanTags, _ := parseTags(tags)
 
@@ -2142,6 +2198,7 @@ func (s *DBStore) GetGoalByID(id int, username string) (*Goal, []GoalContributio
 }
 
 func (s *DBStore) CreateGoal(username, name string, targetAmount float64, targetDate *time.Time, emoji, color, category string) (*Goal, error) {
+	emoji, color = sanitizeIcon(emoji), sanitizeColor(color)
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2194,6 +2251,7 @@ func (s *DBStore) CreateGoal(username, name string, targetAmount float64, target
 }
 
 func (s *DBStore) UpdateGoal(id int, username, name string, targetAmount float64, targetDate *time.Time, emoji, color, category, status string) (*Goal, error) {
+	emoji, color = sanitizeIcon(emoji), sanitizeColor(color)
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2537,6 +2595,7 @@ func (s *DBStore) GetCategories(username string) ([]Category, error) {
 }
 
 func (s *DBStore) CreateCategory(username, name, catType, emoji, color string) (*Category, error) {
+	emoji, color = sanitizeIcon(emoji), sanitizeColor(color)
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2593,6 +2652,7 @@ func (s *DBStore) CreateCategory(username, name, catType, emoji, color string) (
 }
 
 func (s *DBStore) UpdateCategory(id int, username, name, emoji, color string) (*Category, error) {
+	emoji, color = sanitizeIcon(emoji), sanitizeColor(color)
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2848,6 +2908,7 @@ func (s *DBStore) GetAccountByID(id int, username string) (*Account, error) {
 }
 
 func (s *DBStore) CreateAccount(username, name, accType, currency, color, icon string, initialBalance float64, isDefault bool) (*Account, error) {
+	icon, color = sanitizeIcon(icon), sanitizeColor(color)
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -2923,6 +2984,7 @@ func (s *DBStore) CreateAccount(username, name, accType, currency, color, icon s
 }
 
 func (s *DBStore) UpdateAccount(id int, username, name, accType, currency, color, icon string, initialBalance float64, isDefault bool) (*Account, error) {
+	icon, color = sanitizeIcon(icon), sanitizeColor(color)
 
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -5279,8 +5341,9 @@ func (s *DBStore) DeleteReceipt(id int, username string) error {
 		return err
 	}
 
-	if filePath != "" && strings.HasPrefix(filePath, "uploads/") {
-		_ = os.Remove(filePath)
+	// Stored paths are URL paths ("/uploads/receipts/<name>"); map back to disk by base name only.
+	if strings.HasPrefix(filePath, "/uploads/receipts/") {
+		_ = os.Remove(filepath.Join("uploads", "receipts", filepath.Base(filePath)))
 	}
 	return nil
 }

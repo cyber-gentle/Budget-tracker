@@ -20,7 +20,7 @@ type ParsedAITransaction struct {
 	Note           string   `json:"note"`
 	Amount         float64  `json:"amount"`
 	Category       string   `json:"category"`
-	Type           string   `json:"type"` // "expense", "income", "transfer"
+	Type           string   `json:"type"` // "expense" or "income"
 	Date           string   `json:"date"` // YYYY-MM-DD
 	AccountID      int      `json:"account_id"`
 	AccountName    string   `json:"account_name"`
@@ -155,7 +155,7 @@ func callGroqModel(apiKey, model, text string, accounts []Account) (*ParsedAITra
 	sysPrompt := fmt.Sprintf(`You are an expert financial transaction parser for the Spendly personal finance app.
 Today is %s (%s).
 Allowed Categories: ["food", "transport", "housing", "entertainment", "shopping", "healthcare", "education", "bills", "personal", "other"].
-Allowed Types: ["expense", "income", "transfer"].
+Allowed Types: ["expense", "income"].
 Available Accounts: [%s].
 
 Extract clean transaction details from user voice transcripts, free-form text, or bank SMS alerts.
@@ -163,7 +163,7 @@ Rules:
 - "note": Clear merchant, payee, or clean description (e.g. "Dinner at KFC", "Uber ride", "Monthly Salary", "Grocery shopping").
 - "amount": Strictly numeric value as a float (e.g. 2500.0). If currency symbols appear, extract only the number.
 - "category": Choose the single most fitting category from the allowed list.
-- "type": "expense", "income", or "transfer".
+- "type": "expense" or "income".
 - "date": YYYY-MM-DD. Calculate relative dates like "yesterday", "last Friday", or default to today (%s).
 - "account_id": Integer matching one of the Available Accounts if specified, otherwise 0.
 - "account_name": Name of the selected account.
@@ -246,11 +246,21 @@ Return strictly valid JSON only matching this schema:
 		return nil, err
 	}
 
+	normalizeAIParsed(&parsed, accounts, todayStr)
+	return &parsed, nil
+}
+
+// normalizeAIParsed clamps model output to values the app can store: the model's
+// reply is untrusted, so category, type, amount, and account must all be checked.
+func normalizeAIParsed(parsed *ParsedAITransaction, accounts []Account, todayStr string) {
 	if parsed.Date == "" {
 		parsed.Date = todayStr
 	}
 	if parsed.Confidence == 0 {
 		parsed.Confidence = 0.95
+	}
+	if !validMoney(parsed.Amount) || parsed.Amount < 0 {
+		parsed.Amount = 0
 	}
 
 	validCategories := map[string]bool{
@@ -263,9 +273,8 @@ Return strictly valid JSON only matching this schema:
 		parsed.Category = "other"
 	}
 
-	validTypes := map[string]bool{"expense": true, "income": true, "transfer": true}
 	parsed.Type = strings.ToLower(strings.TrimSpace(parsed.Type))
-	if !validTypes[parsed.Type] {
+	if parsed.Type != "income" {
 		parsed.Type = "expense"
 	}
 
@@ -296,8 +305,6 @@ Return strictly valid JSON only matching this schema:
 			parsed.AccountName = defaultAcc.Name
 		}
 	}
-
-	return &parsed, nil
 }
 
 // ─── Gemini Flash API Integration ──────────────────────────────────────────
@@ -324,7 +331,7 @@ func parseWithGemini(apiKey, model, text string, accounts []Account) (*ParsedAIT
 	prompt := fmt.Sprintf(`You are a financial transaction natural language parser for the Spendly budget app.
 Today is %s (%s).
 Allowed Categories: ["food", "transport", "housing", "entertainment", "shopping", "healthcare", "education", "bills", "personal", "other"].
-Allowed Types: ["expense", "income", "transfer"].
+Allowed Types: ["expense", "income"].
 Available Accounts: [%s].
 
 Extract the transaction details from this text or bank SMS:
@@ -411,19 +418,7 @@ Return strictly valid JSON only without markdown code blocks, matching this sche
 		return nil, err
 	}
 
-	if parsed.Date == "" {
-		parsed.Date = todayStr
-	}
-	if parsed.Category == "" {
-		parsed.Category = "other"
-	}
-	if parsed.Type == "" {
-		parsed.Type = "expense"
-	}
-	if parsed.Confidence == 0 {
-		parsed.Confidence = 0.95
-	}
-
+	normalizeAIParsed(&parsed, accounts, todayStr)
 	return &parsed, nil
 }
 
@@ -451,7 +446,7 @@ func parseWithOpenAI(apiKey, model, text string, accounts []Account) (*ParsedAIT
 	sysPrompt := fmt.Sprintf(`You are a financial transaction natural language parser for the Spendly app.
 Today is %s (%s).
 Allowed Categories: ["food", "transport", "housing", "entertainment", "shopping", "healthcare", "education", "bills", "personal", "other"].
-Allowed Types: ["expense", "income", "transfer"].
+Allowed Types: ["expense", "income"].
 Available Accounts: [%s].
 Return valid JSON only matching schema:
 {
@@ -523,19 +518,7 @@ Return valid JSON only matching schema:
 		return nil, err
 	}
 
-	if parsed.Date == "" {
-		parsed.Date = todayStr
-	}
-	if parsed.Category == "" {
-		parsed.Category = "other"
-	}
-	if parsed.Type == "" {
-		parsed.Type = "expense"
-	}
-	if parsed.Confidence == 0 {
-		parsed.Confidence = 0.95
-	}
-
+	normalizeAIParsed(&parsed, accounts, todayStr)
 	return &parsed, nil
 }
 
@@ -559,8 +542,6 @@ func parseWithLocalNLP(text string, accounts []Account) ParsedAITransaction {
 	txnType := "expense"
 	if containsAny(rawLower, "received", "credited", "credit alert", "deposit", "salary", "earned", "allowance", "refund", "cashback", "dividend", "interest", "inflow") {
 		txnType = "income"
-	} else if containsAny(rawLower, "transfer to", "transferred to", "sent to", "moved to", "withdrawal", "withdrew") {
-		txnType = "transfer"
 	}
 
 	// 3. Date Detection
