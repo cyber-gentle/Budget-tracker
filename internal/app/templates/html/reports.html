@@ -11,7 +11,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{asset "/static/css/globals.css"}}">
 
     <!-- Tailwind CSS -->
@@ -37,8 +37,6 @@
             }
         })();</script>
     <style>
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @media print {
             header, #timeframe-toolbar, #export-dropdown-wrapper, .no-print {
                 display: none !important;
@@ -102,6 +100,7 @@
 
         <!-- Timeframe & Filter Toolbar -->
         <section id="timeframe-toolbar" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xs transition-colors space-y-3">
+            <h1 class="sr-only">Financial reports</h1>
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 
                 <!-- Timeframe Quick Pills (Horizontal Touch Carousel) -->
@@ -115,10 +114,10 @@
                 </div>
 
                 <!-- Secondary Filters: Account & Category -->
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <!-- Account Filter -->
                     <div class="flex items-center gap-1.5 text-xs font-semibold">
-                        <select id="filter-account" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl focus:outline-none cursor-pointer">
+                        <select id="filter-account" aria-label="Filter by wallet" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl focus:outline-none cursor-pointer">
                             <option value="all">💳 All Wallets</option>
                         </select>
                     </div>
@@ -131,7 +130,7 @@
 
                     <!-- Category Filter -->
                     <div class="flex items-center gap-1.5 text-xs font-semibold">
-                        <select id="filter-category" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl focus:outline-none cursor-pointer">
+                        <select id="filter-category" aria-label="Filter by category" class="px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl focus:outline-none cursor-pointer">
                             <option value="all">📦 All Categories</option>
                         </select>
                     </div>
@@ -260,7 +259,7 @@
                 </div>
 
                 <!-- Ranked Category List -->
-                <div id="category-report-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+                <div id="category-report-list" tabindex="0" role="region" aria-label="Spending by category" class="space-y-3 max-h-72 overflow-y-auto pr-1">
                     <div class="p-4 text-center text-xs text-slate-400">Loading categories...</div>
                 </div>
             </div>
@@ -431,17 +430,16 @@
             return params;
         }
 
-        document.getElementById('btn-export-csv').addEventListener('click', () => {
+        function exportReport(format) {
             const p = getFilterParams();
-            p.set('format', 'csv');
+            p.set('format', format);
             window.location.href = '/api/export?' + p.toString();
-        });
-
-        document.getElementById('btn-export-json').addEventListener('click', () => {
-            const p = getFilterParams();
-            p.set('format', 'json');
-            window.location.href = '/api/export?' + p.toString();
-        });
+        }
+        // The header's Export button (layout.js) calls this: export the report being viewed.
+        function openExportModal() { exportReport('csv'); }
+        // Optional page-level export buttons; a missing one must not stop the page from loading.
+        document.getElementById('btn-export-csv')?.addEventListener('click', () => exportReport('csv'));
+        document.getElementById('btn-export-json')?.addEventListener('click', () => exportReport('json'));
 
         document.getElementById('btn-print-statement').addEventListener('click', () => {
             window.print();

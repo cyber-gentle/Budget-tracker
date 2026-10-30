@@ -11,7 +11,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{asset "/static/css/globals.css"}}">
 
     <!-- Tailwind CSS -->
@@ -197,7 +197,7 @@
                         <input type="date" id="goal-date" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Category</label>
+                        <label for="goal-category" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Category</label>
                         <select id="goal-category" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
                             <option value="emergency">🛡️ Emergency</option>
                             <option value="savings">💰 General Savings</option>
@@ -232,7 +232,7 @@
 
                 <!-- Status (Only when editing) -->
                 <div id="goal-status-container" class="hidden">
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                    <label for="goal-status" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Status</label>
                     <select id="goal-status" class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
                         <option value="in_progress">In Progress</option>
                         <option value="completed">Completed</option>

@@ -79,3 +79,35 @@ func TestPagesUseCompiledCSSAndPinnedScripts(t *testing.T) {
 		t.Fatalf("compiled stylesheet not served correctly: %d %s", rec.Code, rec.Header().Get("Content-Type"))
 	}
 }
+
+// Basic accessibility guarantees that can be checked from the rendered HTML:
+// a level-one heading, zoom allowed, and an accessible name on every <select>.
+func TestPagesMeetBasicAccessibility(t *testing.T) {
+	app, token := assistantTestApp(t)
+	selectTag := regexp.MustCompile(`<select\b[^>]*>`)
+	idAttr := regexp.MustCompile(`\bid="([^"]+)"`)
+	for _, page := range []string{"", "login", "sign-up", "dashboard", "transactions", "debts", "subscriptions", "goals", "reports", "net-worth", "receipts", "forecast"} {
+		req := httptest.NewRequest(http.MethodGet, "/"+page, nil)
+		if page != "" && page != "login" && page != "sign-up" {
+			req.AddCookie(&http.Cookie{Name: "session", Value: token})
+		}
+		rec := httptest.NewRecorder()
+		app.ServeHTTP(rec, req)
+		body := rec.Body.String()
+		if !strings.Contains(body, "<h1") {
+			t.Errorf("/%s has no <h1>", page)
+		}
+		if strings.Contains(body, "user-scalable=no") || strings.Contains(body, "maximum-scale=1") {
+			t.Errorf("/%s disables pinch-zoom", page)
+		}
+		for _, tag := range selectTag.FindAllString(body, -1) {
+			if strings.Contains(tag, "aria-label=") {
+				continue
+			}
+			m := idAttr.FindStringSubmatch(tag)
+			if m == nil || !strings.Contains(body, `for="`+m[1]+`"`) {
+				t.Errorf("/%s: <select> without an accessible name: %s", page, tag[:min(len(tag), 80)])
+			}
+		}
+	}
+}
