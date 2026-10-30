@@ -123,7 +123,7 @@
                 <div
                     class="flex items-center gap-1 sm:gap-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
                     <span class="text-slate-400 hidden sm:inline">Currency:</span>
-                    <select id="currency-select"
+                    <select id="currency-select" aria-label="Currency"
                         class="bg-transparent font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer text-xs">
                         <option value="₦" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">₦ (NGN)</option>
                         <option value="$" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">$ (USD)</option>
@@ -649,7 +649,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Default Currency</label>
+                    <label for="profile-currency" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Default Currency</label>
                     <select id="profile-currency"
                         class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium cursor-pointer">
                         <option value="₦" class="bg-white dark:bg-slate-900">₦ - Nigerian Naira (NGN)</option>

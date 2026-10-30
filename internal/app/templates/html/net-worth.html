@@ -11,7 +11,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{asset "/static/css/globals.css"}}">
 
     <!-- Tailwind CSS -->
@@ -39,8 +39,6 @@
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1/dist/chart.umd.min.js" integrity="sha384-Emf5ZVIUiarAdhkgtqK+5/Z5qIvM6QoVrS+qAVtfyZVuD5lIHrac0me485+Antp0" crossorigin="anonymous"></script>
     <style>
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
     <link rel="stylesheet" href="{{asset "/static/css/tailwind.css"}}">
 </head>
@@ -295,7 +293,7 @@
                         <input type="number" step="any" min="0" id="item-amount" required placeholder="0.00" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Category</label>
+                        <label for="item-category" class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Category</label>
                         <select id="item-category" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             <!-- Populated dynamically based on type -->
                         </select>
@@ -349,7 +347,7 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white dark:bg-slate-800 dark:text-white text-xs font-semibold rounded-2xl shadow-xl border border-slate-700 transition-all duration-300 translate-y-16 opacity-0 pointer-events-none">
+    <div id="toast" role="status" aria-live="polite" class="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white dark:bg-slate-800 dark:text-white text-xs font-semibold rounded-2xl shadow-xl border border-slate-700 transition-all duration-300 translate-y-16 opacity-0 pointer-events-none">
         <span id="toast-icon">✓</span>
         <span id="toast-msg">Notification</span>
     </div>
