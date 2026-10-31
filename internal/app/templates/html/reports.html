@@ -98,9 +98,13 @@
     <!-- Main Container -->
     <main class="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24 lg:pb-8 sm:pb-24 lg:pb-8 flex-1 w-full">
 
+        <div class="print:hidden">
+            <h1 class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Budgets & Reports</h1>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">See where your money went and how each budget is tracking.</p>
+        </div>
+
         <!-- Timeframe & Filter Toolbar -->
         <section id="timeframe-toolbar" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xs transition-colors space-y-3">
-            <h1 class="sr-only">Financial reports</h1>
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 
                 <!-- Timeframe Quick Pills (Horizontal Touch Carousel) -->
@@ -123,7 +127,7 @@
                     </div>
 
                     <!-- Print Statement Button -->
-                    <button type="button" id="btn-print-statement" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition-all shadow-xs cursor-pointer" title="Print / Save PDF Statement">
+                    <button type="button" id="btn-print-statement" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100" title="Print / Save PDF Statement">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
                         <span>Print Statement</span>
                     </button>
@@ -141,13 +145,13 @@
             <div id="custom-date-container" class="hidden pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-3">
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">From:</span>
-                    <input type="date" id="custom-start-date" class="px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+                    <input type="date" id="custom-start-date" class="px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">To:</span>
-                    <input type="date" id="custom-end-date" class="px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
+                    <input type="date" id="custom-end-date" class="px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
                 </div>
-                <button type="button" id="btn-apply-custom-dates" class="px-3 py-1 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 rounded-lg hover:opacity-90 cursor-pointer">
+                <button type="button" id="btn-apply-custom-dates" class="px-3 py-1 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 rounded-xl hover:opacity-90 cursor-pointer">
                     Apply Filter
                 </button>
             </div>
@@ -159,7 +163,7 @@
             <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
                     <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Net Cash Flow</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
                         ⚖️
                     </span>
                 </div>
@@ -167,7 +171,7 @@
                     <span class="font-heading text-lg sm:text-2xl font-black tracking-tight" id="kpi-net-savings">₦0</span>
                 </div>
                 <div class="mt-2 flex items-center gap-1.5">
-                    <span id="kpi-net-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">Surplus</span>
+                    <span id="kpi-net-badge" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">Surplus</span>
                     <span class="text-[10px] text-slate-500 dark:text-slate-400" id="kpi-savings-rate">0% Savings Rate</span>
                 </div>
             </div>
@@ -176,7 +180,7 @@
             <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
                     <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Total Income</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
                         ↓
                     </span>
                 </div>
@@ -192,7 +196,7 @@
             <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
                     <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Total Expenses</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
                         ↑
                     </span>
                 </div>
@@ -208,7 +212,7 @@
             <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
                     <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Emergency Runway</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
                         🛡️
                     </span>
                 </div>
@@ -540,11 +544,11 @@
             if (k.net_savings >= 0) {
                 netSavingsEl.className = 'font-heading text-lg sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight';
                 netBadgeEl.textContent = 'Surplus';
-                netBadgeEl.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
+                netBadgeEl.className = 'px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
             } else {
                 netSavingsEl.className = 'font-heading text-lg sm:text-2xl font-black text-rose-700 dark:text-rose-400 tracking-tight';
                 netBadgeEl.textContent = 'Deficit';
-                netBadgeEl.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400';
+                netBadgeEl.className = 'px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400';
             }
 
             document.getElementById('kpi-savings-rate').textContent = `${k.savings_rate}% Savings Rate`;
@@ -733,7 +737,7 @@
                 <div class="space-y-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                     <div class="flex items-center justify-between text-xs">
                         <div class="flex items-center gap-2 min-w-0">
-                            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0 font-bold" style="background-color: ${c.color}20; color: ${c.color}; border: 1px solid ${c.color}40;">
+                            <span class="w-6 h-6 rounded-xl flex items-center justify-center text-xs shrink-0 font-bold" style="background-color: ${c.color}20; color: ${c.color}; border: 1px solid ${c.color}40;">
                                 ${c.icon || '📦'}
                             </span>
                             <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${esc(c.name)}</span>
@@ -819,7 +823,7 @@
                 const sign = isExp ? '-' : '+';
                 const color = isExp ? 'text-rose-700 dark:text-rose-400 font-bold' : 'text-emerald-700 dark:text-emerald-400 font-bold';
                 const tagsHtml = (t.tag_list && t.tag_list.length > 0)
-                    ? t.tag_list.map(tg => `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold mr-1">#${esc(tg)}</span>`).join('')
+                    ? t.tag_list.map(tg => `<span class="px-1.5 py-0.5 rounded-md text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold mr-1">#${esc(tg)}</span>`).join('')
                     : '<span class="text-slate-300 dark:text-slate-400">—</span>';
 
                 return `
@@ -828,7 +832,7 @@
                         <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">${esc(t.note || t.category)}</td>
                         <td class="py-3 px-4 whitespace-nowrap text-slate-600 dark:text-slate-400">${esc(t.category)}</td>
                         <td class="py-3 px-4 whitespace-nowrap">
-                            <span class="inline-flex items-center gap-1 font-semibold text-[11px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg text-slate-700 dark:text-slate-300">
+                            <span class="inline-flex items-center gap-1 font-semibold text-[11px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-xl text-slate-700 dark:text-slate-300">
                                 <span>${t.account_icon || '🏦'}</span> ${esc(t.account_name || 'Main Wallet')}
                             </span>
                         </td>

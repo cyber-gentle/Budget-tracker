@@ -185,7 +185,7 @@
                 <div
                     class="col-span-2 sm:col-span-3 flex items-center justify-between bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-1.5 py-1">
                     <button type="button" id="btn-prev-month"
-                        class="p-1 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                        class="tap-target p-1 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                         title="Previous Month">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2.5">
@@ -193,12 +193,12 @@
                         </svg>
                     </button>
                     <button type="button" id="btn-month-label"
-                        class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate px-1 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                        class="tap-target text-xs font-bold text-slate-800 dark:text-slate-200 truncate px-1 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer"
                         title="Click to reset to current month">
                         <span id="month-display-text">This Month</span>
                     </button>
                     <button type="button" id="btn-next-month"
-                        class="p-1 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                        class="tap-target p-1 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                         title="Next Month">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2.5">
@@ -206,7 +206,7 @@
                         </svg>
                     </button>
                     <button type="button" id="btn-all-time"
-                        class="text-[10px] font-bold px-2 py-0.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1"
+                        class="tap-target text-[10px] font-bold px-2 py-0.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1"
                         title="Toggle all historical transactions">All</button>
                 </div>
 
@@ -329,7 +329,7 @@
     <div id="tx-modal"
         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm hidden p-4">
         <div
-            class="bg-[#0b1329] text-white border border-slate-800/80 rounded-3xl w-full max-w-md p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
+            class="bg-[#0b1329] text-white border border-slate-800/80 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
 
             <!-- Modal Header -->
             <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
@@ -531,7 +531,7 @@
     <div id="delete-modal"
         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs hidden p-4">
         <div
-            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4 text-center">
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4 text-center">
             <div
                 class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto text-xl font-bold">
                 🗑️
@@ -559,7 +559,7 @@
     <div id="export-modal"
         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs hidden p-4">
         <div
-            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                 <h3 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Export Transactions</h3>
                 <button type="button" id="btn-close-export"
@@ -586,82 +586,7 @@
         </div>
     </div>
 
-    <!-- ─── Mobile More Navigation Drawer / Sheet ───────────────────────────── -->
-    <div id="mobile-more-sheet" onclick="if(event.target===this)this.classList.add('hidden')"
-        class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden transition-opacity">
-        <div
-            class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto">
-            <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4"></div>
-
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
-                <div>
-                    <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-white">All Features</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Dedicated financial management sections</p>
-                </div>
-                <button type="button"
-                    onclick="const s = document.getElementById('mobile-more-sheet'); if (s) s.classList.add('hidden');"
-                    class="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">✕</button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2.5 mb-5">
-                <a href="/dashboard"
-                    class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
-                    <span class="text-xl">🏠</span>
-                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Home Dashboard</strong>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Overview & charts</span>
-                </a>
-                <a href="/debts"
-                    class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
-                    <span class="text-xl">💳</span>
-                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Debts & Loans</strong>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Track money owed</span>
-                </a>
-                <a href="/subscriptions"
-                    class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
-                    <span class="text-xl">🔄</span>
-                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Subscriptions</strong>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Recurring bills</span>
-                </a>
-                <a href="/reports"
-                    class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
-                    <span class="text-xl">📊</span>
-                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Budgets & Reports</strong>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Analytics & stats</span>
-                </a>
-                <a href="/goals"
-                    class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
-                    <span class="text-xl">🎯</span>
-                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Savings Goals</strong>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Target pots</span>
-                </a>
-                <a href="/net-worth"
-                    class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
-                    <span class="text-xl">🏛️</span>
-                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Net Worth</strong>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Assets & liabilities</span>
-                </a>
-                <a href="/receipts"
-                    class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
-                    <span class="text-xl">🧾</span>
-                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Receipts & OCR</strong>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Scan & store</span>
-                </a>
-                <a href="/forecast"
-                    class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
-                    <span class="text-xl">🔮</span>
-                    <strong class="text-xs font-bold text-slate-900 dark:text-white">Cash Runway</strong>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Predictive engine</span>
-                </a>
-            </div>
-
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <a href="/dashboard" class="text-xs font-bold text-slate-700 dark:text-slate-300">Back to Dashboard</a>
-                <a href="/api/logout"
-                    class="px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors">Sign
-                    Out</a>
-            </div>
-        </div>
-    </div>
+    {{template "more-sheet" (layout "transactions" .)}}
 
     <!-- ─── Core Script ─────────────────────────────────────────────────────── -->
     
@@ -770,14 +695,14 @@
                 if (labelEl) labelEl.textContent = 'All Time';
                 if (periodLabel) periodLabel.textContent = 'All Recorded History';
                 if (allBtn) {
-                    allBtn.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-lg bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 text-white dark:text-slate-950 transition-colors cursor-pointer ml-1';
+                    allBtn.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-xl bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 text-white dark:text-slate-950 transition-colors cursor-pointer ml-1';
                 }
                 if (dateRangeEl) dateRangeEl.textContent = 'All dates included';
                 return;
             }
 
             if (allBtn) {
-                allBtn.className = 'text-[10px] font-bold px-2 py-0.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1';
+                allBtn.className = 'text-[10px] font-bold px-2 py-0.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1';
             }
 
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -1017,7 +942,7 @@
                                 ${esc(tx.note || meta.label)}
                             </p>
                             <div class="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 dark:text-slate-400 overflow-x-hidden leading-tight">
-                                <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                                     ${esc(meta.label)}
                                 </span>
                                 <span class="whitespace-nowrap">${fmtDate(tx.date)}</span>
@@ -1028,10 +953,10 @@
 
                         <div class="flex items-center justify-end shrink-0 pl-1 gap-1.5 sm:gap-2">
                             <div class="flex items-center gap-0.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button type="button" onclick="event.stopPropagation(); editTransaction('${tx.id}')" data-id="${tx.id}" class="btn-edit-transaction p-1.5 sm:p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit">
+                                <button type="button" onclick="event.stopPropagation(); editTransaction('${tx.id}')" data-id="${tx.id}" class="btn-edit-transaction p-1.5 sm:p-1 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit">
                                     <svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                                 </button>
-                                <button type="button" onclick="event.stopPropagation(); promptDeleteTransaction('${tx.id}')" data-id="${tx.id}" class="btn-delete-transaction p-1.5 sm:p-1 rounded-lg text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete">
+                                <button type="button" onclick="event.stopPropagation(); promptDeleteTransaction('${tx.id}')" data-id="${tx.id}" class="btn-delete-transaction p-1.5 sm:p-1 rounded-xl text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete">
                                     <svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                 </button>
                             </div>

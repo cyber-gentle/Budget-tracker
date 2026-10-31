@@ -83,3 +83,24 @@ h1, h2, h3, h4, .font-heading {
 .dark .goal-tint {
     color: var(--goal);
 }
+
+/* Small controls (icon buttons, inline actions) keep their look but get a
+   44px touch area; any Tailwind position class on the element still wins. */
+.tap-target {
+    position: relative;
+}
+.tap-target::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+}
+
+/* Money lines up in columns: equal-width digits across the app's content. */
+main,
+.fixed {
+    font-variant-numeric: tabular-nums;
+}

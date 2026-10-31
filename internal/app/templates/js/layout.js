@@ -315,6 +315,26 @@ function initMobileMoreSheet() {
             if (e.target === mobileMoreSheet) mobileMoreSheet.classList.add('hidden');
         });
     }
+
+    // Same tiles on every page: open the page's modal when it has one, else go to the dashboard's.
+    const btnSheetCategories = document.getElementById('btn-sheet-categories');
+    if (btnSheetCategories) {
+        btnSheetCategories.addEventListener('click', () => {
+            if (mobileMoreSheet) mobileMoreSheet.classList.add('hidden');
+            const catModal = document.getElementById('category-modal');
+            if (catModal) catModal.classList.remove('hidden');
+            else window.location.href = '/dashboard?action=categories';
+        });
+    }
+    const btnSheetProfile = document.getElementById('btn-sheet-profile');
+    const profModal = document.getElementById('profile-modal');
+    if (btnSheetProfile && profModal) {
+        btnSheetProfile.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (mobileMoreSheet) mobileMoreSheet.classList.add('hidden');
+            profModal.classList.remove('hidden');
+        });
+    }
 }
 
 // Only bind the shared sheet; pages with their own sheet handle it themselves.
