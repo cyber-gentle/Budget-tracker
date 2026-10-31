@@ -83,7 +83,7 @@
                     <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Total Saved</span>
                     <span id="summary-overall-pct" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">0%</span>
                 </div>
-                <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-saved">₦0.00</h3>
+                <p class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-saved">₦0.00</p>
                 <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
                     <div id="summary-progress-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
@@ -92,14 +92,14 @@
             <!-- Total Target -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
                 <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Total Target</span>
-                <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-target">₦0.00</h3>
+                <p class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-target">₦0.00</p>
                 <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">Across all savings pots</p>
             </div>
 
             <!-- Total Remaining -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
                 <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Still Needed</span>
-                <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-remaining">₦0.00</h3>
+                <p class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-remaining">₦0.00</p>
                 <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">Remaining to reach 100%</p>
             </div>
 
@@ -107,7 +107,7 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
                 <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Pots Status</span>
                 <div class="flex items-baseline gap-1.5 mt-1.5">
-                    <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white" id="summary-active-count">0</h3>
+                    <p class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white" id="summary-active-count">0</p>
                     <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">active</span>
                     <span class="text-xs text-slate-300 dark:text-slate-700">/</span>
                     <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400" id="summary-completed-count">0 reached</span>
@@ -120,13 +120,13 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
             <!-- Tabs -->
             <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full sm:w-auto">
-                <button type="button" onclick="setFilter('all')" id="filter-tab-all" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer">
+                <button type="button" onclick="setFilter('all')" id="filter-tab-all" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer">
                     All Pots
                 </button>
-                <button type="button" onclick="setFilter('in_progress')" id="filter-tab-in_progress" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+                <button type="button" onclick="setFilter('in_progress')" id="filter-tab-in_progress" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
                     In Progress
                 </button>
-                <button type="button" onclick="setFilter('completed')" id="filter-tab-completed" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+                <button type="button" onclick="setFilter('completed')" id="filter-tab-completed" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
                     Completed
                 </button>
             </div>
@@ -170,7 +170,7 @@
                     <span id="modal-emoji-preview" class="text-2xl">🎯</span>
                     <h2 id="modal-title" class="font-heading font-bold text-base text-slate-900 dark:text-white">Create Savings Pot</h2>
                 </div>
-                <button type="button" onclick="closeGoalModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                <button type="button" onclick="closeGoalModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -252,12 +252,12 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
                         +
                     </div>
                     <h2 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Deposit to <span id="deposit-goal-name"></span></h2>
                 </div>
-                <button type="button" onclick="closeDepositModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                <button type="button" onclick="closeDepositModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -281,10 +281,10 @@
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">Quick Add Amount</label>
                     <div class="grid grid-cols-4 gap-1.5" id="deposit-quick-chips">
-                        <button type="button" onclick="setDepositAmount(1000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">+1k</button>
-                        <button type="button" onclick="setDepositAmount(5000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">+5k</button>
-                        <button type="button" onclick="setDepositAmount(10000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">+10k</button>
-                        <button type="button" onclick="fillFullRemainingDeposit()" class="py-1 px-1.5 text-[11px] font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 transition-colors">Fill Pot</button>
+                        <button type="button" onclick="setDepositAmount(1000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-xl transition-colors bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">+1k</button>
+                        <button type="button" onclick="setDepositAmount(5000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-xl transition-colors bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">+5k</button>
+                        <button type="button" onclick="setDepositAmount(10000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-xl transition-colors bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">+10k</button>
+                        <button type="button" onclick="fillFullRemainingDeposit()" class="py-1 px-1.5 text-[11px] font-bold rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 transition-colors">Fill Pot</button>
                     </div>
                 </div>
 
@@ -322,12 +322,12 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+                    <div class="w-7 h-7 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
                         -
                     </div>
                     <h2 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Withdraw from <span id="withdraw-goal-name"></span></h2>
                 </div>
-                <button type="button" onclick="closeWithdrawModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                <button type="button" onclick="closeWithdrawModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -341,7 +341,7 @@
                         <span class="text-amber-800 dark:text-amber-300 block text-[10px] font-semibold">Available in Pot</span>
                         <span class="font-black text-amber-900 dark:text-amber-200 text-sm" id="withdraw-available-saved">₦0</span>
                     </div>
-                    <button type="button" onclick="withdrawAllAvailable()" class="px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg hover:bg-amber-50 transition-colors shadow-xs">
+                    <button type="button" onclick="withdrawAllAvailable()" class="px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-xl hover:bg-amber-50 transition-colors shadow-xs">
                         Withdraw All
                     </button>
                 </div>
@@ -386,7 +386,7 @@
                         <p class="text-[10px] text-slate-500 dark:text-slate-400">Transaction history for this pot</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeLedgerModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                <button type="button" onclick="closeLedgerModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -397,7 +397,7 @@
             </div>
 
             <div class="p-3 border-t border-slate-100 dark:border-slate-800 text-right shrink-0">
-                <button type="button" onclick="closeLedgerModal()" class="px-4 py-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Close</button>
+                <button type="button" onclick="closeLedgerModal()" class="px-4 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">Close</button>
             </div>
         </div>
     </div>
@@ -632,7 +632,7 @@
                                         ${g.emoji || '🎯'}
                                     </div>
                                     <div class="min-w-0">
-                                        <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">${esc(g.name)}</h3>
+                                        <h2 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">${esc(g.name)}</h2>
                                         <div class="flex items-center gap-1.5 mt-0.5">
                                             <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">${esc(g.category || 'Savings')}</span>
                                             <span class="text-slate-300 dark:text-slate-700">•</span>
@@ -643,10 +643,10 @@
 
                                 <!-- Action Buttons: Edit / Delete -->
                                 <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" onclick="openEditModal(${g.id})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit goal">
+                                    <button type="button" onclick="openEditModal(${g.id})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit goal">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                                     </button>
-                                    <button type="button" onclick="deleteGoal(${g.id}, ${jsArg(g.name)})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete goal">
+                                    <button type="button" onclick="deleteGoal(${g.id}, ${jsArg(g.name)})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete goal">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                     </button>
                                 </div>
@@ -678,7 +678,7 @@
                             <!-- Remaining Notice -->
                             <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
                                 <span>${isCompleted ? 'Target achieved! 🎉' : `${g.remaining_fmt || fmtMoney(g.remaining)} remaining`}</span>
-                                <button type="button" onclick="openLedgerModal(${g.id})" class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+                                <button type="button" onclick="openLedgerModal(${g.id})" class="tap-target text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
                                     View Activity
                                 </button>
                             </div>
@@ -690,7 +690,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                                 <span>Deposit</span>
                             </button>
-                            <button type="button" onclick="openWithdrawModal(${g.id})" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-98 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                            <button type="button" onclick="openWithdrawModal(${g.id})" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 active:scale-98 rounded-xl text-xs font-bold transition-all cursor-pointer bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
                                 <span>Withdraw</span>
                             </button>
@@ -706,9 +706,9 @@
             ['all', 'in_progress', 'completed'].forEach(tab => {
                 const el = document.getElementById(`filter-tab-${tab}`);
                 if (tab === filter) {
-                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer';
+                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer';
                 } else {
-                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer';
+                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer';
                 }
             });
             renderGoals();
@@ -966,7 +966,7 @@
                     return `
                         <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-3">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-lg ${iconColor} flex items-center justify-center font-bold text-xs shrink-0">
+                                <div class="w-7 h-7 rounded-xl ${iconColor} flex items-center justify-center font-bold text-xs shrink-0">
                                     ${prefix}
                                 </div>
                                 <div class="min-w-0">

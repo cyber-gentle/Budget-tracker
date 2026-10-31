@@ -52,7 +52,7 @@
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-                <h1 class="font-heading text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Debts & IOUs</h1>
+                <h1 class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Debts & IOUs</h1>
                 <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">Track money people owe you, debts you owe, and split shared group expenses.</p>
             </div>
             <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
@@ -73,7 +73,7 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5">
                     <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 truncate pr-1">People Owing You</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                         <svg class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
                     </span>
                 </div>
@@ -85,7 +85,7 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5">
                     <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-400 truncate pr-1">You Owe (Debts)</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center shrink-0">
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center shrink-0">
                         <svg class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
                     </span>
                 </div>
@@ -97,7 +97,7 @@
             <div class="col-span-2 md:col-span-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5">
                     <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate pr-1">Net Position</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
                         <svg class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                     </span>
                 </div>
@@ -250,13 +250,13 @@
 
     <!-- Add / Edit Debt Modal -->
     <div id="debt-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-2.5 sm:p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto transition-colors">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto transition-colors">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h3 id="debt-modal-title" class="font-heading font-bold text-base text-slate-900 dark:text-white">Add Debt or Loan</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Track a new amount owed or lent</p>
                 </div>
-                <button type="button" id="debt-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <button type="button" id="debt-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -270,10 +270,10 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Type</label>
                     <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold">
-                        <button type="button" id="form-type-owing-me" class="py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center">
+                        <button type="button" id="form-type-owing-me" class="py-2 px-3 rounded-xl bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center">
                             Someone Owes Me (Loan)
                         </button>
-                        <button type="button" id="form-type-i-owe" class="py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 transition-all cursor-pointer text-center">
+                        <button type="button" id="form-type-i-owe" class="py-2 px-3 rounded-xl text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 transition-all cursor-pointer text-center">
                             I Owe Someone (Debt)
                         </button>
                     </div>
@@ -318,13 +318,13 @@
 
     <!-- Record Payment / Settle Modal -->
     <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-2.5 sm:p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-md shadow-2xl transition-colors">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-md shadow-2xl transition-colors">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Record Payment</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="payment-modal-subtitle">Log a repayment</p>
                 </div>
-                <button type="button" id="payment-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <button type="button" id="payment-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -396,7 +396,7 @@
 
     <!-- Split Expense Modal -->
     <div id="split-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-2.5 sm:p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto transition-colors">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto transition-colors">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -405,7 +405,7 @@
                     </h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Divide a group bill and generate tracked IOUs</p>
                 </div>
-                <button type="button" id="split-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <button type="button" id="split-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -467,13 +467,13 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Split Method</label>
                     <div class="grid grid-cols-3 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold text-center">
-                        <button type="button" data-mode="equal" class="split-mode-btn py-1.5 px-2 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer">
+                        <button type="button" data-mode="equal" class="split-mode-btn py-1.5 px-2 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer">
                             Equal (÷)
                         </button>
-                        <button type="button" data-mode="exact" class="split-mode-btn py-1.5 px-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                        <button type="button" data-mode="exact" class="split-mode-btn py-1.5 px-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
                             Exact ($)
                         </button>
-                        <button type="button" data-mode="percent" class="split-mode-btn py-1.5 px-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                        <button type="button" data-mode="percent" class="split-mode-btn py-1.5 px-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
                             Percent (%)
                         </button>
                     </div>
@@ -528,7 +528,7 @@
 
     <!-- Settle Up Modal -->
     <div id="settle-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-2.5 sm:p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto transition-colors">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-md shadow-2xl max-h-[92vh] overflow-y-auto transition-colors">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -537,7 +537,7 @@
                     </h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="settle-modal-desc">Clear balances and log transaction</p>
                 </div>
-                <button type="button" id="settle-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <button type="button" id="settle-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -810,7 +810,7 @@
                                         ${escapeHtml(initials)}
                                     </div>
                                     <div>
-                                        <h4 class="font-heading font-bold text-sm text-slate-900 dark:text-white leading-tight">${escapeHtml(d.person_name)}</h4>
+                                        <h2 class="font-heading font-bold text-sm text-slate-900 dark:text-white leading-tight">${escapeHtml(d.person_name)}</h2>
                                         <span class="inline-flex items-center gap-1 text-[11px] font-semibold ${isOwingMe ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'} mt-0.5">
                                             <span>${isOwingMe ? '↑ Owes You' : '↓ You Owe'}</span>
                                         </span>
@@ -872,10 +872,10 @@
                                 `}
                             </div>
                             <div class="flex items-center gap-1">
-                                <button type="button" onclick="openEditModal(${d.id})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer" title="Edit">
+                                <button type="button" onclick="openEditModal(${d.id})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer" title="Edit">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                                 </button>
-                                <button type="button" onclick="openDeleteModal(${d.id})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer" title="Delete">
+                                <button type="button" onclick="openDeleteModal(${d.id})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer" title="Delete">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                 </button>
                             </div>
@@ -901,11 +901,11 @@
         function setFormType(type) {
             debtFormType.value = type;
             if (type === 'owing_me') {
-                typeOwingMeBtn.className = 'py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center';
-                typeIOweBtn.className = 'py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 transition-all cursor-pointer text-center';
+                typeOwingMeBtn.className = 'py-2 px-3 rounded-xl bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center';
+                typeIOweBtn.className = 'py-2 px-3 rounded-xl text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 transition-all cursor-pointer text-center';
             } else {
-                typeIOweBtn.className = 'py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-rose-700 dark:text-rose-400 shadow-xs transition-all cursor-pointer text-center';
-                typeOwingMeBtn.className = 'py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all cursor-pointer text-center';
+                typeIOweBtn.className = 'py-2 px-3 rounded-xl bg-white dark:bg-slate-700 text-rose-700 dark:text-rose-400 shadow-xs transition-all cursor-pointer text-center';
+                typeOwingMeBtn.className = 'py-2 px-3 rounded-xl text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all cursor-pointer text-center';
             }
         }
 
@@ -1202,26 +1202,26 @@
 
                 return `
                 <div class="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-slate-800/60 p-2 sm:p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 min-w-0">
-                    <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-xs font-bold shrink-0">
+                    <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-xs font-bold shrink-0">
                         ${isUser ? '👤' : (idx + 1)}
                     </div>
                     <div class="flex-1 min-w-0">
                         ${isUser ? 
                             `<span class="text-xs font-bold text-slate-800 dark:text-slate-100 px-1 sm:px-2 py-1 block truncate">You (Your Share)</span>` : 
-                            `<input type="text" placeholder="Friend's Name" value="${escapeHtml(p.name)}" oninput="updateParticipantName(${idx}, this.value)" required class="w-full px-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">`
+                            `<input type="text" placeholder="Friend's Name" value="${escapeHtml(p.name)}" oninput="updateParticipantName(${idx}, this.value)" required class="w-full px-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">`
                         }
                     </div>
                     <div class="w-22 sm:w-28 shrink-0 relative">
                         <input type="number" step="any" min="0" value="${p.share || 0}" 
                             ${currentSplitMode === 'equal' ? 'readonly' : ''}
                             oninput="updateParticipantShare(${idx}, this.value)"
-                            class="w-full pl-4 sm:pl-5 pr-1.5 sm:pr-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 text-right ${currentSplitMode === 'equal' ? 'opacity-80 bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : ''}">
+                            class="w-full pl-4 sm:pl-5 pr-1.5 sm:pr-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 text-right ${currentSplitMode === 'equal' ? 'opacity-80 bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : ''}">
                         <span class="absolute left-1.5 top-1 text-[10px] text-slate-500 dark:text-slate-400 font-bold pointer-events-none">
                             ${currentSplitMode === 'percent' ? '%' : currentCurrency}
                         </span>
                     </div>
                     ${canRemove ? `
-                        <button type="button" onclick="removeParticipant(${idx})" class="p-1 text-slate-500 dark:text-slate-400 hover:text-rose-700 rounded-lg transition-colors cursor-pointer shrink-0" title="Remove">
+                        <button type="button" onclick="removeParticipant(${idx})" class="p-1 text-slate-500 dark:text-slate-400 hover:text-rose-700 rounded-xl transition-colors cursor-pointer shrink-0" title="Remove">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
                     ` : `<div class="w-4 shrink-0"></div>`}
@@ -1491,8 +1491,8 @@
                                         <div class="flex items-center gap-2 shrink-0">
                                             <span class="font-bold text-slate-900 dark:text-white">${fmtMoney(p.share_amount)}</span>
                                             ${p.status === 'settled' ? 
-                                                `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300">Settled</span>` : 
-                                                `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300">Pending</span>`
+                                                `<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300">Settled</span>` : 
+                                                `<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300">Pending</span>`
                                             }
                                         </div>
                                     </div>
@@ -1600,17 +1600,17 @@
 
                 let netBadge = '';
                 if (net > 0.005) {
-                    netBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                    netBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
                         <span>Owes you ${fmtMoney(net)}</span>
                     </span>`;
                 } else if (net < -0.005) {
-                    netBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 flex items-center gap-1">
+                    netBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-xl bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 flex items-center gap-1">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
                         <span>You owe ${fmtMoney(-net)}</span>
                     </span>`;
                 } else {
-                    netBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    netBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                         Squared Up (${fmtMoney(0)})
                     </span>`;
                 }
