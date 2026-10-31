@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Savings Goals & Virtual Pots — Spendly</title>
     
     <link rel="icon" type="image/svg+xml" href="{{asset "/static/assets/imgs/favicon.svg"}}">
@@ -56,7 +56,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
                         </svg>
@@ -68,7 +68,7 @@
                 </div>
             </div>
             <div>
-                <button type="button" onclick="openCreateModal()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
+                <button type="button" onclick="openCreateModal()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 active:scale-98 text-white dark:text-slate-950 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                     <span>Create Savings Pot</span>
                 </button>
@@ -81,9 +81,9 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Total Saved</span>
-                    <span id="summary-overall-pct" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">0%</span>
+                    <span id="summary-overall-pct" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">0%</span>
                 </div>
-                <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-saved">₦0.00</h3>
+                <p class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-saved">₦0.00</p>
                 <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
                     <div id="summary-progress-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
@@ -92,27 +92,27 @@
             <!-- Total Target -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
                 <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Total Target</span>
-                <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-target">₦0.00</h3>
-                <p class="text-[10px] sm:text-[11px] text-slate-400 mt-2 truncate">Across all savings pots</p>
+                <p class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-target">₦0.00</p>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">Across all savings pots</p>
             </div>
 
             <!-- Total Remaining -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
                 <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Still Needed</span>
-                <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-remaining">₦0.00</h3>
-                <p class="text-[10px] sm:text-[11px] text-slate-400 mt-2 truncate">Remaining to reach 100%</p>
+                <p class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5 truncate" id="summary-total-remaining">₦0.00</p>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">Remaining to reach 100%</p>
             </div>
 
             <!-- Active / Completed -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
                 <span class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">Pots Status</span>
                 <div class="flex items-baseline gap-1.5 mt-1.5">
-                    <h3 class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white" id="summary-active-count">0</h3>
-                    <span class="text-xs text-slate-400 font-medium">active</span>
+                    <p class="font-heading text-lg sm:text-2xl font-black text-slate-900 dark:text-white" id="summary-active-count">0</p>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">active</span>
                     <span class="text-xs text-slate-300 dark:text-slate-700">/</span>
-                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400" id="summary-completed-count">0 reached</span>
+                    <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400" id="summary-completed-count">0 reached</span>
                 </div>
-                <p class="text-[10px] sm:text-[11px] text-slate-400 mt-2 truncate" id="summary-total-count">0 total pots</p>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate" id="summary-total-count">0 total pots</p>
             </div>
         </div>
 
@@ -120,20 +120,20 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
             <!-- Tabs -->
             <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full sm:w-auto">
-                <button type="button" onclick="setFilter('all')" id="filter-tab-all" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer">
+                <button type="button" onclick="setFilter('all')" id="filter-tab-all" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer">
                     All Pots
                 </button>
-                <button type="button" onclick="setFilter('in_progress')" id="filter-tab-in_progress" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+                <button type="button" onclick="setFilter('in_progress')" id="filter-tab-in_progress" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
                     In Progress
                 </button>
-                <button type="button" onclick="setFilter('completed')" id="filter-tab-completed" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+                <button type="button" onclick="setFilter('completed')" id="filter-tab-completed" class="flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
                     Completed
                 </button>
             </div>
 
             <!-- Search input -->
             <div class="relative w-full sm:w-64">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </span>
                 <input type="text" id="search-input" placeholder="Search goals or pots..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
@@ -143,19 +143,19 @@
         <!-- Goals Grid -->
         <div id="goals-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             <!-- Loading placeholder -->
-            <div class="col-span-full py-16 text-center text-slate-400 text-xs">
+            <div class="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 text-xs">
                 Loading savings goals...
             </div>
         </div>
 
         <!-- Empty State (Hidden by default) -->
         <div id="goals-empty" class="hidden text-center py-16 px-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
-            <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
             </div>
             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">No savings goals found</h3>
-            <p class="text-xs text-slate-400 max-w-sm mx-auto mt-1">Start locking money away into dedicated pots for emergencies, a dream vacation, new tech, or rainy days.</p>
-            <button type="button" onclick="openCreateModal()" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
+            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">Start locking money away into dedicated pots for emergencies, a dream vacation, new tech, or rainy days.</p>
+            <button type="button" onclick="openCreateModal()" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
                 + Create your first savings goal
             </button>
         </div>
@@ -170,7 +170,7 @@
                     <span id="modal-emoji-preview" class="text-2xl">🎯</span>
                     <h2 id="modal-title" class="font-heading font-bold text-base text-slate-900 dark:text-white">Create Savings Pot</h2>
                 </div>
-                <button type="button" onclick="closeGoalModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                <button type="button" onclick="closeGoalModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -241,7 +241,7 @@
 
                 <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
                     <button type="button" onclick="closeGoalModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-colors cursor-pointer">Save Pot</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 rounded-xl shadow-xs transition-colors cursor-pointer">Save Pot</button>
                 </div>
             </form>
         </div>
@@ -252,12 +252,12 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
                         +
                     </div>
                     <h2 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Deposit to <span id="deposit-goal-name"></span></h2>
                 </div>
-                <button type="button" onclick="closeDepositModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                <button type="button" onclick="closeDepositModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -268,23 +268,23 @@
                 <!-- Current Goal Status Snapshot -->
                 <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                     <div>
-                        <span class="text-slate-400 block text-[10px]">Saved so far</span>
+                        <span class="text-slate-500 dark:text-slate-400 block text-[10px]">Saved so far</span>
                         <span class="font-bold text-slate-800 dark:text-white" id="deposit-current-saved">₦0</span>
                     </div>
                     <div class="text-right">
-                        <span class="text-slate-400 block text-[10px]">Remaining</span>
-                        <span class="font-bold text-emerald-600 dark:text-emerald-400" id="deposit-remaining">₦0</span>
+                        <span class="text-slate-500 dark:text-slate-400 block text-[10px]">Remaining</span>
+                        <span class="font-bold text-emerald-700 dark:text-emerald-400" id="deposit-remaining">₦0</span>
                     </div>
                 </div>
 
                 <!-- Quick Amount Chips -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">Quick Add Amount</label>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">Quick Add Amount</label>
                     <div class="grid grid-cols-4 gap-1.5" id="deposit-quick-chips">
-                        <button type="button" onclick="setDepositAmount(1000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">+1k</button>
-                        <button type="button" onclick="setDepositAmount(5000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">+5k</button>
-                        <button type="button" onclick="setDepositAmount(10000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">+10k</button>
-                        <button type="button" onclick="fillFullRemainingDeposit()" class="py-1 px-1.5 text-[11px] font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors">Fill Pot</button>
+                        <button type="button" onclick="setDepositAmount(1000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-xl transition-colors bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">+1k</button>
+                        <button type="button" onclick="setDepositAmount(5000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-xl transition-colors bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">+5k</button>
+                        <button type="button" onclick="setDepositAmount(10000)" class="py-1 px-1.5 text-[11px] font-semibold rounded-xl transition-colors bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">+10k</button>
+                        <button type="button" onclick="fillFullRemainingDeposit()" class="py-1 px-1.5 text-[11px] font-bold rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 transition-colors">Fill Pot</button>
                     </div>
                 </div>
 
@@ -302,16 +302,16 @@
 
                 <!-- Log Transaction Toggle -->
                 <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
-                    <input type="checkbox" id="deposit-log-tx" checked class="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                    <input type="checkbox" id="deposit-log-tx" checked class="mt-0.5 w-4 h-4 rounded text-emerald-700 dark:text-emerald-400 focus:ring-emerald-500 cursor-pointer">
                     <label for="deposit-log-tx" class="text-xs text-slate-600 dark:text-slate-300 select-none cursor-pointer">
                         <span class="font-bold block text-slate-800 dark:text-white">Deduct from wallet balance</span>
-                        <span class="text-[10px] text-slate-400">Records an expense in your main budget transactions</span>
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Records an expense in your main budget transactions</span>
                     </label>
                 </div>
 
                 <div class="pt-2 flex items-center justify-end gap-2">
                     <button type="button" onclick="closeDepositModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-colors cursor-pointer">Confirm Deposit</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-bold bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 rounded-xl shadow-xs transition-colors cursor-pointer">Confirm Deposit</button>
                 </div>
             </form>
         </div>
@@ -322,12 +322,12 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+                    <div class="w-7 h-7 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
                         -
                     </div>
                     <h2 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Withdraw from <span id="withdraw-goal-name"></span></h2>
                 </div>
-                <button type="button" onclick="closeWithdrawModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                <button type="button" onclick="closeWithdrawModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -341,7 +341,7 @@
                         <span class="text-amber-800 dark:text-amber-300 block text-[10px] font-semibold">Available in Pot</span>
                         <span class="font-black text-amber-900 dark:text-amber-200 text-sm" id="withdraw-available-saved">₦0</span>
                     </div>
-                    <button type="button" onclick="withdrawAllAvailable()" class="px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg hover:bg-amber-50 transition-colors shadow-xs">
+                    <button type="button" onclick="withdrawAllAvailable()" class="px-2.5 py-1 text-[11px] font-bold bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-xl hover:bg-amber-50 transition-colors shadow-xs">
                         Withdraw All
                     </button>
                 </div>
@@ -360,10 +360,10 @@
 
                 <!-- Log Transaction Toggle -->
                 <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
-                    <input type="checkbox" id="withdraw-log-tx" checked class="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer">
+                    <input type="checkbox" id="withdraw-log-tx" checked class="mt-0.5 w-4 h-4 rounded text-amber-700 dark:text-amber-400 focus:ring-amber-500 cursor-pointer">
                     <label for="withdraw-log-tx" class="text-xs text-slate-600 dark:text-slate-300 select-none cursor-pointer">
                         <span class="font-bold block text-slate-800 dark:text-white">Return to wallet balance</span>
-                        <span class="text-[10px] text-slate-400">Records an income into your main budget balance</span>
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Records an income into your main budget balance</span>
                     </label>
                 </div>
 
@@ -383,21 +383,21 @@
                     <span id="ledger-emoji" class="text-xl">🎯</span>
                     <div>
                         <h2 class="font-heading font-bold text-sm text-slate-900 dark:text-white" id="ledger-goal-name">Vault Activity Ledger</h2>
-                        <p class="text-[10px] text-slate-400">Transaction history for this pot</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Transaction history for this pot</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeLedgerModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                <button type="button" onclick="closeLedgerModal()" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
 
             <!-- Ledger Content -->
             <div class="p-5 overflow-y-auto flex-1 space-y-3" id="ledger-list">
-                <div class="text-center py-8 text-xs text-slate-400">Loading ledger...</div>
+                <div class="text-center py-8 text-xs text-slate-500 dark:text-slate-400">Loading ledger...</div>
             </div>
 
             <div class="p-3 border-t border-slate-100 dark:border-slate-800 text-right shrink-0">
-                <button type="button" onclick="closeLedgerModal()" class="px-4 py-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Close</button>
+                <button type="button" onclick="closeLedgerModal()" class="px-4 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">Close</button>
             </div>
         </div>
     </div>
@@ -481,7 +481,7 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const bgClass = type === 'success' 
-                ? 'bg-slate-900 dark:bg-emerald-600 text-white' 
+                ? 'bg-slate-900 dark:bg-emerald-400 text-white dark:text-slate-950' 
                 : 'bg-rose-600 text-white';
             toast.className = `${bgClass} pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 transition-all transform duration-200 translate-y-2 opacity-0`;
             toast.innerHTML = `<span>${esc(message)}</span>`;
@@ -558,7 +558,7 @@
             } catch (err) {
                 console.error(err);
                 document.getElementById('goals-container').innerHTML = `
-                    <div class="col-span-full py-12 text-center text-rose-500 text-xs">
+                    <div class="col-span-full py-12 text-center text-rose-700 dark:text-rose-400 text-xs">
                         Failed to load savings goals. Please refresh the page.
                     </div>
                 `;
@@ -607,16 +607,16 @@
                 let daysBadge = '';
                 if (g.days_left !== undefined && g.days_left !== null) {
                     if (g.days_left < 0) {
-                        daysBadge = `<span class="text-[10px] text-rose-500 font-semibold">Target passed (${Math.abs(g.days_left)}d ago)</span>`;
+                        daysBadge = `<span class="text-[10px] text-rose-700 dark:text-rose-400 font-semibold">Target passed (${Math.abs(g.days_left)}d ago)</span>`;
                     } else if (g.days_left === 0) {
-                        daysBadge = `<span class="text-[10px] text-amber-500 font-bold">Target is Today!</span>`;
+                        daysBadge = `<span class="text-[10px] text-amber-700 dark:text-amber-400 font-bold">Target is Today!</span>`;
                     } else if (g.days_left <= 14) {
-                        daysBadge = `<span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">${g.days_left} days left</span>`;
+                        daysBadge = `<span class="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">${g.days_left} days left</span>`;
                     } else {
-                        daysBadge = `<span class="text-[10px] text-slate-400">${g.days_left} days left</span>`;
+                        daysBadge = `<span class="text-[10px] text-slate-500 dark:text-slate-400">${g.days_left} days left</span>`;
                     }
                 } else {
-                    daysBadge = `<span class="text-[10px] text-slate-400">No deadline</span>`;
+                    daysBadge = `<span class="text-[10px] text-slate-500 dark:text-slate-400">No deadline</span>`;
                 }
 
                 const goalColor = g.color || '#10B981';
@@ -632,9 +632,9 @@
                                         ${g.emoji || '🎯'}
                                     </div>
                                     <div class="min-w-0">
-                                        <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">${esc(g.name)}</h3>
+                                        <h2 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">${esc(g.name)}</h2>
                                         <div class="flex items-center gap-1.5 mt-0.5">
-                                            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">${esc(g.category || 'Savings')}</span>
+                                            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">${esc(g.category || 'Savings')}</span>
                                             <span class="text-slate-300 dark:text-slate-700">•</span>
                                             ${daysBadge}
                                         </div>
@@ -643,10 +643,10 @@
 
                                 <!-- Action Buttons: Edit / Delete -->
                                 <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" onclick="openEditModal(${g.id})" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit goal">
+                                    <button type="button" onclick="openEditModal(${g.id})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit goal">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                                     </button>
-                                    <button type="button" onclick="deleteGoal(${g.id}, ${jsArg(g.name)})" class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete goal">
+                                    <button type="button" onclick="deleteGoal(${g.id}, ${jsArg(g.name)})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Delete goal">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                     </button>
                                 </div>
@@ -655,7 +655,7 @@
                             <!-- Status Badge -->
                             <div class="mt-3.5 flex items-center justify-between">
                                 ${statusBadge}
-                                <span class="text-xs font-black" style="color: ${goalColor}">${g.percentage}%</span>
+                                <span class="goal-tint text-xs font-black" style="--goal: ${goalColor}">${g.percentage}%</span>
                             </div>
 
                             <!-- Progress Bar -->
@@ -666,19 +666,19 @@
                             <!-- Financial Numbers -->
                             <div class="mt-3 flex items-baseline justify-between text-xs">
                                 <div>
-                                    <span class="text-[10px] text-slate-400 block font-medium">Saved</span>
+                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Saved</span>
                                     <span class="font-heading font-extrabold text-slate-900 dark:text-white text-sm">${g.saved_fmt || fmtMoney(g.saved_amount)}</span>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-[10px] text-slate-400 block font-medium">Target</span>
+                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Target</span>
                                     <span class="font-heading font-semibold text-slate-600 dark:text-slate-300 text-sm">${g.target_fmt || fmtMoney(g.target_amount)}</span>
                                 </div>
                             </div>
 
                             <!-- Remaining Notice -->
-                            <div class="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
+                            <div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
                                 <span>${isCompleted ? 'Target achieved! 🎉' : `${g.remaining_fmt || fmtMoney(g.remaining)} remaining`}</span>
-                                <button type="button" onclick="openLedgerModal(${g.id})" class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+                                <button type="button" onclick="openLedgerModal(${g.id})" class="tap-target text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
                                     View Activity
                                 </button>
                             </div>
@@ -686,11 +686,11 @@
 
                         <!-- Card Action Buttons (Deposit / Withdraw) -->
                         <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 gap-2">
-                            <button type="button" onclick="openDepositModal(${g.id})" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
+                            <button type="button" onclick="openDepositModal(${g.id})" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 active:scale-98 text-white dark:text-slate-950 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                                 <span>Deposit</span>
                             </button>
-                            <button type="button" onclick="openWithdrawModal(${g.id})" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-98 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                            <button type="button" onclick="openWithdrawModal(${g.id})" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 active:scale-98 rounded-xl text-xs font-bold transition-all cursor-pointer bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
                                 <span>Withdraw</span>
                             </button>
@@ -706,9 +706,9 @@
             ['all', 'in_progress', 'completed'].forEach(tab => {
                 const el = document.getElementById(`filter-tab-${tab}`);
                 if (tab === filter) {
-                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer';
+                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition-all cursor-pointer';
                 } else {
-                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer';
+                    el.className = 'flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer';
                 }
             });
             renderGoals();
@@ -934,7 +934,7 @@
         // Modal Handlers: Activity Ledger
         async function openLedgerModal(id) {
             const listEl = document.getElementById('ledger-list');
-            listEl.innerHTML = `<div class="text-center py-8 text-xs text-slate-400">Loading ledger...</div>`;
+            listEl.innerHTML = `<div class="text-center py-8 text-xs text-slate-500 dark:text-slate-400">Loading ledger...</div>`;
             document.getElementById('ledger-modal').classList.remove('hidden');
 
             try {
@@ -949,7 +949,7 @@
 
                 if (contributions.length === 0) {
                     listEl.innerHTML = `
-                        <div class="text-center py-10 text-xs text-slate-400">
+                        <div class="text-center py-10 text-xs text-slate-500 dark:text-slate-400">
                             <p>No contributions recorded yet for this pot.</p>
                             <p class="text-[10px] mt-1">Make a deposit to see your savings history here.</p>
                         </div>
@@ -959,19 +959,19 @@
 
                 listEl.innerHTML = contributions.map(c => {
                     const isDeposit = c.type === 'deposit';
-                    const iconColor = isDeposit ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400';
-                    const amountColor = isDeposit ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
+                    const iconColor = isDeposit ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400';
+                    const amountColor = isDeposit ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400';
                     const prefix = isDeposit ? '+' : '-';
 
                     return `
                         <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-3">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-lg ${iconColor} flex items-center justify-center font-bold text-xs shrink-0">
+                                <div class="w-7 h-7 rounded-xl ${iconColor} flex items-center justify-center font-bold text-xs shrink-0">
                                     ${prefix}
                                 </div>
                                 <div class="min-w-0">
                                     <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate capitalize">${esc(c.note || (isDeposit ? 'Deposit' : 'Withdrawal'))}</h4>
-                                    <p class="text-[10px] text-slate-400">${c.date_fmt}</p>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400">${c.date_fmt}</p>
                                 </div>
                             </div>
                             <span class="font-heading font-black text-xs sm:text-sm ${amountColor} shrink-0">
@@ -982,7 +982,7 @@
                 }).join('');
 
             } catch (err) {
-                listEl.innerHTML = `<div class="text-center py-6 text-xs text-rose-500">Failed to load ledger history.</div>`;
+                listEl.innerHTML = `<div class="text-center py-6 text-xs text-rose-700 dark:text-rose-400">Failed to load ledger history.</div>`;
             }
         }
 

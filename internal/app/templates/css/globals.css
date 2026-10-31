@@ -76,3 +76,78 @@ h1, h2, h3, h4, .font-heading {
 .toast-animate {
     animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+/* Text in a user-chosen goal colour: darkened in light mode to keep AA contrast on white. */
+.goal-tint {
+    color: color-mix(in srgb, var(--goal) 55%, #000);
+}
+.dark .goal-tint {
+    color: var(--goal);
+}
+
+/* Small controls (icon buttons, inline actions) keep their look but get a
+   44px touch area; any Tailwind position class on the element still wins. */
+.tap-target {
+    position: relative;
+}
+.tap-target::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+}
+
+/* Money lines up in columns: equal-width digits across the app's content. */
+main,
+.fixed {
+    font-variant-numeric: tabular-nums;
+}
+
+/* iPhone home bar: the phone bottom nav grows by its height, and the page,
+   floating buttons and More sheet move up to clear it (0px elsewhere). */
+:root {
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+.bottom-nav {
+    height: calc(4rem + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+}
+#mobile-more-sheet > div {
+    padding-bottom: calc(1.25rem + var(--safe-bottom));
+}
+@media (max-width: 1023px) {
+    body {
+        padding-bottom: var(--safe-bottom);
+    }
+    .above-bottom-nav {
+        margin-bottom: var(--safe-bottom);
+    }
+}
+
+/* Forecast sliders: a 44px touch area around the same thin track. */
+.range-slider {
+    height: 44px;
+    background: transparent;
+}
+.range-slider::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 12px;
+    background: #E2E8F0;
+}
+.range-slider::-moz-range-track {
+    height: 8px;
+    border-radius: 12px;
+    background: #E2E8F0;
+}
+/* Kept as separate rules: a browser drops a whole rule with another engine's prefix. */
+.dark .range-slider::-webkit-slider-runnable-track {
+    background: #334155;
+}
+.dark .range-slider::-moz-range-track {
+    background: #334155;
+}
+.range-slider::-webkit-slider-thumb {
+    margin-top: -5px; /* centre the 18px thumb on the 8px track */
+}

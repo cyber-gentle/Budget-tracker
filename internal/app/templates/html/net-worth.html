@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Net Worth & Wealth Tracker — Spendly</title>
     
     <link rel="icon" type="image/svg+xml" href="{{asset "/static/assets/imgs/favicon.svg"}}">
@@ -57,7 +57,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- Grand Net Worth Hero Card -->
-            <div class="lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800">
+            <div class="lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-800">
                 <div class="relative z-10 flex flex-col justify-between h-full space-y-6">
                     <div>
                         <div class="flex items-center justify-between gap-2">
@@ -74,7 +74,7 @@
                                 {{.Currency}}0.00
                             </h1>
                         </div>
-                        <p class="text-xs text-slate-400 mt-2">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
                             Sum of all liquid accounts, savings pots, loans owed to you, minus total debts and commitments.
                         </p>
                     </div>
@@ -82,15 +82,15 @@
                     <!-- Mini KPI Badges Row -->
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-800/80">
                         <div class="bg-white/5 dark:bg-white/5 rounded-2xl p-3 border border-white/10">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Assets</span>
+                            <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Total Assets</span>
                             <span id="stat-total-assets" class="text-base sm:text-lg font-extrabold text-emerald-400 mt-0.5 block">+{{.Currency}}0.00</span>
                         </div>
                         <div class="bg-white/5 dark:bg-white/5 rounded-2xl p-3 border border-white/10">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Liabilities</span>
+                            <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Total Liabilities</span>
                             <span id="stat-total-liabilities" class="text-base sm:text-lg font-extrabold text-rose-400 mt-0.5 block">-{{.Currency}}0.00</span>
                         </div>
                         <div class="col-span-2 sm:col-span-1 bg-white/5 dark:bg-white/5 rounded-2xl p-3 border border-white/10">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 block">Debt-to-Asset</span>
+                            <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Debt-to-Asset</span>
                             <span id="stat-debt-ratio" class="text-base sm:text-lg font-extrabold text-slate-200 mt-0.5 block">0.0%</span>
                         </div>
                     </div>
@@ -101,10 +101,10 @@
             </div>
 
             <!-- Financial Health Score Card -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-7 shadow-sm flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Financial Health Score</h2>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Financial Health Score</h2>
                         <span id="badge-health-rating" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                             Exceptional
                         </span>
@@ -115,14 +115,14 @@
                         <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 flex items-center justify-center shadow-md shadow-emerald-500/10">
                             <div class="w-full h-full bg-white dark:bg-slate-900 rounded-[14px] flex flex-col items-center justify-center">
                                 <span id="health-score-val" class="text-2xl font-heading font-extrabold text-slate-900 dark:text-white">0</span>
-                                <span class="text-[9px] uppercase font-bold text-slate-400">/ 100</span>
+                                <span class="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400">/ 100</span>
                             </div>
                         </div>
                         <div class="flex-1 space-y-1">
                             <p id="health-score-desc" class="text-xs font-semibold text-slate-700 dark:text-slate-200">
                                 Solid financial stability with controlled debt and adequate liquidity runway.
                             </p>
-                            <span id="runway-text" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold block">
+                            <span id="runway-text" class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold block">
                                 🛡️ 0.0 mo emergency runway
                             </span>
                         </div>
@@ -163,20 +163,20 @@
         </div>
 
         <!-- Wealth Trajectory & Growth Chart -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-sm">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 shadow-sm">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                 <div>
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Wealth Trajectory & Growth</h2>
-                    <p class="text-xs text-slate-400">Assets vs. Liabilities trend and net capital trajectory over time</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Assets vs. Liabilities trend and net capital trajectory over time</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold mr-2">
+                    <span class="inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-semibold mr-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Assets
                     </span>
-                    <span class="inline-flex items-center gap-1.5 text-xs text-rose-500 font-semibold mr-2">
+                    <span class="inline-flex items-center gap-1.5 text-xs text-rose-700 dark:text-rose-400 font-semibold mr-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Liabilities
                     </span>
-                    <span class="inline-flex items-center gap-1.5 text-xs text-indigo-500 font-semibold">
+                    <span class="inline-flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
                         <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Net Worth
                     </span>
                 </div>
@@ -192,18 +192,18 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             <!-- Left: Assets Ledger -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-sm flex flex-col">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 shadow-sm flex flex-col">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
                             🏛️
                         </div>
                         <div>
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white">Assets Breakdown</h3>
-                            <p class="text-[11px] text-slate-400">Accounts, savings goals, receivables & custom holdings</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Accounts, savings goals, receivables & custom holdings</p>
                         </div>
                     </div>
-                    <button type="button" id="btn-add-asset" class="px-2.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1">
+                    <button type="button" id="btn-add-asset" class="px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
                         <span>Add Asset</span>
                     </button>
@@ -211,29 +211,29 @@
 
                 <!-- Assets List -->
                 <div id="assets-list" class="space-y-2.5 flex-1">
-                    <div class="text-center py-8 text-xs text-slate-400">Loading assets...</div>
+                    <div class="text-center py-8 text-xs text-slate-500 dark:text-slate-400">Loading assets...</div>
                 </div>
 
                 <!-- Asset Total Footer -->
                 <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-500">Total Assets</span>
-                    <span id="footer-total-assets" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">+{{.Currency}}0.00</span>
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Total Assets</span>
+                    <span id="footer-total-assets" class="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">+{{.Currency}}0.00</span>
                 </div>
             </div>
 
             <!-- Right: Liabilities Ledger -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-sm flex flex-col">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 shadow-sm flex flex-col">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
+                        <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
                             💳
                         </div>
                         <div>
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white">Liabilities Breakdown</h3>
-                            <p class="text-[11px] text-slate-400">Debts, commitments, monthly subscriptions & loans</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Debts, commitments, monthly subscriptions & loans</p>
                         </div>
                     </div>
-                    <button type="button" id="btn-add-liability" class="px-2.5 py-1 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1">
+                    <button type="button" id="btn-add-liability" class="px-2.5 py-1 text-xs font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
                         <span>Add Liability</span>
                     </button>
@@ -241,13 +241,13 @@
 
                 <!-- Liabilities List -->
                 <div id="liabilities-list" class="space-y-2.5 flex-1">
-                    <div class="text-center py-8 text-xs text-slate-400">Loading liabilities...</div>
+                    <div class="text-center py-8 text-xs text-slate-500 dark:text-slate-400">Loading liabilities...</div>
                 </div>
 
                 <!-- Liability Total Footer -->
                 <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-500">Total Liabilities</span>
-                    <span id="footer-total-liabilities" class="text-sm font-extrabold text-rose-600 dark:text-rose-400">-{{.Currency}}0.00</span>
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Total Liabilities</span>
+                    <span id="footer-total-liabilities" class="text-sm font-extrabold text-rose-700 dark:text-rose-400">-{{.Currency}}0.00</span>
                 </div>
             </div>
         </div>
@@ -256,10 +256,10 @@
 
     <!-- Custom Asset/Liability Modal -->
     <div id="modal-custom-item" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
             <div class="flex items-center justify-between">
                 <h3 id="modal-title" class="text-base font-bold text-slate-900 dark:text-white">Add Asset / Liability</h3>
-                <button type="button" id="btn-close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer">
+                <button type="button" id="btn-close-modal" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -271,10 +271,10 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Item Type</label>
                     <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                        <button type="button" id="type-btn-asset" class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer bg-emerald-600 text-white shadow-xs">
+                        <button type="button" id="type-btn-asset" class="py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 text-white dark:text-slate-950 shadow-xs">
                             Asset (+)
                         </button>
-                        <button type="button" id="type-btn-liability" class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                        <button type="button" id="type-btn-liability" class="py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900">
                             Liability (−)
                         </button>
                     </div>
@@ -302,13 +302,13 @@
 
                 <!-- Institution / Holding Platform -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Institution / Platform <span class="font-normal text-slate-400">(Optional)</span></label>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Institution / Platform <span class="font-normal text-slate-500 dark:text-slate-400">(Optional)</span></label>
                     <input type="text" id="item-institution" placeholder="e.g., Vanguard, Chase, Binance, Self-Held" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
                 <!-- Notes -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Notes <span class="font-normal text-slate-400">(Optional)</span></label>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Notes <span class="font-normal text-slate-500 dark:text-slate-400">(Optional)</span></label>
                     <textarea id="item-notes" rows="2" placeholder="Additional details or account references" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
                 </div>
 
@@ -317,7 +317,7 @@
                     <button type="button" id="btn-cancel-modal" class="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
                         Cancel
                     </button>
-                    <button type="submit" id="btn-save-modal" class="px-5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors cursor-pointer">
+                    <button type="submit" id="btn-save-modal" class="px-5 py-2 text-xs font-bold rounded-xl bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 shadow-sm transition-colors cursor-pointer">
                         Save Item
                     </button>
                 </div>
@@ -327,8 +327,8 @@
 
     <!-- Delete Confirmation Modal -->
     <div id="modal-delete-confirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-            <div class="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto text-lg">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            <div class="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto text-lg">
                 🗑️
             </div>
             <div class="text-center">
@@ -336,7 +336,7 @@
                 <p id="delete-confirm-text" class="text-xs text-slate-500 dark:text-slate-400 mt-1">This custom item will be permanently removed from your net worth calculation.</p>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" id="btn-cancel-delete" class="flex-1 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer">
+                <button type="button" id="btn-cancel-delete" class="flex-1 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
                     Cancel
                 </button>
                 <button type="button" id="btn-confirm-delete" class="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl transition-colors cursor-pointer shadow-sm">
@@ -446,11 +446,11 @@
             const btnAsset = document.getElementById('type-btn-asset');
             const btnLiab = document.getElementById('type-btn-liability');
             if (type === 'asset') {
-                btnAsset.className = 'py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer bg-emerald-600 text-white shadow-xs';
-                btnLiab.className = 'py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+                btnAsset.className = 'py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 text-white dark:text-slate-950 shadow-xs';
+                btnLiab.className = 'py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
             } else {
-                btnLiab.className = 'py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer bg-rose-600 text-white shadow-xs';
-                btnAsset.className = 'py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
+                btnLiab.className = 'py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer bg-rose-600 text-white shadow-xs';
+                btnAsset.className = 'py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900';
             }
             populateCategories(type);
         }
@@ -586,7 +586,7 @@
             const isAssetsNeg = (data.total_assets || 0) < 0;
             const assetsPrefix = isAssetsNeg ? '' : '+';
             const assetsText = assetsPrefix + fmtMoney(data.total_assets);
-            const assetsColorClass = isAssetsNeg ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+            const assetsColorClass = isAssetsNeg ? 'text-rose-700 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400';
 
             const statAssets = document.getElementById('stat-total-assets');
             if (statAssets) {
@@ -635,12 +635,12 @@
             // Render Assets List
             const assetsContainer = document.getElementById('assets-list');
             if (!data.assets_list || data.assets_list.length === 0) {
-                assetsContainer.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">No assets recorded yet. Add wallets, savings goals or custom holdings!</div>';
+                assetsContainer.innerHTML = '<div class="text-center py-6 text-xs text-slate-500 dark:text-slate-400">No assets recorded yet. Add wallets, savings goals or custom holdings!</div>';
             } else {
                 assetsContainer.innerHTML = data.assets_list.map(it => {
                     const isNeg = it.amount < 0;
                     const sign = isNeg ? '' : '+';
-                    const colorClass = isNeg ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+                    const colorClass = isNeg ? 'text-rose-700 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400';
                     return `
                     <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/20 transition-all">
                         <div class="flex items-center gap-3 min-w-0">
@@ -649,17 +649,17 @@
                             </span>
                             <div class="min-w-0">
                                 <p class="text-xs font-bold text-slate-900 dark:text-white truncate">${esc(it.name)}</p>
-                                <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">${esc(it.subtitle || it.category)}</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${esc(it.subtitle || it.category)}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2 shrink-0 ml-3">
                             <span class="text-xs font-extrabold ${colorClass}">${sign}${fmtMoney(it.amount)}</span>
                             ${it.source === 'custom' ? `
                                 <div class="flex items-center gap-1">
-                                    <button type="button" onclick="editCustomItem(${it.id})" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer" title="Edit">
+                                    <button type="button" onclick="editCustomItem(${it.id})" class="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer" title="Edit">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                                     </button>
-                                    <button type="button" onclick="confirmDelete(${it.id}, '${esc(it.name)}')" class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer" title="Delete">
+                                    <button type="button" onclick="confirmDelete(${it.id}, '${esc(it.name)}')" class="p-1 text-rose-400 hover:text-rose-700 cursor-pointer" title="Delete">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                     </button>
                                 </div>
@@ -672,7 +672,7 @@
             // Render Liabilities List
             const liabContainer = document.getElementById('liabilities-list');
             if (!data.liabilities_list || data.liabilities_list.length === 0) {
-                liabContainer.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">No liabilities recorded. You have zero debt obligations!</div>';
+                liabContainer.innerHTML = '<div class="text-center py-6 text-xs text-slate-500 dark:text-slate-400">No liabilities recorded. You have zero debt obligations!</div>';
             } else {
                 liabContainer.innerHTML = data.liabilities_list.map(it => `
                     <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-rose-500/20 transition-all">
@@ -682,17 +682,17 @@
                             </span>
                             <div class="min-w-0">
                                 <p class="text-xs font-bold text-slate-900 dark:text-white truncate">${esc(it.name)}</p>
-                                <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate">${esc(it.subtitle || it.category)}</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${esc(it.subtitle || it.category)}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2 shrink-0 ml-3">
-                            <span class="text-xs font-extrabold text-rose-600 dark:text-rose-400">-${fmtMoney(it.amount)}</span>
+                            <span class="text-xs font-extrabold text-rose-700 dark:text-rose-400">-${fmtMoney(it.amount)}</span>
                             ${it.source === 'custom' ? `
                                 <div class="flex items-center gap-1">
-                                    <button type="button" onclick="editCustomItem(${it.id})" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer" title="Edit">
+                                    <button type="button" onclick="editCustomItem(${it.id})" class="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer" title="Edit">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                                     </button>
-                                    <button type="button" onclick="confirmDelete(${it.id}, '${esc(it.name)}')" class="p-1 text-rose-400 hover:text-rose-600 cursor-pointer" title="Delete">
+                                    <button type="button" onclick="confirmDelete(${it.id}, '${esc(it.name)}')" class="p-1 text-rose-400 hover:text-rose-700 cursor-pointer" title="Delete">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                     </button>
                                 </div>

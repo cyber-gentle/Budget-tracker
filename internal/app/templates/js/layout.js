@@ -131,7 +131,7 @@
             showToast(msg, type);
         } else {
             const t = document.createElement('div');
-            t.className = `fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg text-white ${type === 'error' ? 'bg-rose-600' : 'bg-slate-900 dark:bg-emerald-600'} transition-all`;
+            t.className = `fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg text-white ${type === 'error' ? 'bg-rose-600' : 'bg-slate-900 dark:bg-emerald-400 dark:text-slate-950'} transition-all`;
             t.textContent = msg;
             document.body.appendChild(t);
             setTimeout(() => t.remove(), 3000);
@@ -313,6 +313,26 @@ function initMobileMoreSheet() {
     if (mobileMoreSheet) {
         mobileMoreSheet.addEventListener('click', (e) => {
             if (e.target === mobileMoreSheet) mobileMoreSheet.classList.add('hidden');
+        });
+    }
+
+    // Same tiles on every page: open the page's modal when it has one, else go to the dashboard's.
+    const btnSheetCategories = document.getElementById('btn-sheet-categories');
+    if (btnSheetCategories) {
+        btnSheetCategories.addEventListener('click', () => {
+            if (mobileMoreSheet) mobileMoreSheet.classList.add('hidden');
+            const catModal = document.getElementById('category-modal');
+            if (catModal) catModal.classList.remove('hidden');
+            else window.location.href = '/dashboard?action=categories';
+        });
+    }
+    const btnSheetProfile = document.getElementById('btn-sheet-profile');
+    const profModal = document.getElementById('profile-modal');
+    if (btnSheetProfile && profModal) {
+        btnSheetProfile.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (mobileMoreSheet) mobileMoreSheet.classList.add('hidden');
+            profModal.classList.remove('hidden');
         });
     }
 }
