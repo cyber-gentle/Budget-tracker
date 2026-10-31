@@ -815,12 +815,14 @@
         });
     </script>
     <!-- ─── Fixed Mobile Bottom Navigation Bar ────────────────────────────── -->
+    {{template "export-modal" (layout "net-worth" .)}}
     {{template "bottom-nav" (layout "net-worth" .)}}
 
     <!-- ─── Mobile More Navigation Drawer / Sheet ───────────────────────────── -->
     {{template "more-sheet" (layout "net-worth" .)}}
 
     <script src="{{asset "/static/js/layout.js"}}"></script>
+    <script src="{{asset "/static/js/export.js"}}"></script>
     <script src="{{asset "/static/js/assistant.js"}}" defer></script>
 </body>
 </html>

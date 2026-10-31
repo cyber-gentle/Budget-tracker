@@ -2065,3 +2065,40 @@ func TestCashFlowForecastingAndRunwayPredictorFlow(t *testing.T) {
 		t.Fatalf("failed to delete recurring income: %v", err)
 	}
 }
+
+// The export window offers these timeframes; each must select its own range
+// rather than falling back to "this month".
+func TestReportTimeframesUsedByExport(t *testing.T) {
+	store, err := NewDBStore("file:"+filepath.Join(t.TempDir(), "tf.db"), "")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+	username := "tf_user"
+	_ = store.Signup(username, "tf@example.com", "hash123", "TF User")
+	acc, err := store.CreateAccount(username, "Bank", "bank", "₦", "#3B82F6", "🏦", 0, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now()
+	for _, daysAgo := range []int{0, 20, 45, 800} {
+		d := now.AddDate(0, 0, -daysAgo)
+		if err := store.AddTransactionFull(username, 1000, "food", "x", "expense", "", acc.ID, d); err != nil {
+			t.Fatal(err)
+		}
+	}
+	thisYear := 0
+	for _, daysAgo := range []int{0, 20, 45, 800} {
+		if now.AddDate(0, 0, -daysAgo).Year() == now.Year() {
+			thisYear++
+		}
+	}
+	for tf, want := range map[string]int{"30d": 2, "all_time": 4, "all": 4, "this_year": thisYear} {
+		rep, err := store.GetDetailedFinancialReport(username, tf, "", "", 0, "")
+		if err != nil {
+			t.Fatalf("%s: %v", tf, err)
+		}
+		if got := int(rep.KPIs.TotalExpense / 1000); got != want {
+			t.Errorf("%s: %d transactions in range, want %d (%s to %s)", tf, got, want, rep.StartDate, rep.EndDate)
+		}
+	}
+}

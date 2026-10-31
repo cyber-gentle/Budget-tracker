@@ -1024,6 +1024,7 @@
 
     </script>
     <!-- ─── Fixed Mobile Bottom Navigation Bar ────────────────────────────── -->
+    {{template "export-modal" (layout "receipts" .)}}
     {{template "bottom-nav" (layout "receipts" .)}}
 
     <!-- ─── Mobile More Navigation Drawer / Sheet ───────────────────────────── -->
@@ -1035,6 +1036,7 @@
 
 <script src="{{asset "/static/js/dialogs.js"}}"></script>
     <script src="{{asset "/static/js/layout.js"}}"></script>
+    <script src="{{asset "/static/js/export.js"}}"></script>
     <script src="{{asset "/static/js/assistant.js"}}" defer></script>
 </body>
 </html>
