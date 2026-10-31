@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -109,5 +110,31 @@ func TestPagesMeetBasicAccessibility(t *testing.T) {
 				t.Errorf("/%s: <select> without an accessible name: %s", page, tag[:min(len(tag), 80)])
 			}
 		}
+	}
+}
+
+// Colour classes that fail WCAG AA (4.5:1) as text on Spendly's surfaces. The
+// AA replacements are listed in the phase 5 colour roles: slate-500 / dark:slate-400
+// for secondary text, -700 shades for money and status text, emerald-700 buttons.
+func TestTemplatesAvoidLowContrastColours(t *testing.T) {
+	banned := regexp.MustCompile(`(?:^|[\s"'\x60])(text-slate-400|dark:text-slate-(?:500|600)|text-(?:emerald|rose|amber)-[56]00|text-gray-400)(?:[\s"'\x60]|$)`)
+	whiteOnLightGreen := regexp.MustCompile(`(?:^|[\s"'\x60])bg-emerald-[56]00(?:[\s"'\x60]|$)[^"'\x60]*\stext-white|\stext-white\s[^"'\x60]*(?:^|\s)bg-emerald-[56]00(?:[\s"'\x60]|$)`)
+	err := fs.WalkDir(embeddedFS, "templates", func(p string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !(strings.HasSuffix(p, ".html") || strings.HasSuffix(p, ".js")) {
+			return err
+		}
+		data, _ := embeddedFS.ReadFile(p)
+		for i, line := range strings.Split(string(data), "\n") {
+			if m := banned.FindStringSubmatch(line); m != nil {
+				t.Errorf("%s:%d uses low-contrast %s", p, i+1, m[1])
+			}
+			if whiteOnLightGreen.MatchString(line) {
+				t.Errorf("%s:%d puts white text on emerald-500/600 (use bg-emerald-700)", p, i+1)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }

@@ -56,7 +56,7 @@
                 <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">Track money people owe you, debts you owe, and split shared group expenses.</p>
             </div>
             <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
-                <button type="button" id="btn-split-expense" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer truncate">
+                <button type="button" id="btn-split-expense" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer truncate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="sm:w-[15px] sm:h-[15px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     <span class="truncate">Split Expense</span>
                 </button>
@@ -72,25 +72,25 @@
             <!-- Owing You (Receivables) -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5">
-                    <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 truncate pr-1">People Owing You</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 truncate pr-1">People Owing You</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                         <svg class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
                     </span>
                 </div>
-                <p class="font-heading text-lg sm:text-2xl md:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 truncate" id="summary-owing-me">0</p>
-                <p class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 font-medium truncate" id="summary-owing-me-count">0 active loans</p>
+                <p class="font-heading text-lg sm:text-2xl md:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 truncate" id="summary-owing-me">0</p>
+                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 font-medium truncate" id="summary-owing-me-count">0 active loans</p>
             </div>
 
             <!-- You Owe (Debts) -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1 sm:mb-1.5">
-                    <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400 truncate pr-1">You Owe (Debts)</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center shrink-0">
+                    <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-400 truncate pr-1">You Owe (Debts)</span>
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center shrink-0">
                         <svg class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
                     </span>
                 </div>
-                <p class="font-heading text-lg sm:text-2xl md:text-3xl font-extrabold text-rose-500 dark:text-rose-400 truncate" id="summary-i-owe">0</p>
-                <p class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 font-medium truncate" id="summary-i-owe-count">0 pending debts</p>
+                <p class="font-heading text-lg sm:text-2xl md:text-3xl font-extrabold text-rose-700 dark:text-rose-400 truncate" id="summary-i-owe">0</p>
+                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 font-medium truncate" id="summary-i-owe-count">0 pending debts</p>
             </div>
 
             <!-- Net Loan Position -->
@@ -102,7 +102,7 @@
                     </span>
                 </div>
                 <p class="font-heading text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white truncate" id="summary-net">0</p>
-                <p class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 font-medium truncate" id="summary-net-desc">Calculated as (Owed To You - You Owe)</p>
+                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 font-medium truncate" id="summary-net-desc">Calculated as (Owed To You - You Owe)</p>
             </div>
         </section>
 
@@ -112,20 +112,20 @@
                 <button type="button" data-tab="all" class="tab-btn shrink-0 px-3 sm:px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5">
                     All Records
                 </button>
-                <button type="button" data-tab="owing_me" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                <button type="button" data-tab="owing_me" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
                     <span class="sm:hidden">Owing You</span>
                     <span class="hidden sm:inline">People Owing You</span>
                 </button>
-                <button type="button" data-tab="i_owe" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                <button type="button" data-tab="i_owe" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
                     <span class="sm:hidden">You Owe</span>
                     <span class="hidden sm:inline">You Owe (Debts)</span>
                 </button>
-                <button type="button" data-tab="splits" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                <button type="button" data-tab="splits" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     <span>Splits</span>
                     <span id="tab-splits-count" class="hidden px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">0</span>
                 </button>
-                <button type="button" data-tab="settlements" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                <button type="button" data-tab="settlements" class="tab-btn shrink-0 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition-all cursor-pointer flex items-center gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                     <span class="sm:hidden">Settlements</span>
                     <span class="hidden sm:inline">Settlement Calculator</span>
@@ -140,15 +140,15 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <!-- Search Input -->
                 <div class="relative w-full sm:w-72">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     </span>
-                    <input type="text" id="debts-search" placeholder="Search person or note..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all font-medium">
+                    <input type="text" id="debts-search" placeholder="Search person or note..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all font-medium">
                 </div>
 
                 <!-- Status Filter -->
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">Status:</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline">Status:</span>
                     <select id="debts-filter-status" aria-label="Filter debts by status" class="px-3 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-colors cursor-pointer">
                         <option value="all">All Statuses</option>
                         <option value="active" selected>Active (Pending / Partial)</option>
@@ -159,7 +159,7 @@
 
             <!-- Debts List Container -->
             <div id="debts-container" class="space-y-3">
-                <div id="debts-loading" class="py-16 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
+                <div id="debts-loading" class="py-16 text-center text-xs font-medium text-slate-500 dark:text-slate-400">
                     Loading debts and loans...
                 </div>
                 <div id="debts-empty" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl py-16 text-center px-4 hidden transition-colors">
@@ -167,7 +167,7 @@
                         🤝
                     </div>
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white">No records found</h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">Click "Add Debt / Loan" above to start tracking money you lent or money you owe.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">Click "Add Debt / Loan" above to start tracking money you lent or money you owe.</p>
                 </div>
                 <div id="debts-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0"></div>
             </div>
@@ -181,20 +181,20 @@
                         <span>🍕</span>
                         <span class="truncate">Shared & Split Expenses</span>
                     </h2>
-                    <p class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">Bills divided among groups with synchronized IOUs.</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">Bills divided among groups with synchronized IOUs.</p>
                 </div>
-                <button type="button" id="btn-splits-new" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-colors cursor-pointer shadow-xs shrink-0">
+                <button type="button" id="btn-splits-new" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 rounded-xl transition-colors cursor-pointer shadow-xs shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     <span>Split</span>
                 </button>
             </div>
 
             <div id="splits-empty" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl py-16 text-center px-4 hidden transition-colors">
-                <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 text-2xl">
                     🍕
                 </div>
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">No split expenses yet</h3>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">Split a dinner, trip, or rent bill with friends or roommates to start tracking shared shares.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">Split a dinner, trip, or rent bill with friends or roommates to start tracking shared shares.</p>
             </div>
 
             <div id="splits-list" class="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full min-w-0"></div>
@@ -205,19 +205,19 @@
             <!-- Settlement KPI banner -->
             <section class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm transition-colors">
-                    <span class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 truncate block">Net Receivable</span>
-                    <p class="font-heading text-lg sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate" id="settle-kpi-receivable">0</p>
-                    <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">Others owe you</p>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 truncate block">Net Receivable</span>
+                    <p class="font-heading text-lg sm:text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-0.5 truncate" id="settle-kpi-receivable">0</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">Others owe you</p>
                 </div>
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm transition-colors">
-                    <span class="text-[10px] font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400 truncate block">Net Payable</span>
-                    <p class="font-heading text-lg sm:text-2xl font-extrabold text-rose-500 dark:text-rose-400 mt-0.5 truncate" id="settle-kpi-payable">0</p>
-                    <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">You owe others</p>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-400 truncate block">Net Payable</span>
+                    <p class="font-heading text-lg sm:text-2xl font-extrabold text-rose-700 dark:text-rose-400 mt-0.5 truncate" id="settle-kpi-payable">0</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">You owe others</p>
                 </div>
                 <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm transition-colors">
                     <span class="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 truncate block">Overall Net</span>
                     <p class="font-heading text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5 truncate" id="settle-kpi-overall">0</p>
-                    <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate" id="settle-kpi-desc">After mutual offsets</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate" id="settle-kpi-desc">After mutual offsets</p>
                 </div>
             </section>
 
@@ -238,7 +238,7 @@
                     ✨
                 </div>
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">All contacts are squared up!</h3>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">No outstanding debts or receivables exist with any contact.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">No outstanding debts or receivables exist with any contact.</p>
             </div>
 
             <div id="settlements-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full min-w-0"></div>
@@ -254,9 +254,9 @@
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h3 id="debt-modal-title" class="font-heading font-bold text-base text-slate-900 dark:text-white">Add Debt or Loan</h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Track a new amount owed or lent</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Track a new amount owed or lent</p>
                 </div>
-                <button type="button" id="debt-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <button type="button" id="debt-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -270,10 +270,10 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Type</label>
                     <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold">
-                        <button type="button" id="form-type-owing-me" class="py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center">
+                        <button type="button" id="form-type-owing-me" class="py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center">
                             Someone Owes Me (Loan)
                         </button>
-                        <button type="button" id="form-type-i-owe" class="py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all cursor-pointer text-center">
+                        <button type="button" id="form-type-i-owe" class="py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 transition-all cursor-pointer text-center">
                             I Owe Someone (Debt)
                         </button>
                     </div>
@@ -308,7 +308,7 @@
                     <button type="button" id="debt-modal-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
                         Cancel
                     </button>
-                    <button type="submit" id="debt-modal-submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white rounded-xl transition-all shadow-sm cursor-pointer">
+                    <button type="submit" id="debt-modal-submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 text-white dark:text-slate-950 rounded-xl transition-all shadow-sm cursor-pointer">
                         Save Record
                     </button>
                 </div>
@@ -322,9 +322,9 @@
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Record Payment</h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" id="payment-modal-subtitle">Log a repayment</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="payment-modal-subtitle">Log a repayment</p>
                 </div>
-                <button type="button" id="payment-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <button type="button" id="payment-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -344,7 +344,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Amount Paid (<span class="currency-label">{{.Currency}}</span>)</label>
                     <input type="number" step="any" min="0.01" id="payment-amount" required class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-bold">
-                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">You can enter a partial payment or settle in full.</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">You can enter a partial payment or settle in full.</p>
                 </div>
 
                 <!-- Payment Date -->
@@ -356,7 +356,7 @@
                 <!-- Log to main transactions checkbox -->
                 <div class="p-3 bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 rounded-xl">
                     <label class="flex items-start gap-2.5 cursor-pointer">
-                        <input type="checkbox" id="payment-log-transaction" checked class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                        <input type="checkbox" id="payment-log-transaction" checked class="mt-0.5 rounded text-emerald-700 dark:text-emerald-400 focus:ring-emerald-500 cursor-pointer">
                         <div class="text-xs">
                             <span class="font-bold text-emerald-900 dark:text-emerald-300" id="payment-log-label">Log to Main Transactions</span>
                             <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-0.5" id="payment-log-desc">Automatically records this payment as Income/Expense and updates your total balance.</p>
@@ -368,7 +368,7 @@
                     <button type="button" id="payment-modal-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
                         Cancel
                     </button>
-                    <button type="submit" id="payment-modal-submit" class="px-5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-sm cursor-pointer">
+                    <button type="submit" id="payment-modal-submit" class="px-5 py-2 text-xs font-semibold bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 rounded-xl transition-all shadow-sm cursor-pointer">
                         Confirm Payment
                     </button>
                 </div>
@@ -387,7 +387,7 @@
                 <button type="button" id="confirm-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
                     Cancel
                 </button>
-                <button type="button" id="confirm-delete" class="px-4 py-2 text-xs font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition-colors shadow-xs cursor-pointer">
+                <button type="button" id="confirm-delete" class="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-colors shadow-xs cursor-pointer">
                     Delete
                 </button>
             </div>
@@ -403,9 +403,9 @@
                         <span>👥</span>
                         <span>Split an Expense</span>
                     </h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Divide a group bill and generate tracked IOUs</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Divide a group bill and generate tracked IOUs</p>
                 </div>
-                <button type="button" id="split-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <button type="button" id="split-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -470,10 +470,10 @@
                         <button type="button" data-mode="equal" class="split-mode-btn py-1.5 px-2 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs cursor-pointer">
                             Equal (÷)
                         </button>
-                        <button type="button" data-mode="exact" class="split-mode-btn py-1.5 px-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                        <button type="button" data-mode="exact" class="split-mode-btn py-1.5 px-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
                             Exact ($)
                         </button>
-                        <button type="button" data-mode="percent" class="split-mode-btn py-1.5 px-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                        <button type="button" data-mode="percent" class="split-mode-btn py-1.5 px-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer">
                             Percent (%)
                         </button>
                     </div>
@@ -484,7 +484,7 @@
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Participants & Shares</label>
-                        <button type="button" id="btn-add-participant" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer">
+                        <button type="button" id="btn-add-participant" class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer">
                             <span>+ Add Person</span>
                         </button>
                     </div>
@@ -518,7 +518,7 @@
                     <button type="button" id="split-modal-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
                         Cancel
                     </button>
-                    <button type="submit" id="split-modal-submit" class="px-5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
+                    <button type="submit" id="split-modal-submit" class="px-5 py-2 text-xs font-semibold bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
                         <span>Create Split & Sync IOUs</span>
                     </button>
                 </div>
@@ -535,9 +535,9 @@
                         <span>⚡</span>
                         <span>Settle Up with <span id="settle-modal-name"></span></span>
                     </h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5" id="settle-modal-desc">Clear balances and log transaction</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="settle-modal-desc">Clear balances and log transaction</p>
                 </div>
-                <button type="button" id="settle-modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                <button type="button" id="settle-modal-close" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -549,9 +549,9 @@
 
                 <!-- Net Balance Banner -->
                 <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-center">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-1">Net Balance</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Net Balance</span>
                     <p class="font-heading text-2xl font-extrabold text-slate-900 dark:text-white" id="settle-net-amount">0.00</p>
-                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 inline-block mt-1" id="settle-net-status">Alice owes you</span>
+                    <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 inline-block mt-1" id="settle-net-status">Alice owes you</span>
                 </div>
 
                 <!-- Settlement Mode Toggle -->
@@ -559,7 +559,7 @@
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Action</label>
                     <div class="space-y-2">
                         <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
-                            <input type="radio" name="settle-mode" value="full" checked class="mt-0.5 text-emerald-600 focus:ring-0">
+                            <input type="radio" name="settle-mode" value="full" checked class="mt-0.5 text-emerald-700 dark:text-emerald-400 focus:ring-0">
                             <div>
                                 <span class="text-xs font-bold text-slate-900 dark:text-slate-100 block">Complete Settlement</span>
                                 <span class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight block mt-0.5">Mark all active debts with this person as fully settled.</span>
@@ -595,7 +595,7 @@
                     <button type="button" id="settle-modal-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
                         Cancel
                     </button>
-                    <button type="submit" id="settle-modal-submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white rounded-xl transition-all shadow-sm cursor-pointer">
+                    <button type="submit" id="settle-modal-submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 text-white dark:text-slate-950 rounded-xl transition-all shadow-sm cursor-pointer">
                         Confirm Settle Up
                     </button>
                 </div>
@@ -669,10 +669,10 @@
             document.querySelectorAll('.tab-btn').forEach(b => {
                 if (b.dataset.tab === tab) {
                     b.classList.add('bg-white', 'dark:bg-slate-900', 'text-slate-900', 'dark:text-white', 'shadow-xs', 'font-bold');
-                    b.classList.remove('text-slate-500', 'dark:text-slate-400', 'font-semibold');
+                    b.classList.remove('text-slate-600', 'dark:text-slate-400', 'font-semibold');
                 } else {
                     b.classList.remove('bg-white', 'dark:bg-slate-900', 'text-slate-900', 'dark:text-white', 'shadow-xs', 'font-bold');
-                    b.classList.add('text-slate-500', 'dark:text-slate-400', 'font-semibold');
+                    b.classList.add('text-slate-600', 'dark:text-slate-400', 'font-semibold');
                 }
             });
 
@@ -725,10 +725,10 @@
                 const netEl = document.getElementById('summary-net');
                 netEl.textContent = (net >= 0 ? '+' : '') + fmtMoney(net);
                 if (net > 0) {
-                    netEl.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 truncate';
+                    netEl.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 truncate';
                     document.getElementById('summary-net-desc').textContent = 'Positive: You are owed more than you owe';
                 } else if (net < 0) {
-                    netEl.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-rose-500 dark:text-rose-400 truncate';
+                    netEl.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-rose-700 dark:text-rose-400 truncate';
                     document.getElementById('summary-net-desc').textContent = 'Negative: You owe more than you are owed';
                 } else {
                     netEl.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white truncate';
@@ -790,11 +790,11 @@
                     const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
 
                     if (!isSettled && diffDays < 0) {
-                        dueBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">Overdue by ${Math.abs(diffDays)}d</span>`;
+                        dueBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400">Overdue by ${Math.abs(diffDays)}d</span>`;
                     } else if (!isSettled && diffDays === 0) {
-                        dueBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">Due today</span>`;
+                        dueBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">Due today</span>`;
                     } else {
-                        dueBadge = `<span class="text-[11px] text-slate-400 dark:text-slate-500">Due ${d.due_date_fmt}</span>`;
+                        dueBadge = `<span class="text-[11px] text-slate-500 dark:text-slate-400">Due ${d.due_date_fmt}</span>`;
                     }
                 }
 
@@ -806,12 +806,12 @@
                             <!-- Header: Person & Type Badge -->
                             <div class="flex items-start justify-between gap-3 mb-3">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl ${isOwingMe ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 border border-rose-100 dark:border-rose-900'} flex items-center justify-center font-heading font-extrabold text-xs">
+                                    <div class="w-10 h-10 rounded-xl ${isOwingMe ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-100 dark:border-rose-900'} flex items-center justify-center font-heading font-extrabold text-xs">
                                         ${escapeHtml(initials)}
                                     </div>
                                     <div>
                                         <h4 class="font-heading font-bold text-sm text-slate-900 dark:text-white leading-tight">${escapeHtml(d.person_name)}</h4>
-                                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold ${isOwingMe ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'} mt-0.5">
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold ${isOwingMe ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'} mt-0.5">
                                             <span>${isOwingMe ? '↑ Owes You' : '↓ You Owe'}</span>
                                         </span>
                                     </div>
@@ -819,7 +819,7 @@
 
                                 <div class="flex items-center gap-1.5">
                                     ${isSettled ? `
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800">
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800">
                                             ✓ Settled
                                         </span>
                                     ` : `
@@ -836,23 +836,23 @@
                             <!-- Financial Breakdown -->
                             <div class="space-y-2 py-2 border-t border-slate-100 dark:border-slate-800/80">
                                 <div class="flex items-center justify-between text-xs">
-                                    <span class="text-slate-400 dark:text-slate-500">Total:</span>
+                                    <span class="text-slate-500 dark:text-slate-400">Total:</span>
                                     <span class="font-bold text-slate-700 dark:text-slate-200">${fmtMoney(d.amount)}</span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs">
-                                    <span class="text-slate-400 dark:text-slate-500">Paid:</span>
-                                    <span class="font-bold text-emerald-600 dark:text-emerald-400">${fmtMoney(d.amount_paid)}</span>
+                                    <span class="text-slate-500 dark:text-slate-400">Paid:</span>
+                                    <span class="font-bold text-emerald-700 dark:text-emerald-400">${fmtMoney(d.amount_paid)}</span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs">
-                                    <span class="text-slate-400 dark:text-slate-500">Remaining:</span>
-                                    <span class="font-extrabold ${isSettled ? 'text-slate-400' : 'text-slate-900 dark:text-white'} text-sm">${fmtMoney(d.remaining)}</span>
+                                    <span class="text-slate-500 dark:text-slate-400">Remaining:</span>
+                                    <span class="font-extrabold ${isSettled ? 'text-slate-500' : 'text-slate-900 dark:text-white'} text-sm">${fmtMoney(d.remaining)}</span>
                                 </div>
 
                                 <!-- Progress Bar -->
                                 <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
                                     <div class="h-full ${isSettled ? 'bg-emerald-500' : 'bg-slate-900 dark:bg-emerald-500'} rounded-full transition-all duration-500" style="width: ${pct}%"></div>
                                 </div>
-                                <div class="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-0.5">
+                                <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
                                     <span>${pct}% completed</span>
                                     <div>${dueBadge}</div>
                                 </div>
@@ -868,14 +868,14 @@
                                         <span>Record Payment</span>
                                     </button>
                                 ` : `
-                                    <span class="text-xs text-slate-400 dark:text-slate-500 font-medium">Fully settled</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Fully settled</span>
                                 `}
                             </div>
                             <div class="flex items-center gap-1">
-                                <button type="button" onclick="openEditModal(${d.id})" class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer" title="Edit">
+                                <button type="button" onclick="openEditModal(${d.id})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer" title="Edit">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                                 </button>
-                                <button type="button" onclick="openDeleteModal(${d.id})" class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer" title="Delete">
+                                <button type="button" onclick="openDeleteModal(${d.id})" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer" title="Delete">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                 </button>
                             </div>
@@ -901,11 +901,11 @@
         function setFormType(type) {
             debtFormType.value = type;
             if (type === 'owing_me') {
-                typeOwingMeBtn.className = 'py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center';
-                typeIOweBtn.className = 'py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all cursor-pointer text-center';
+                typeOwingMeBtn.className = 'py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-xs transition-all cursor-pointer text-center';
+                typeIOweBtn.className = 'py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 transition-all cursor-pointer text-center';
             } else {
-                typeIOweBtn.className = 'py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-rose-500 dark:text-rose-400 shadow-xs transition-all cursor-pointer text-center';
-                typeOwingMeBtn.className = 'py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all cursor-pointer text-center';
+                typeIOweBtn.className = 'py-2 px-3 rounded-lg bg-white dark:bg-slate-700 text-rose-700 dark:text-rose-400 shadow-xs transition-all cursor-pointer text-center';
+                typeOwingMeBtn.className = 'py-2 px-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all cursor-pointer text-center';
             }
         }
 
@@ -1136,10 +1136,10 @@
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.split-mode-btn').forEach(b => {
                     b.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
-                    b.classList.add('text-slate-500', 'dark:text-slate-400');
+                    b.classList.add('text-slate-600', 'dark:text-slate-400');
                 });
                 btn.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
-                btn.classList.remove('text-slate-500', 'dark:text-slate-400');
+                btn.classList.remove('text-slate-600', 'dark:text-slate-400');
                 currentSplitMode = btn.dataset.mode;
                 document.getElementById('split-mode-val').value = currentSplitMode;
                 renderParticipantsList();
@@ -1175,10 +1175,10 @@
             document.querySelectorAll('.split-mode-btn').forEach(b => {
                 if (b.dataset.mode === 'equal') {
                     b.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
-                    b.classList.remove('text-slate-500', 'dark:text-slate-400');
+                    b.classList.remove('text-slate-600', 'dark:text-slate-400');
                 } else {
                     b.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
-                    b.classList.add('text-slate-500', 'dark:text-slate-400');
+                    b.classList.add('text-slate-600', 'dark:text-slate-400');
                 }
             });
 
@@ -1216,12 +1216,12 @@
                             ${currentSplitMode === 'equal' ? 'readonly' : ''}
                             oninput="updateParticipantShare(${idx}, this.value)"
                             class="w-full pl-4 sm:pl-5 pr-1.5 sm:pr-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 text-right ${currentSplitMode === 'equal' ? 'opacity-80 bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : ''}">
-                        <span class="absolute left-1.5 top-1 text-[10px] text-slate-400 font-bold pointer-events-none">
+                        <span class="absolute left-1.5 top-1 text-[10px] text-slate-500 dark:text-slate-400 font-bold pointer-events-none">
                             ${currentSplitMode === 'percent' ? '%' : currentCurrency}
                         </span>
                     </div>
                     ${canRemove ? `
-                        <button type="button" onclick="removeParticipant(${idx})" class="p-1 text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer shrink-0" title="Remove">
+                        <button type="button" onclick="removeParticipant(${idx})" class="p-1 text-slate-500 dark:text-slate-400 hover:text-rose-700 rounded-lg transition-colors cursor-pointer shrink-0" title="Remove">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
                     ` : `<div class="w-4 shrink-0"></div>`}
@@ -1274,7 +1274,7 @@
             if (total <= 0) {
                 pillText.textContent = 'Enter total amount to calculate shares';
                 pillStatus.textContent = '--';
-                pill.className = 'mt-2.5 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-xs flex items-center justify-between font-medium text-slate-500';
+                pill.className = 'mt-2.5 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-xs flex items-center justify-between font-medium text-slate-500 dark:text-slate-400';
                 return;
             }
 
@@ -1440,7 +1440,7 @@
                                     <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                                         ${escapeHtml(s.category)}
                                     </span>
-                                    <span class="text-[11px] text-slate-400 font-medium">${s.date_fmt}</span>
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">${s.date_fmt}</span>
                                     ${s.is_settled ? 
                                         `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">All Settled ✓</span>` : 
                                         `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">${s.settled_count}/${s.total_count} Settled</span>`
@@ -1451,12 +1451,12 @@
                                 </h3>
                             </div>
                             <div class="flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-start gap-1 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80">
-                                <span class="text-xs text-slate-400 font-medium sm:hidden">Total Bill:</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400 font-medium sm:hidden">Total Bill:</span>
                                 <div class="text-right">
                                     <span class="font-heading text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white block">
                                         ${fmtMoney(s.total_amount)}
                                     </span>
-                                    <span class="text-[11px] font-semibold text-slate-400 block">
+                                    <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block">
                                         ${s.payer_is_user ? 'Paid by You' : `Paid by ${escapeHtml(s.payer_name)}`}
                                     </span>
                                 </div>
@@ -1467,7 +1467,7 @@
 
                         <!-- Progress Bar -->
                         <div class="mb-3">
-                            <div class="flex items-center justify-between text-[11px] text-slate-400 font-semibold mb-1">
+                            <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
                                 <span>Settlement Progress</span>
                                 <span>${settledPct}%</span>
                             </div>
@@ -1478,7 +1478,7 @@
 
                         <!-- Participants Chips -->
                         <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Participants Breakdown</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Participants Breakdown</span>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                 ${participants.map(p => `
                                     <div class="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs min-w-0">
@@ -1503,10 +1503,10 @@
 
                     <!-- Footer Controls -->
                     <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                        <span class="text-[11px] text-slate-400">
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400">
                             Your portion: <strong class="text-slate-700 dark:text-slate-300">${fmtMoney(s.user_share)}</strong>
                         </span>
-                        <button type="button" onclick="deleteSplitExpense(${s.id})" class="text-rose-500 hover:text-rose-600 text-xs font-semibold flex items-center gap-1 cursor-pointer">
+                        <button type="button" onclick="deleteSplitExpense(${s.id})" class="text-rose-700 dark:text-rose-400 hover:text-rose-700 text-xs font-semibold flex items-center gap-1 cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             <span>Delete Split</span>
                         </button>
@@ -1556,10 +1556,10 @@
                 const netEl = document.getElementById('settle-kpi-overall');
                 netEl.textContent = (net >= 0 ? '+' : '') + fmtMoney(net);
                 if (net > 0) {
-                    netEl.className = 'font-heading text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1';
+                    netEl.className = 'font-heading text-xl sm:text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-1';
                     document.getElementById('settle-kpi-desc').textContent = 'Overall: Friends owe you net';
                 } else if (net < 0) {
-                    netEl.className = 'font-heading text-xl sm:text-2xl font-extrabold text-rose-500 dark:text-rose-400 mt-1';
+                    netEl.className = 'font-heading text-xl sm:text-2xl font-extrabold text-rose-700 dark:text-rose-400 mt-1';
                     document.getElementById('settle-kpi-desc').textContent = 'Overall: You owe friends net';
                 } else {
                     netEl.className = 'font-heading text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1';
@@ -1627,7 +1627,7 @@
                                 <h3 class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">
                                     ${escapeHtml(c.contact_name)}
                                 </h3>
-                                <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate block">
+                                <span class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate block">
                                     ${c.active_debts ? c.active_debts.length : 0} open debts / split items
                                 </span>
                             </div>
@@ -1636,13 +1636,13 @@
                         <!-- Mutual Debt Breakdown -->
                         <div class="grid grid-cols-2 gap-2 mb-3 sm:mb-3.5">
                             <div class="p-2 sm:p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 min-w-0">
-                                <span class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block mb-0.5 truncate">They Owe You</span>
+                                <span class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block mb-0.5 truncate">They Owe You</span>
                                 <span class="font-heading text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block truncate">
                                     ${fmtMoney(c.they_owe_you)}
                                 </span>
                             </div>
                             <div class="p-2 sm:p-2.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 min-w-0">
-                                <span class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400 block mb-0.5 truncate">You Owe Them</span>
+                                <span class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-400 block mb-0.5 truncate">You Owe Them</span>
                                 <span class="font-heading text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 block truncate">
                                     ${fmtMoney(c.you_owe_them)}
                                 </span>
@@ -1651,7 +1651,7 @@
 
                         <!-- Net Badge -->
                         <div class="mb-3 sm:mb-4 flex items-center justify-between gap-2 flex-wrap">
-                            <span class="text-xs text-slate-400 font-semibold">Net Balance:</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Net Balance:</span>
                             ${netBadge}
                         </div>
                     </div>
@@ -1665,7 +1665,7 @@
                             </button>
                         ` : ''}
 
-                        <button type="button" onclick="openSettleModal('${escapeHtml(c.contact_name)}', ${net}, ${hasMutual})" class="w-full py-2.5 px-3 text-xs font-semibold bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white rounded-xl transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5">
+                        <button type="button" onclick="openSettleModal('${escapeHtml(c.contact_name)}', ${net}, ${hasMutual})" class="w-full py-2.5 px-3 text-xs font-semibold bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 text-white dark:text-slate-950 rounded-xl transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5">
                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Settle Up (${fmtMoney(Math.abs(net))})</span>
                         </button>
@@ -1718,15 +1718,15 @@
 
             if (netAmount > 0.005) {
                 statusEl.textContent = `${contactName} pays you ${fmtMoney(netAmount)}`;
-                statusEl.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400 inline-block mt-1';
+                statusEl.className = 'text-xs font-semibold text-emerald-700 dark:text-emerald-400 inline-block mt-1';
                 logDescEl.textContent = `Record ${fmtMoney(netAmount)} as Income into selected wallet`;
             } else if (netAmount < -0.005) {
                 statusEl.textContent = `You pay ${contactName} ${fmtMoney(-netAmount)}`;
-                statusEl.className = 'text-xs font-semibold text-rose-600 dark:text-rose-400 inline-block mt-1';
+                statusEl.className = 'text-xs font-semibold text-rose-700 dark:text-rose-400 inline-block mt-1';
                 logDescEl.textContent = `Record ${fmtMoney(-netAmount)} as Expense from selected wallet`;
             } else {
                 statusEl.textContent = `Mutual debts already offset to ${fmtMoney(0)}`;
-                statusEl.className = 'text-xs font-semibold text-slate-500 inline-block mt-1';
+                statusEl.className = 'text-xs font-semibold text-slate-500 dark:text-slate-400 inline-block mt-1';
                 logDescEl.textContent = `No transaction needed (zero net balance)`;
             }
 

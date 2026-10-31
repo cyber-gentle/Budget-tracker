@@ -152,12 +152,12 @@
             <div class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Net Monthly Flow</span>
-                    <span id="stat-net-flow-icon" class="p-1.5 rounded-lg {{if le .Forecast.NetMonthlyBurn 0.0}}bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400{{else}}bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400{{end}}">
+                    <span id="stat-net-flow-icon" class="p-1.5 rounded-lg {{if le .Forecast.NetMonthlyBurn 0.0}}bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400{{else}}bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-400{{end}}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 16 7-7 4 4 7-7"/><path d="M14 6h7v7"/></svg>
                     </span>
                 </div>
                 <div class="mt-3">
-                    <div id="stat-net-flow" class="font-heading text-2xl sm:text-3xl font-extrabold {{if le .Forecast.NetMonthlyBurn 0.0}}text-emerald-600 dark:text-emerald-400{{else}}text-rose-600 dark:text-rose-400{{end}}">
+                    <div id="stat-net-flow" class="font-heading text-2xl sm:text-3xl font-extrabold {{if le .Forecast.NetMonthlyBurn 0.0}}text-emerald-700 dark:text-emerald-400{{else}}text-rose-700 dark:text-rose-400{{end}}">
                         {{if le .Forecast.NetMonthlyBurn 0.0}}+{{formatMoney .Forecast.NetMonthlySurplus .Currency}}{{else}}-{{formatMoney .Forecast.NetMonthlyBurnAbs .Currency}}{{end}}
                     </div>
                     <p id="stat-net-flow-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -170,12 +170,12 @@
             <div class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Lowest Projected Balance</span>
-                    <span id="stat-safety-icon" class="p-1.5 rounded-lg {{if lt .Forecast.LowestProjectedBalance .Forecast.SafetyBuffer}}bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400{{else}}bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400{{end}}">
+                    <span id="stat-safety-icon" class="p-1.5 rounded-lg {{if lt .Forecast.LowestProjectedBalance .Forecast.SafetyBuffer}}bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400{{else}}bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-400{{end}}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     </span>
                 </div>
                 <div class="mt-3">
-                    <div id="stat-lowest-bal" class="font-heading text-2xl sm:text-3xl font-extrabold {{if lt .Forecast.LowestProjectedBalance .Forecast.SafetyBuffer}}text-amber-600 dark:text-amber-400{{else}}text-slate-900 dark:text-white{{end}}">
+                    <div id="stat-lowest-bal" class="font-heading text-2xl sm:text-3xl font-extrabold {{if lt .Forecast.LowestProjectedBalance .Forecast.SafetyBuffer}}text-amber-700 dark:text-amber-400{{else}}text-slate-900 dark:text-white{{end}}">
                         {{formatMoney .Forecast.LowestProjectedBalance .Currency}}
                     </div>
                     <p id="stat-lowest-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -217,7 +217,7 @@
 
             <!-- Danger Zone Alert (Rendered dynamically if safety breached) -->
             <div id="danger-alert-banner" class="hidden p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 flex items-start sm:items-center gap-3">
-                <div class="p-2 rounded-xl bg-rose-500 text-white shrink-0">
+                <div class="p-2 rounded-xl bg-rose-600 text-white shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
                 </div>
                 <div class="text-xs space-y-0.5">
@@ -232,10 +232,10 @@
 
                 <!-- Floating Canvas Hover Tooltip -->
                 <div id="chartTooltip" class="absolute pointer-events-none hidden bg-slate-900/95 dark:bg-slate-800/95 text-white backdrop-blur-md px-3 py-2 rounded-xl text-xs shadow-xl border border-slate-700 z-30 transition-opacity space-y-1 min-w-[130px]">
-                    <div id="tooltipDate" class="text-[10px] text-slate-400 font-bold uppercase tracking-wider"></div>
+                    <div id="tooltipDate" class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider"></div>
                     <div id="tooltipBal" class="text-sm font-extrabold text-emerald-400"></div>
                     <div id="tooltipChange" class="text-[11px] text-slate-300"></div>
-                    <div id="tooltipEvents" class="text-[10px] text-slate-400 space-y-0.5 border-t border-slate-700/60 pt-1"></div>
+                    <div id="tooltipEvents" class="text-[10px] text-slate-500 dark:text-slate-400 space-y-0.5 border-t border-slate-700/60 pt-1"></div>
                 </div>
             </div>
 
@@ -255,7 +255,7 @@
                         <span>Danger Point</span>
                     </div>
                 </div>
-                <div class="text-[11px] text-slate-400">
+                <div class="text-[11px] text-slate-500 dark:text-slate-400">
                     Hover/Tap points along the line to inspect daily cash events
                 </div>
             </div>
@@ -273,9 +273,9 @@
                                 <span>"What-If" Scenario Simulator</span>
                                 <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400">Live</span>
                             </h3>
-                            <p class="text-xs text-slate-400">Test hypothetical spending & income shifts in real time</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Test hypothetical spending & income shifts in real time</p>
                         </div>
-                        <button type="button" id="btn-reset-simulator" class="text-xs font-semibold text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors cursor-pointer" title="Reset to live defaults">
+                        <button type="button" id="btn-reset-simulator" class="text-xs font-semibold text-slate-500 hover:text-rose-700 dark:text-slate-400 dark:hover:text-rose-400 transition-colors cursor-pointer" title="Reset to live defaults">
                             Reset
                         </button>
                     </div>
@@ -284,10 +284,10 @@
                     <div class="space-y-2 bg-slate-50/70 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <div class="flex items-center justify-between text-xs">
                             <span class="font-bold text-slate-700 dark:text-slate-300">Discretionary Spending</span>
-                            <span id="slider-spend-val" class="font-heading font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">Baseline (0%)</span>
+                            <span id="slider-spend-val" class="font-heading font-extrabold text-emerald-700 dark:text-emerald-400 text-sm">Baseline (0%)</span>
                         </div>
                         <input type="range" id="slider-discretionary" aria-label="Change in discretionary spending (%)" min="-50" max="100" step="5" value="0" class="range-slider w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                        <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+                        <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                             <span>-50% (Extreme Thrift)</span>
                             <span>Normal (0%)</span>
                             <span>+100% (High Spend)</span>
@@ -301,7 +301,7 @@
                             <span id="slider-income-val" class="font-heading font-extrabold text-slate-700 dark:text-slate-300 text-sm">{{.Currency}}0</span>
                         </div>
                         <input type="range" id="slider-income" aria-label="Change in monthly income" min="-5000" max="5000" step="100" value="0" class="range-slider w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                        <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+                        <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                             <span>-{{.Currency}}5,000 (Job Loss)</span>
                             <span>{{.Currency}}0</span>
                             <span>+{{.Currency}}5,000 (Promotion)</span>
@@ -313,14 +313,14 @@
                         <span class="block text-xs font-bold text-slate-700 dark:text-slate-300">Simulate Major One-Off Purchase</span>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-[10px] font-semibold text-slate-400 mb-1">Expense Amount</label>
+                                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Expense Amount</label>
                                 <div class="relative">
-                                    <span class="absolute left-3 top-2.5 text-xs text-slate-400">{{.Currency}}</span>
+                                    <span class="absolute left-3 top-2.5 text-xs text-slate-500 dark:text-slate-400">{{.Currency}}</span>
                                     <input type="text" inputmode="decimal" id="input-planned-amt" placeholder="0" class="w-full pl-7 pr-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-bold">
                                 </div>
                             </div>
                             <div>
-                                <label for="input-planned-date" class="block text-[10px] font-semibold text-slate-400 mb-1">Target Date</label>
+                                <label for="input-planned-date" class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Target Date</label>
                                 <input type="date" id="input-planned-date" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-semibold">
                             </div>
                         </div>
@@ -332,17 +332,17 @@
                     <div class="space-y-3 bg-slate-50/70 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <div class="flex items-center justify-between text-xs">
                             <span class="font-bold text-slate-700 dark:text-slate-300">Test Cancelling Subscriptions</span>
-                            <span class="text-[10px] text-slate-400">Toggle off to see runway gain</span>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400">Toggle off to see runway gain</span>
                         </div>
                         <div class="space-y-2 max-h-40 overflow-y-auto no-scrollbar pr-1">
                             {{range .Subscriptions}}
                             {{if eq .Status "active"}}
                             <label class="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
                                 <div class="flex items-center gap-2">
-                                    <input type="checkbox" class="sub-toggle-checkbox w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500" value="{{.ID}}" checked>
+                                    <input type="checkbox" class="sub-toggle-checkbox w-4 h-4 rounded text-emerald-700 dark:text-emerald-400 focus:ring-emerald-500" value="{{.ID}}" checked>
                                     <div class="text-xs">
                                         <div class="font-bold text-slate-800 dark:text-slate-200">{{.Name}}</div>
-                                        <div class="text-[10px] text-slate-400 capitalize">{{.BillingCycle}}</div>
+                                        <div class="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{{.BillingCycle}}</div>
                                     </div>
                                 </div>
                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{formatMoney .Amount $.Currency}}</span>
@@ -367,7 +367,7 @@
                                     {{len .Forecast.UpcomingEvents}} Events
                                 </span>
                             </h3>
-                            <p class="text-xs text-slate-400">Chronological schedule of paydays, bills & loan payments</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Chronological schedule of paydays, bills & loan payments</p>
                         </div>
 
                         <!-- Filter Tabs -->
@@ -390,12 +390,12 @@
                         {{range .Forecast.UpcomingEvents}}
                         <div class="event-feed-card flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs" data-type="{{.Type}}">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg {{if or (eq .Type "income") (eq .Type "debt_collection")}}bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600{{else if eq .Type "planned_expense"}}bg-amber-50 dark:bg-amber-950/60 text-amber-500{{else}}bg-purple-50 dark:bg-purple-950/60 text-purple-600{{end}}">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg {{if or (eq .Type "income") (eq .Type "debt_collection")}}bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400{{else if eq .Type "planned_expense"}}bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400{{else}}bg-purple-50 dark:bg-purple-950/60 text-purple-600{{end}}">
                                     {{.Icon}}
                                 </div>
                                 <div class="space-y-0.5">
                                     <div class="text-xs font-bold text-slate-900 dark:text-white">{{.Title}}</div>
-                                    <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
                                         <span class="font-semibold text-slate-600 dark:text-slate-400">{{.DisplayDate}}</span>
                                         <span>•</span>
                                         <span class="capitalize">{{.Category}}</span>
@@ -403,17 +403,17 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <div class="text-xs font-heading font-extrabold {{if or (eq .Type "income") (eq .Type "debt_collection")}}text-emerald-600 dark:text-emerald-400{{else}}text-rose-600 dark:text-rose-400{{end}}">
+                                <div class="text-xs font-heading font-extrabold {{if or (eq .Type "income") (eq .Type "debt_collection")}}text-emerald-700 dark:text-emerald-400{{else}}text-rose-700 dark:text-rose-400{{end}}">
                                     {{if or (eq .Type "income") (eq .Type "debt_collection")}}+{{else}}-{{end}}{{formatMoney .Amount $.Currency}}
                                 </div>
-                                <span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md {{if or (eq .Type "income") (eq .Type "debt_collection")}}bg-emerald-50 dark:bg-emerald-950 text-emerald-600{{else}}bg-slate-100 dark:bg-slate-800 text-slate-500{{end}}">
+                                <span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md {{if or (eq .Type "income") (eq .Type "debt_collection")}}bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400{{else}}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300{{end}}">
                                     {{.Type}}
                                 </span>
                             </div>
                         </div>
                         {{end}}
                         {{else}}
-                        <div class="text-center py-12 text-slate-400 text-xs">
+                        <div class="text-center py-12 text-slate-500 dark:text-slate-400 text-xs">
                             No upcoming scheduled events found for this timeframe. Add recurring income or subscriptions!
                         </div>
                         {{end}}
@@ -426,13 +426,13 @@
                         <div>
                             <h3 class="font-heading text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <span>Recurring Incomes</span>
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400">
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400">
                                     {{len .Incomes}} Active
                                 </span>
                             </h3>
-                            <p class="text-xs text-slate-400">Primary salaries, freelance retainers, and scheduled deposits</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Primary salaries, freelance retainers, and scheduled deposits</p>
                         </div>
-                        <button type="button" id="btn-card-add-income" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-black text-white transition-colors cursor-pointer">
+                        <button type="button" id="btn-card-add-income" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 dark:bg-emerald-400 hover:bg-black text-white dark:text-slate-950 transition-colors cursor-pointer">
                             + Add
                         </button>
                     </div>
@@ -442,30 +442,30 @@
                         {{range .Incomes}}
                         <div class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800" data-income-id="{{.ID}}">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-sm text-emerald-600">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-sm text-emerald-700 dark:text-emerald-400">
                                     💰
                                 </div>
                                 <div>
                                     <div class="text-xs font-bold text-slate-800 dark:text-slate-200">{{.Name}}</div>
-                                    <div class="text-[10px] text-slate-400 capitalize">
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 capitalize">
                                         {{.Frequency}} • Next: {{.NextPayFmt}}
                                     </div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3">
-                                <span class="text-xs font-heading font-extrabold text-emerald-600 dark:text-emerald-400">
+                                <span class="text-xs font-heading font-extrabold text-emerald-700 dark:text-emerald-400">
                                     {{formatMoney .Amount $.Currency}}
                                 </span>
-                                <button type="button" class="btn-delete-income text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer" data-id="{{.ID}}" title="Delete income stream">
+                                <button type="button" class="btn-delete-income text-slate-500 dark:text-slate-400 hover:text-rose-700 transition-colors p-1 cursor-pointer" data-id="{{.ID}}" title="Delete income stream">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                                 </button>
                             </div>
                         </div>
                         {{end}}
                         {{else}}
-                        <div class="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400 space-y-1">
+                        <div class="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 space-y-1">
                             <p>No recurring incomes configured yet.</p>
-                            <button type="button" class="btn-trigger-add-income text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">
+                            <button type="button" class="btn-trigger-add-income text-emerald-700 dark:text-emerald-400 font-bold hover:underline cursor-pointer">
                                 Add your primary salary or retainer
                             </button>
                         </div>
@@ -484,15 +484,15 @@
         <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden p-6 space-y-5">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 text-lg">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-700 dark:text-emerald-400 text-lg">
                         💰
                     </div>
                     <div>
                         <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Add Recurring Income</h3>
-                        <p class="text-[11px] text-slate-400">Schedule automatic paydays in your cash forecast</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Schedule automatic paydays in your cash forecast</p>
                     </div>
                 </div>
-                <button type="button" class="btn-close-income-modal p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                <button type="button" class="btn-close-income-modal p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -507,7 +507,7 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Amount *</label>
                         <div class="relative">
-                            <span class="absolute left-3 top-2.5 text-xs text-slate-400">{{.Currency}}</span>
+                            <span class="absolute left-3 top-2.5 text-xs text-slate-500 dark:text-slate-400">{{.Currency}}</span>
                             <input type="text" inputmode="decimal" id="inc-amount" required placeholder="4,500" class="w-full pl-7 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-bold">
                         </div>
                     </div>
@@ -561,10 +561,10 @@
                     </div>
                     <div>
                         <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Cash Flow Settings</h3>
-                        <p class="text-[11px] text-slate-400">Configure safety buffers & daily burn baseline</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Configure safety buffers & daily burn baseline</p>
                     </div>
                 </div>
-                <button type="button" id="btn-close-settings-modal" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                <button type="button" id="btn-close-settings-modal" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -573,10 +573,10 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Minimum Safety Buffer (Threshold)</label>
                     <div class="relative">
-                        <span class="absolute left-3 top-2.5 text-xs text-slate-400">{{.Currency}}</span>
+                        <span class="absolute left-3 top-2.5 text-xs text-slate-500 dark:text-slate-400">{{.Currency}}</span>
                         <input type="text" inputmode="decimal" id="setting-safety" value="{{formatAmount .Settings.SafetyBuffer}}" class="w-full pl-7 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-bold">
                     </div>
-                    <p class="text-[10px] text-slate-400 mt-1">
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                         You'll receive a danger warning if your projected balance breaches this emergency reserve.
                     </p>
                 </div>
@@ -584,10 +584,10 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Custom Daily Discretionary Burn (Optional)</label>
                     <div class="relative">
-                        <span class="absolute left-3 top-2.5 text-xs text-slate-400">{{.Currency}}</span>
+                        <span class="absolute left-3 top-2.5 text-xs text-slate-500 dark:text-slate-400">{{.Currency}}</span>
                         <input type="text" inputmode="decimal" id="setting-daily-burn" value="{{if gt .Settings.DiscretionaryDailyBurn 0.0}}{{formatAmount .Settings.DiscretionaryDailyBurn}}{{end}}" placeholder="0 (Auto calculate from past 30 days)" class="w-full pl-7 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 font-bold">
                     </div>
-                    <p class="text-[10px] text-slate-400 mt-1">
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                         Leave at 0 to automatically extrapolate from your past 30-day non-recurring transaction history.
                     </p>
                 </div>
@@ -596,7 +596,7 @@
                     <button type="button" id="btn-cancel-settings" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer">
                         Cancel
                     </button>
-                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-black dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl shadow-md cursor-pointer">
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white dark:text-slate-950 bg-slate-900 hover:bg-black dark:bg-emerald-400 dark:hover:bg-emerald-300 rounded-xl shadow-md cursor-pointer">
                         Save Settings
                     </button>
                 </div>
@@ -846,7 +846,7 @@
                     `).join('');
                     evsDiv.classList.remove('hidden');
                 } else {
-                    evsDiv.innerHTML = '<span class="text-slate-400">Regular daily spend</span>';
+                    evsDiv.innerHTML = '<span class="text-slate-500 dark:text-slate-400">Regular daily spend</span>';
                     evsDiv.classList.remove('hidden');
                 }
 
@@ -932,12 +932,12 @@
             if (forecast.net_monthly_burn <= 0) {
                 const surplus = Math.abs(forecast.net_monthly_burn);
                 statNet.textContent = `+${fmtMoney(surplus)}`;
-                statNet.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400';
-                statNetIcon.className = 'p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400';
+                statNet.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400';
+                statNetIcon.className = 'p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400';
             } else {
                 statNet.textContent = `-${fmtMoney(forecast.net_monthly_burn)}`;
-                statNet.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400';
-                statNetIcon.className = 'p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400';
+                statNet.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-rose-700 dark:text-rose-400';
+                statNetIcon.className = 'p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-400';
             }
 
             // Stat 4: Lowest projected dip
@@ -949,7 +949,7 @@
                 statLowestSub.innerHTML = `Safety threshold: ${fmtMoney(forecast.safety_buffer)} (on <span id="stat-lowest-date">${forecast.lowest_balance_date}</span>)`;
             }
             if (forecast.lowest_projected_balance < forecast.safety_buffer) {
-                statLowest.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400';
+                statLowest.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-rose-700 dark:text-rose-400';
             } else {
                 statLowest.className = 'font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white';
             }
@@ -982,7 +982,7 @@
 
             if (!events || !events.length) {
                 container.innerHTML = `
-                    <div class="text-center py-12 text-slate-400 text-xs">
+                    <div class="text-center py-12 text-slate-500 dark:text-slate-400 text-xs">
                         No upcoming scheduled events found for this timeframe.
                     </div>
                 `;
@@ -992,8 +992,8 @@
             container.innerHTML = events.map(ev => {
                 const isInflow = (ev.type === 'income' || ev.type === 'debt_collection');
                 const isPlanned = (ev.type === 'planned_expense');
-                const iconBg = isInflow ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600' : (isPlanned ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-500' : 'bg-purple-50 dark:bg-purple-950/60 text-purple-600');
-                const amtColor = isInflow ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
+                const iconBg = isInflow ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400' : (isPlanned ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400' : 'bg-purple-50 dark:bg-purple-950/60 text-purple-600');
+                const amtColor = isInflow ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400';
                 const sign = isInflow ? '+' : '-';
 
                 return `
@@ -1004,7 +1004,7 @@
                             </div>
                             <div class="space-y-0.5">
                                 <div class="text-xs font-bold text-slate-900 dark:text-white">${esc(ev.title)}</div>
-                                <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                                <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
                                     <span class="font-semibold text-slate-600 dark:text-slate-400">${ev.display_date}</span>
                                     <span>•</span>
                                     <span class="capitalize">${esc(ev.category)}</span>
@@ -1015,7 +1015,7 @@
                             <div class="text-xs font-heading font-extrabold ${amtColor}">
                                 ${sign}${fmtMoney(ev.amount)}
                             </div>
-                            <span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md ${isInflow ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">
+                            <span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-md ${isInflow ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">
                                 ${ev.type.replace('_', ' ')}
                             </span>
                         </div>
@@ -1107,10 +1107,10 @@
                 sliderSpendVal.className = 'font-heading font-extrabold text-slate-700 dark:text-slate-300 text-sm';
             } else if (val < 0) {
                 sliderSpendVal.textContent = `${val}% (Thriftier)`;
-                sliderSpendVal.className = 'font-heading font-extrabold text-emerald-600 dark:text-emerald-400 text-sm';
+                sliderSpendVal.className = 'font-heading font-extrabold text-emerald-700 dark:text-emerald-400 text-sm';
             } else {
                 sliderSpendVal.textContent = `+${val}% (Higher Spend)`;
-                sliderSpendVal.className = 'font-heading font-extrabold text-rose-600 dark:text-rose-400 text-sm';
+                sliderSpendVal.className = 'font-heading font-extrabold text-rose-700 dark:text-rose-400 text-sm';
             }
             queueSimulation();
         });
@@ -1124,10 +1124,10 @@
                 sliderIncVal.className = 'font-heading font-extrabold text-slate-700 dark:text-slate-300 text-sm';
             } else if (val > 0) {
                 sliderIncVal.textContent = `+${currencySymbol}${val.toLocaleString()}/mo`;
-                sliderIncVal.className = 'font-heading font-extrabold text-emerald-600 dark:text-emerald-400 text-sm';
+                sliderIncVal.className = 'font-heading font-extrabold text-emerald-700 dark:text-emerald-400 text-sm';
             } else {
                 sliderIncVal.textContent = `-${currencySymbol}${Math.abs(val).toLocaleString()}/mo`;
-                sliderIncVal.className = 'font-heading font-extrabold text-rose-600 dark:text-rose-400 text-sm';
+                sliderIncVal.className = 'font-heading font-extrabold text-rose-700 dark:text-rose-400 text-sm';
             }
             queueSimulation();
         });
