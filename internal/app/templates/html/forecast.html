@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Cash Flow Forecasting & Runway Predictor — Spendly</title>
     
     <link rel="icon" type="image/svg+xml" href="{{asset "/static/assets/imgs/favicon.svg"}}">
@@ -286,7 +286,7 @@
                             <span class="font-bold text-slate-700 dark:text-slate-300">Discretionary Spending</span>
                             <span id="slider-spend-val" class="font-heading font-extrabold text-emerald-700 dark:text-emerald-400 text-sm">Baseline (0%)</span>
                         </div>
-                        <input type="range" id="slider-discretionary" aria-label="Change in discretionary spending (%)" min="-50" max="100" step="5" value="0" class="range-slider w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-xl appearance-none cursor-pointer">
+                        <input type="range" id="slider-discretionary" aria-label="Change in discretionary spending (%)" min="-50" max="100" step="5" value="0" class="range-slider w-full appearance-none cursor-pointer">
                         <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                             <span>-50% (Extreme Thrift)</span>
                             <span>Normal (0%)</span>
@@ -300,7 +300,7 @@
                             <span class="font-bold text-slate-700 dark:text-slate-300">Income Adjustment (Monthly)</span>
                             <span id="slider-income-val" class="font-heading font-extrabold text-slate-700 dark:text-slate-300 text-sm">{{.Currency}}0</span>
                         </div>
-                        <input type="range" id="slider-income" aria-label="Change in monthly income" min="-5000" max="5000" step="100" value="0" class="range-slider w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-xl appearance-none cursor-pointer">
+                        <input type="range" id="slider-income" aria-label="Change in monthly income" min="-5000" max="5000" step="100" value="0" class="range-slider w-full appearance-none cursor-pointer">
                         <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                             <span>-{{.Currency}}5,000 (Job Loss)</span>
                             <span>{{.Currency}}0</span>
