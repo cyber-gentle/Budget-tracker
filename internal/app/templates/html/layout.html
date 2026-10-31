@@ -473,6 +473,125 @@
 </nav>
 {{end}}
 
+{{define "export-modal"}}
+<!-- Shared export window: every page's Export button opens this (js/layout.js). -->
+<div id="export-modal" role="dialog" aria-modal="true" aria-labelledby="export-modal-title"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📊</span>
+                    <h2 id="export-modal-title" class="font-heading font-bold text-base text-slate-900 dark:text-white">Export Transactions</h2>
+                </div>
+                <button type="button" id="export-modal-close" aria-label="Close"
+                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                    </svg>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Download your transaction records for accounting, spreadsheets, or offline backups.
+            </p>
+
+            <form id="export-form" class="space-y-4">
+                <!-- Format Selector -->
+                <div>
+                    <p id="export-format-label" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">File Format</p>
+                    <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="export-format-label">
+                        <label
+                            class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 cursor-pointer hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
+                            <input type="radio" name="export-format" value="csv" checked
+                                class="text-slate-900 focus:ring-0">
+                            <div>
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">CSV
+                                    (.csv)</span>
+                                <span class="block text-[10px] text-slate-500 dark:text-slate-400">Excel, Sheets, Numbers</span>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 cursor-pointer hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
+                            <input type="radio" name="export-format" value="json" class="text-slate-900 focus:ring-0">
+                            <div>
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">JSON
+                                    (.json)</span>
+                                <span class="block text-[10px] text-slate-500 dark:text-slate-400">Raw ledger records</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Timeframe Selector -->
+                <div>
+                    <label for="export-timeframe" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Timeframe</label>
+                    <select id="export-timeframe"
+                        class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 transition-colors cursor-pointer">
+                        <option value="this_month" selected>This Month</option>
+                        <option value="last_month">Last Month</option>
+                        <option value="30d">Last 30 Days</option>
+                        <option value="3m">Last 3 Months</option>
+                        <option value="6m">Last 6 Months</option>
+                        <option value="this_year">This Year</option>
+                        <option value="12m">Last 12 Months</option>
+                        <option value="all_time">All Time (Entire History)</option>
+                        <option value="custom">Custom Dates…</option>
+                    </select>
+                    <div id="export-custom-dates" class="hidden grid grid-cols-2 gap-2 mt-2">
+                        <div>
+                            <label for="export-start" class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">From</label>
+                            <input type="date" id="export-start" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">
+                        </div>
+                        <div>
+                            <label for="export-end" class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">To</label>
+                            <input type="date" id="export-end" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account / Wallet Selector -->
+                <div>
+                    <label for="export-account" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Wallet /
+                        Account</label>
+                    <select id="export-account"
+                        class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 transition-colors cursor-pointer">
+                        <option value="all">All Wallets</option>
+                    </select>
+                </div>
+
+                <!-- Transaction Type Selector -->
+                <div>
+                    <label for="export-type" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Transaction
+                        Type</label>
+                    <select id="export-type"
+                        class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 transition-colors cursor-pointer">
+                        <option value="all">All (Income & Expenses)</option>
+                        <option value="expense">Expenses Only</option>
+                        <option value="income">Income Only</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-2.5 pt-2">
+                    <button type="button" id="export-cancel"
+                        class="flex-1 py-2 text-xs font-semibold rounded-xl transition-colors cursor-pointer bg-white hover:bg-slate-50 border border-slate-300 text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100">Cancel</button>
+                    <button type="submit" id="export-submit"
+                        class="flex-1 py-2 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" x2="12" y1="15" y2="3" />
+                        </svg>
+                        <span>Download Export</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{{end}}
+
 {{define "more-sheet"}}
 <div id="mobile-more-sheet" data-shared-sheet onclick="if(event.target===this)this.classList.add('hidden')" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs hidden transition-opacity">
         <div class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl p-5 shadow-2xl max-h-[85vh] overflow-y-auto">

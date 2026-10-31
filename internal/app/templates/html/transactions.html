@@ -555,36 +555,7 @@
         </div>
     </div>
 
-    <!-- ─── Export Modal ────────────────────────────────────────────────────── -->
-    <div id="export-modal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs hidden p-4">
-        <div
-            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="font-heading font-bold text-sm text-slate-900 dark:text-white">Export Transactions</h3>
-                <button type="button" id="btn-close-export"
-                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
-            </div>
-            <div class="space-y-3">
-                <p class="text-xs text-slate-500 dark:text-slate-400">Download your transactions for spreadsheets or
-                    external tax audits.</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button" onclick="triggerExport('csv')"
-                        class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 flex flex-col items-center gap-1 cursor-pointer">
-                        <span class="text-xl">📊</span>
-                        <strong class="text-xs font-bold">CSV Spreadsheet</strong>
-                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Excel / Numbers</span>
-                    </button>
-                    <button type="button" onclick="triggerExport('json')"
-                        class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 flex flex-col items-center gap-1 cursor-pointer">
-                        <span class="text-xl">📄</span>
-                        <strong class="text-xs font-bold">JSON Data</strong>
-                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Raw Records</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    {{template "export-modal" (layout "transactions" .)}}
 
     {{template "more-sheet" (layout "transactions" .)}}
 
@@ -1105,11 +1076,6 @@
             }
         }
 
-        function triggerExport(format) {
-            document.getElementById('export-modal').classList.add('hidden');
-            showToast(`Generating ${format.toUpperCase()} export...`);
-            window.location.href = `/api/export?format=${format}`;
-        }
 
         // Event Listeners Setup
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1194,13 +1160,6 @@
             });
             document.getElementById('btn-confirm-delete')?.addEventListener('click', executeDeleteTransaction);
 
-            // Export Modal
-            document.getElementById('btn-export')?.addEventListener('click', () => {
-                document.getElementById('export-modal').classList.remove('hidden');
-            });
-            document.getElementById('btn-close-export')?.addEventListener('click', () => {
-                document.getElementById('export-modal').classList.add('hidden');
-            });
 
             // Form Submit
             formatAmountInput(document.getElementById('form-amount'));
@@ -1473,6 +1432,7 @@
         });
     </script>
     <script src="{{asset "/static/js/layout.js"}}"></script>
+    <script src="{{asset "/static/js/export.js"}}"></script>
     <script src="{{asset "/static/js/assistant.js"}}" defer></script>
 </body>
 

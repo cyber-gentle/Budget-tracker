@@ -81,22 +81,7 @@
     }
 
     // ─── Header & Dropdown Actions: Export, Categories, Profile ──────────────
-    function handleExportAction(e) {
-        e.preventDefault();
-        if (userDropdownMenu) userDropdownMenu.classList.add('hidden');
-        const exportModal = document.getElementById('export-modal');
-        if (exportModal) {
-            exportModal.classList.remove('hidden');
-        } else if (typeof openExportModal === 'function') {
-            openExportModal();
-        } else {
-            window.location.href = '/dashboard?action=export';
-        }
-    }
-    const btnExportHeader = document.getElementById('btn-export-header');
-    const btnDropdownExport = document.getElementById('btn-dropdown-export');
-    if (btnExportHeader) btnExportHeader.addEventListener('click', handleExportAction);
-    if (btnDropdownExport) btnDropdownExport.addEventListener('click', handleExportAction);
+    // Export buttons are wired by js/export.js (shared with the dashboard).
 
     const btnOpenCategoryMenu = document.getElementById('btn-open-category-modal-menu');
     if (btnOpenCategoryMenu) {

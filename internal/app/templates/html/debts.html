@@ -1790,12 +1790,14 @@
     
 </script>
     <!-- ─── Fixed Mobile Bottom Navigation Bar ────────────────────────────── -->
+    {{template "export-modal" (layout "debts" .)}}
     {{template "bottom-nav" (layout "debts" .)}}
 
     <!-- ─── Mobile More Navigation Drawer / Sheet ───────────────────────────── -->
     {{template "more-sheet" (layout "debts" .)}}
 
     <script src="{{asset "/static/js/layout.js"}}"></script>
+    <script src="{{asset "/static/js/export.js"}}"></script>
     <script src="{{asset "/static/js/assistant.js"}}" defer></script>
 </body>
 </html>

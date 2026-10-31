@@ -1041,7 +1041,13 @@ func (s *DBStore) GetDetailedFinancialReport(username, timeframe, startDateStr, 
 		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, 1, 0).Add(-time.Nanosecond)
 		timeframeLabel = "Last 6 Months"
 
-	case "ytd":
+	case "30d":
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		start = today.AddDate(0, 0, -29)
+		end = today.AddDate(0, 0, 1).Add(-time.Nanosecond)
+		timeframeLabel = "Last 30 Days"
+
+	case "ytd", "this_year":
 		start = time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location())
 		end = time.Date(now.Year(), 12, 31, 23, 59, 59, 999999999, now.Location())
 		timeframeLabel = fmt.Sprintf("YTD %d", now.Year())
@@ -1051,7 +1057,7 @@ func (s *DBStore) GetDetailedFinancialReport(username, timeframe, startDateStr, 
 		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, 1, 0).Add(-time.Nanosecond)
 		timeframeLabel = "Last 12 Months"
 
-	case "all":
+	case "all", "all_time":
 		start = time.Date(2000, 1, 1, 0, 0, 0, 0, now.Location())
 		end = time.Date(2100, 1, 1, 0, 0, 0, 0, now.Location())
 		timeframeLabel = "All Time"
