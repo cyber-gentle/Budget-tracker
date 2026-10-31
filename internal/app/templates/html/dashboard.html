@@ -725,7 +725,7 @@
 
     <!-- Mobile Floating Action Button (FAB) (Enlarged) -->
     <button type="button" id="btn-mobile-fab"
-        class="lg:hidden fixed right-4 bottom-20 z-40 w-[58px] h-[58px] rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black flex items-center justify-center shadow-xl shadow-emerald-500/40 active:scale-90 transition-all cursor-pointer"
+        class="lg:hidden fixed right-4 bottom-20 above-bottom-nav z-40 w-[58px] h-[58px] rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black flex items-center justify-center shadow-xl shadow-emerald-500/40 active:scale-90 transition-all cursor-pointer"
         title="Add Transaction" aria-label="Add Transaction">
         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
@@ -3903,7 +3903,7 @@
                 const greetingEl = document.getElementById(id);
                 if (greetingEl) {
                     const fName = greetingEl.dataset.firstname || 'there';
-                    greetingEl.textContent = `${greetingWord}, ${fName} 👋`;
+                    greetingEl.textContent = `${greetingWord}, ${fName}`;
                 }
             }
 

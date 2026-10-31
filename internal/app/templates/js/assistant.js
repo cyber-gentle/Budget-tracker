@@ -14,12 +14,12 @@
     ];
 
     const css = `
-    .sa-fab{position:fixed;right:16px;bottom:160px;z-index:40;width:52px;height:52px;border-radius:16px;border:0;cursor:pointer;
+    .sa-fab{position:fixed;right:16px;bottom:calc(160px + env(safe-area-inset-bottom, 0px));z-index:40;width:52px;height:52px;border-radius:16px;border:0;cursor:pointer;
       background:linear-gradient(135deg,#10B981,#0d9488);color:#fff;font-size:22px;box-shadow:0 8px 24px rgba(16,185,129,.35);
       display:flex;align-items:center;justify-content:center;transition:transform .15s}
     .sa-fab:hover{transform:scale(1.06)} .sa-fab:active{transform:scale(.96)}
     @media (min-width:1024px){.sa-fab{right:24px;bottom:24px}}
-    .sa-panel{position:fixed;z-index:60;left:8px;right:8px;bottom:8px;height:min(78vh,620px);display:none;flex-direction:column;
+    .sa-panel{position:fixed;z-index:60;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom, 0px));height:min(78vh,620px);display:none;flex-direction:column;
       background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:20px;box-shadow:0 20px 50px rgba(15,23,42,.25);overflow:hidden;
       font-family:inherit;font-size:13px}
     @media (min-width:640px){.sa-panel{left:auto;right:24px;bottom:24px;width:380px;height:560px}}

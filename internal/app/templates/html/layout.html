@@ -449,7 +449,7 @@
 
 {{define "bottom-nav"}}
 <!-- Five equal columns, identical on every page; only the active item's colour changes. -->
-<nav aria-label="Main" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 h-16 px-1 grid grid-cols-5 items-stretch shadow-lg transition-colors">
+<nav aria-label="Main" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 bottom-nav px-1 grid grid-cols-5 items-stretch shadow-lg transition-colors">
     <a href="/dashboard" class="flex flex-col items-center justify-center gap-1 min-w-0 h-full text-[10px] font-semibold transition-colors {{if eq .Active "dashboard"}}text-emerald-700 dark:text-emerald-400{{else}}text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white{{end}}"{{if eq .Active "dashboard"}} aria-current="page"{{end}}>
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         <span class="truncate max-w-full">Home</span>
