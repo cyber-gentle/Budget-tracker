@@ -89,7 +89,7 @@
         <div class="block lg:hidden space-y-3.5 mb-2">
             <!-- Personalized Greeting -->
             <div class="px-0.5">
-                <p class="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"
                     id="mobile-greeting-date">{{if .DateGreeting}}{{.DateGreeting}}{{else}}Today{{end}}</p>
                 <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5"
                     id="mobile-greeting-text"
@@ -105,9 +105,9 @@
                     aria-hidden="true"></div>
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-1">
-                        <span class="text-xs font-medium text-slate-400">Total balance</span>
+                        <span class="text-xs font-medium text-slate-300">Total balance</span>
                         <button type="button" id="btn-toggle-balance-mobile"
-                            class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                            class="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                             title="Hide balance" aria-label="Toggle balance visibility">
                             <span class="icon-eye block">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -137,13 +137,13 @@
                     <div class="grid grid-cols-2 gap-2.5">
                         <div
                             class="bg-white/5 dark:bg-white/[0.04] p-2.5 sm:p-3 rounded-2xl border border-white/10 backdrop-blur-xs">
-                            <span class="block text-[10px] font-medium text-slate-400">Income this month</span>
+                            <span class="block text-[10px] font-medium text-slate-300">Income this month</span>
                             <strong class="block text-xs sm:text-sm font-bold text-emerald-400 mt-0.5 truncate"
                                 id="mobile-kpi-income" data-raw-income="{{.IncomeFmt}}">+{{.IncomeFmt}}</strong>
                         </div>
                         <div
                             class="bg-white/5 dark:bg-white/[0.04] p-2.5 sm:p-3 rounded-2xl border border-white/10 backdrop-blur-xs">
-                            <span class="block text-[10px] font-medium text-slate-400">Expenses this month</span>
+                            <span class="block text-[10px] font-medium text-slate-300">Expenses this month</span>
                             <strong class="block text-xs sm:text-sm font-bold text-rose-400 mt-0.5 truncate"
                                 id="mobile-kpi-expense" data-raw-expense="{{.ExpensesFmt}}">−{{.ExpensesFmt}}</strong>
                         </div>
@@ -185,7 +185,7 @@
                         <div class="flex items-center gap-1.5">
                             <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Total Balance</span>
                             <button type="button" id="btn-toggle-balance-desktop"
-                                class="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                class="p-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                                 title="Hide balance" aria-label="Toggle balance visibility">
                                 <span class="icon-eye block">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
@@ -211,7 +211,7 @@
                             </button>
                         </div>
                         <span
-                            class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">All time</span>
+                            class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">All time</span>
                     </div>
                     <p class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate"
                         id="kpi-balance" data-raw-balance="{{.BalanceFmt}}">{{.BalanceFmt}}</p>
@@ -256,9 +256,9 @@
                     <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 gap-1">
                         <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Monthly Income</span>
                         <span
-                            class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">This month</span>
+                            class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">This month</span>
                     </div>
-                    <p class="font-heading text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight truncate"
+                    <p class="font-heading text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 tracking-tight truncate"
                         id="kpi-income" data-raw-income="{{.IncomeFmt}}">{{.IncomeFmt}}</p>
                 </div>
                 <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Recorded this calendar month</p>
@@ -271,9 +271,9 @@
                     <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5 gap-1">
                         <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Monthly Expenses</span>
                         <span
-                            class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20">This month</span>
+                            class="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">This month</span>
                     </div>
-                    <p class="font-heading text-2xl sm:text-3xl font-extrabold text-rose-500 dark:text-rose-400 tracking-tight truncate"
+                    <p class="font-heading text-2xl sm:text-3xl font-extrabold text-rose-700 dark:text-rose-400 tracking-tight truncate"
                         id="kpi-expense" data-raw-expense="{{.ExpensesFmt}}">{{.ExpensesFmt}}</p>
                 </div>
                 <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Recorded this calendar month</p>
@@ -298,7 +298,7 @@
                                 <path class="text-slate-100 dark:text-slate-800" stroke-width="3.5"
                                     stroke="currentColor" fill="none"
                                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="text-emerald-500 transition-all duration-1000"
+                                <path class="text-emerald-700 dark:text-emerald-400 transition-all duration-1000"
                                     stroke-dasharray="{{.SavingsRate}}, 100" stroke-width="3.5" stroke-linecap="round"
                                     stroke="currentColor" fill="none"
                                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -319,13 +319,13 @@
             <h1 class="sr-only">Dashboard</h1>
             <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <h2 class="font-heading text-base font-bold">Wallets & Accounts</h2>
-                <button type="button" id="btn-open-accounts" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold"><span aria-hidden="true">+</span> Add account</button>
+                <button type="button" id="btn-open-accounts" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 text-xs font-semibold"><span aria-hidden="true">+</span> Add account</button>
             </div>
             <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
                 <span class="text-sm text-slate-500 dark:text-slate-400">Total balance</span>
                 <span id="accounts-total-pill" class="text-lg font-bold tabular-nums">₦0.00</span>
             </div>
-            <div id="account-rows" class="divide-y divide-slate-100 dark:divide-slate-800"><p class="py-3 text-sm text-slate-500">Loading accounts…</p></div>
+            <div id="account-rows" class="divide-y divide-slate-100 dark:divide-slate-800"><p class="py-3 text-sm text-slate-500 dark:text-slate-400">Loading accounts…</p></div>
             <div class="flex justify-end pt-3 border-t border-slate-200 dark:border-slate-800">
                 <button type="button" id="btn-open-transfer" class="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700">Transfer</button>
             </div>
@@ -348,7 +348,7 @@
                                 class="text-[10px] sm:text-[11px] px-2 py-0.5 font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md">This
                                 Month</span>
                             <button type="button"
-                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-md"
+                                class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-md"
                                 title="Category options">···</button>
                         </div>
                     </div>
@@ -360,7 +360,7 @@
                         <div id="donut-center-total"
                             class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                             <span
-                                class="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Total
+                                class="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">Total
                                 Spent</span>
                             <span id="donut-total-val"
                                 class="font-heading font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">₦0.00</span>
@@ -368,8 +368,8 @@
                         <div id="chart-empty"
                             class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-white dark:bg-slate-900 hidden">
                             <span class="text-2xl mb-1">📊</span>
-                            <p class="text-xs text-slate-400 dark:text-slate-500 font-medium">No expenses recorded this month.</p>
-                            <button type="button" onclick="openAddTxModal()" class="mt-3 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold">Add an expense</button>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">No expenses recorded this month.</p>
+                            <button type="button" onclick="openAddTxModal()" class="mt-3 px-3 py-2 rounded-lg bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 text-white dark:text-slate-950 text-sm font-semibold">Add an expense</button>
                         </div>
                     </div>
                 </div>
@@ -390,17 +390,17 @@
                         <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs font-semibold">
                             <button type="button" id="tab-quick-ai"
                                 class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all">
-                                <span class="text-emerald-500">✨</span>
+                                <span class="text-emerald-700 dark:text-emerald-400">✨</span>
                                 <span>AI Assistant</span>
                             </button>
                             <button type="button" id="tab-quick-manual"
-                                class="px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer transition-all">
+                                class="px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer transition-all">
                                 <span>📝 Form</span>
                             </button>
                         </div>
                         <div class="flex items-center gap-1.5">
                             <button type="button" id="btn-open-ai-settings"
-                                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                class="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                                 title="AI Assistant Settings (Gemini / OpenAI / Smart NLP)">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                             </button>
@@ -432,10 +432,10 @@
                             </div>
 
                             <div class="relative">
-                                <textarea id="ai-chat-input" rows="2" placeholder='e.g. "Spent ₦4,500 on dinner at KFC yesterday" or "350k salary" or paste bank SMS...' class="w-full pl-3 pr-24 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none transition-all font-medium"></textarea>
+                                <textarea id="ai-chat-input" rows="2" placeholder='e.g. "Spent ₦4,500 on dinner at KFC yesterday" or "350k salary" or paste bank SMS...' class="w-full pl-3 pr-24 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none transition-all font-medium"></textarea>
                                 
                                 <div class="absolute right-2 top-2 flex items-center gap-1">
-                                    <button type="button" id="btn-ai-mic" class="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 bg-slate-100 dark:bg-slate-700/80 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all cursor-pointer relative" title="Voice Input (Tap to speak)">
+                                    <button type="button" id="btn-ai-mic" class="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 dark:text-slate-400 dark:hover:text-emerald-400 bg-slate-100 dark:bg-slate-700/80 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all cursor-pointer relative" title="Voice Input (Tap to speak)">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
                                         <span id="mic-pulse-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
                                     </button>
@@ -446,7 +446,7 @@
                             </div>
 
                             <!-- Voice Recording Status Banner -->
-                            <div id="voice-banner" class="hidden py-1.5 px-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center justify-between">
+                            <div id="voice-banner" class="hidden py-1.5 px-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-400 text-xs font-semibold flex items-center justify-between">
                                 <div class="flex items-center gap-2">
                                     <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
                                     <span id="voice-listening-label">Listening... Speak your expense now</span>
@@ -461,13 +461,13 @@
                                         <span id="ai-prev-cat-icon">🍔</span>
                                         <span id="ai-prev-note" class="truncate max-w-[170px]">Dinner at KFC</span>
                                     </div>
-                                    <div id="ai-prev-amount" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+                                    <div id="ai-prev-amount" class="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">
                                         ₦4,500.00
                                     </div>
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold">
-                                    <span id="ai-prev-type" class="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 uppercase tracking-wider font-bold">
+                                    <span id="ai-prev-type" class="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 uppercase tracking-wider font-bold">
                                         Expense
                                     </span>
                                     <span id="ai-prev-cat" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 capitalize">
@@ -489,7 +489,7 @@
                                     <button type="button" id="btn-ai-to-manual" class="py-2 px-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-xl transition-all cursor-pointer" title="Edit in manual form">
                                         ✏️ Edit
                                     </button>
-                                    <button type="button" id="btn-ai-discard" class="py-2 px-2 text-xs text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer" title="Clear">
+                                    <button type="button" id="btn-ai-discard" class="py-2 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-rose-700 rounded-lg transition-colors cursor-pointer" title="Clear">
                                         ✕
                                     </button>
                                 </div>
@@ -497,7 +497,7 @@
 
                             <!-- Sample Prompts -->
                             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-                                <span class="text-[10px] text-slate-400">Try:</span>
+                                <span class="text-[10px] text-slate-500 dark:text-slate-400">Try:</span>
                                 <button type="button" class="btn-sample-ai px-2 py-0.5 text-[10px] rounded-lg bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-500 cursor-pointer transition-colors" data-phrase="Spent ₦3,500 on lunch at KFC yesterday">
                                     "Lunch at KFC 3,500"
                                 </button>
@@ -523,7 +523,7 @@
                                     id="tx-note-label">Note / Description</label>
                                 <input type="text" id="tx-note-input" name="note"
                                     placeholder="e.g. Lunch at Cafe, Groceries..." required
-                                    class="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all">
+                                    class="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 transition-all">
                             </div>
                             <div>
                                 <label
@@ -540,7 +540,7 @@
                                     <label for="add-category"
                                         class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Category</label>
                                     <button type="button" id="btn-quick-manage-cat"
-                                        class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">Manage</button>
+                                        class="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">Manage</button>
                                 </div>
                                 <select name="category" id="add-category" required
                                     class="w-full px-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 cursor-pointer">
@@ -587,13 +587,13 @@
                             <button type="button" id="type-income-btn"
                                 class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700">Income</button>
                             <button type="button" id="type-expense-btn"
-                                class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold text-center flex-1 transition-all cursor-pointer border border-emerald-500/80 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]">Expense</button>
+                                class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold text-center flex-1 transition-all cursor-pointer border border-emerald-500/80 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]">Expense</button>
                             <button type="button" id="type-transfer-btn"
                                 class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700">Transfer</button>
                         </div>
 
                         <input type="hidden" id="add-tags" name="tags" value="">
-                        <p class="text-xs text-rose-500 font-medium hidden" id="tx-error"></p>
+                        <p class="text-xs text-rose-700 dark:text-rose-400 font-medium hidden" id="tx-error"></p>
 
                         <!-- Glowing Emerald CTA Button -->
                         <button type="submit" id="btn-submit-tx"
@@ -615,7 +615,7 @@
                             <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Cash Flow Trends
                             </h2>
                             <span id="trends-net-badge"
-                                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Net:
+                                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">Net:
                                 +₦0</span>
                         </div>
                         <div class="flex items-center gap-1.5">
@@ -629,22 +629,22 @@
                                 <option value="custom" class="bg-white dark:bg-slate-900">Custom...</option>
                             </select>
                             <button type="button"
-                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md"
+                                class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md"
                                 title="More options">···</button>
                         </div>
                     </div>
 
                     <div class="flex items-center justify-between mb-2 text-xs">
-                        <p id="trends-subtitle" class="text-[11px] text-slate-400 dark:text-slate-500">Monthly Cash Flow
+                        <p id="trends-subtitle" class="text-[11px] text-slate-500 dark:text-slate-400">Monthly Cash Flow
                         </p>
                         <!-- Legend Indicator -->
                         <div class="flex items-center gap-3 text-[11px] font-semibold">
-                            <span class="flex items-center gap-1 text-emerald-500">
+                            <span class="flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
                                 <span
                                     class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]"></span>
                                 <span>Income</span>
                             </span>
-                            <span class="flex items-center gap-1 text-slate-400 dark:text-slate-300">
+                            <span class="flex items-center gap-1 text-slate-500 dark:text-slate-300">
                                 <span class="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-300"></span>
                                 <span>Expenses</span>
                             </span>
@@ -660,28 +660,28 @@
                             <input type="date" id="trends-end-date"
                                 class="px-2 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs">
                             <button type="button" id="trends-apply-custom"
-                                class="px-2.5 py-0.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold">Apply</button>
+                                class="px-2.5 py-0.5 bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 text-white dark:text-slate-950 rounded-lg text-xs font-semibold">Apply</button>
                             <button type="button" id="trends-cancel-custom"
-                                class="px-1.5 py-0.5 text-slate-500 text-xs">✕</button>
+                                class="px-1.5 py-0.5 text-slate-500 dark:text-slate-400 text-xs">✕</button>
                         </div>
-                        <p id="trends-custom-error" class="text-rose-500 text-[10px] font-medium hidden"></p>
+                        <p id="trends-custom-error" class="text-rose-700 dark:text-rose-400 text-[10px] font-medium hidden"></p>
                     </div>
 
                     <!-- Cash Flow Period Metrics Bar -->
                     <div id="trends-summary-bar"
                         class="flex items-center justify-between text-xs py-1 px-2.5 mb-2 bg-slate-50/80 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-1">
-                            <span class="text-slate-400 text-[10px]">In:</span>
+                            <span class="text-slate-500 dark:text-slate-400 text-[10px]">In:</span>
                             <span id="trends-total-income"
-                                class="font-bold text-emerald-600 dark:text-emerald-400 text-[11px]">₦0</span>
+                                class="font-bold text-emerald-700 dark:text-emerald-400 text-[11px]">₦0</span>
                         </div>
                         <div class="flex items-center gap-1">
-                            <span class="text-slate-400 text-[10px]">Out:</span>
+                            <span class="text-slate-500 dark:text-slate-400 text-[10px]">Out:</span>
                             <span id="trends-total-expense"
-                                class="font-bold text-rose-500 dark:text-rose-400 text-[11px]">₦0</span>
+                                class="font-bold text-rose-700 dark:text-rose-400 text-[11px]">₦0</span>
                         </div>
                         <div class="flex items-center gap-1">
-                            <span class="text-slate-400 text-[10px]">Net:</span>
+                            <span class="text-slate-500 dark:text-slate-400 text-[10px]">Net:</span>
                             <span id="trends-total-net"
                                 class="font-bold text-slate-900 dark:text-white text-[11px]">₦0</span>
                         </div>
@@ -692,8 +692,8 @@
                         <div id="trends-empty"
                             class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-white dark:bg-slate-900 hidden">
                             <span class="text-2xl mb-1">📉</span>
-                            <p class="text-xs text-slate-400 dark:text-slate-500 font-medium">Your income and spending trends will appear here.</p>
-                            <button type="button" onclick="openAddTxModal()" class="mt-3 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold">Add a transaction</button>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Your income and spending trends will appear here.</p>
+                            <button type="button" onclick="openAddTxModal()" class="mt-3 px-3 py-2 rounded-lg bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 text-white dark:text-slate-950 text-sm font-semibold">Add a transaction</button>
                         </div>
                     </div>
                 </div>
@@ -703,7 +703,7 @@
         <section id="dashboard-budgets" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div><h2 class="font-heading text-base font-bold">Monthly budgets</h2><p id="budget-month-progress" class="text-sm text-slate-500 dark:text-slate-400"></p></div>
-                <div class="flex flex-wrap gap-2"><span id="budget-pace-pill"></span><button id="btn-manage-budgets" type="button" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold">Set limits</button><button id="btn-auto-503020" type="button" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm">Auto 50/30/20</button></div>
+                <div class="flex flex-wrap gap-2"><span id="budget-pace-pill"></span><button id="btn-manage-budgets" type="button" class="px-3 py-2 rounded-lg bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 text-white dark:text-slate-950 text-sm font-semibold">Set limits</button><button id="btn-auto-503020" type="button" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm">Auto 50/30/20</button></div>
             </div>
             <p id="budget-overall-burn" class="text-sm"></p>
             <div id="budget-alerts-container" class="hidden space-y-2"></div>
@@ -737,11 +737,11 @@
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
                 <div>
                     <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-white">All Features</h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500">Dedicated financial management sections</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Dedicated financial management sections</p>
                 </div>
                 <button type="button" id="btn-close-more-sheet"
                     onclick="const s = document.getElementById('mobile-more-sheet'); if (s) s.classList.add('hidden');"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">✕</button>
+                    class="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">✕</button>
             </div>
 
             <!-- Features Navigation Grid -->
@@ -750,64 +750,64 @@
                     class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
                     <span class="text-xl">💳</span>
                     <strong class="text-xs font-bold text-slate-900 dark:text-white">Debts & Loans</strong>
-                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Track money owed & loans</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Track money owed & loans</span>
                 </a>
                 <a href="/subscriptions"
                     class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
                     <span class="text-xl">🔄</span>
                     <strong class="text-xs font-bold text-slate-900 dark:text-white">Subscriptions</strong>
-                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Recurring bills & charges</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Recurring bills & charges</span>
                 </a>
                 <a href="/reports"
                     class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
                     <span class="text-xl">📊</span>
                     <strong class="text-xs font-bold text-slate-900 dark:text-white">Budgets & Reports</strong>
-                    <span class="text-[10px] text-slate-400 dark:text-slate-500">50/30/20 & deep analytics</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">50/30/20 & deep analytics</span>
                 </a>
                 <a href="/goals"
                     class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
                     <span class="text-xl">🎯</span>
                     <strong class="text-xs font-bold text-slate-900 dark:text-white">Savings Goals</strong>
-                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Target pots & milestones</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Target pots & milestones</span>
                 </a>
                 <a href="/net-worth"
                     class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
                     <span class="text-xl">🏛️</span>
                     <strong class="text-xs font-bold text-slate-900 dark:text-white">Net Worth</strong>
-                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Assets & overall wealth</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Assets & overall wealth</span>
                 </a>
                 <a href="/receipts"
                     class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
                     <span class="text-xl">🧾</span>
                     <strong class="text-xs font-bold text-slate-900 dark:text-white">Receipts & OCR</strong>
-                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Scan & store receipts</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Scan & store receipts</span>
                 </a>
                 <a href="/forecast"
                     class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 transition-all">
                     <span class="text-xl">🔮</span>
                     <strong class="text-xs font-bold text-slate-900 dark:text-white">Cash Runway</strong>
-                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Forecast balance & runway</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Forecast balance & runway</span>
                 </a>
                 <button type="button" id="btn-sheet-categories"
                     class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-emerald-500/50 flex flex-col gap-1 text-left transition-all cursor-pointer">
                     <span class="text-xl">🏷️</span>
                     <strong class="text-xs font-bold text-slate-900 dark:text-white">Categories & Tags</strong>
-                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Manage tags & rules</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Manage tags & rules</span>
                 </button>
             </div>
 
             <!-- Profile & Sign out -->
             <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <button type="button" id="btn-sheet-profile"
-                    class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-500 cursor-pointer">
+                    class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-700 cursor-pointer">
                     <div
-                        class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-600 text-white flex items-center justify-center font-bold">
+                        class="w-8 h-8 rounded-full bg-slate-900 dark:bg-emerald-400 text-white dark:text-slate-950 flex items-center justify-center font-bold">
                         {{if .FirstName}}{{slice .FirstName 0 1}}{{else}}U{{end}}
                     </div>
                     <span>Edit Profile</span>
                 </button>
                 <a href="/api/logout"
-                    class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors">
+                    class="px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors">
                     Sign Out
                 </a>
             </div>
@@ -824,11 +824,11 @@
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Edit Profile</h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Manage your personal information and
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage your personal information and
                         preferences</p>
                 </div>
                 <button type="button" id="profile-modal-close"
-                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18" />
@@ -881,7 +881,7 @@
                             </svg>
                             <span>Security & Password</span>
                         </span>
-                        <svg id="password-toggle-chevron" class="text-slate-400 transition-transform duration-200"
+                        <svg id="password-toggle-chevron" class="text-slate-500 dark:text-slate-400 transition-transform duration-200"
                             xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="m6 9 6 6 6-6" />
@@ -917,7 +917,7 @@
                     <button type="button" id="profile-cancel-btn"
                         class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">Cancel</button>
                     <button type="submit" id="profile-submit-btn"
-                        class="px-4 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors shadow-sm cursor-pointer">Save
+                        class="px-4 py-2 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 rounded-xl transition-colors shadow-sm cursor-pointer">Save
                         Changes</button>
                 </div>
             </form>
@@ -964,7 +964,7 @@
                 <!-- Type Selector -->
                 <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-[#0d1627] border border-slate-200 dark:border-slate-700/80 rounded-2xl">
                     <button type="button" id="modal-type-btn-expense" onclick="setModalAddType('expense')"
-                        class="py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/40 shadow-xs">
+                        class="py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/40 shadow-xs">
                         <span class="text-base font-bold">−</span>
                         <span>Expense</span>
                     </button>
@@ -1056,7 +1056,7 @@
                     </div>
                 </div>
 
-                <p class="text-xs text-rose-500 font-medium hidden" id="modal-tx-error"></p>
+                <p class="text-xs text-rose-700 dark:text-rose-400 font-medium hidden" id="modal-tx-error"></p>
 
                 <!-- Action Buttons: Cancel & Save Transaction -->
                 <div class="pt-2 flex items-center gap-3">
@@ -1081,7 +1081,7 @@
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Edit Transaction</h3>
                 <button type="button" id="edit-modal-close"
-                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18" />
@@ -1151,18 +1151,18 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Tags <span
-                            class="font-normal text-[11px] text-slate-400">(optional, comma-separated)</span></label>
+                            class="font-normal text-[11px] text-slate-500 dark:text-slate-400">(optional, comma-separated)</span></label>
                     <input type="text" id="edit-tags" name="tags" placeholder="e.g. food, team-lunch, personal"
                         class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
                 </div>
 
-                <p class="text-xs text-rose-500 font-medium hidden" id="edit-error"></p>
+                <p class="text-xs text-rose-700 dark:text-rose-400 font-medium hidden" id="edit-error"></p>
 
                 <div class="flex gap-2.5 pt-2">
                     <button type="button" id="edit-cancel"
                         class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
                     <button type="submit"
-                        class="flex-1 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer">Save
+                        class="flex-1 py-2 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 rounded-xl transition-colors cursor-pointer">Save
                         Changes</button>
                 </div>
             </form>
@@ -1181,7 +1181,7 @@
                     </h3>
                 </div>
                 <button type="button" id="budgets-modal-close"
-                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18" />
@@ -1189,7 +1189,7 @@
                     </svg>
                 </button>
             </div>
-            <p class="text-xs text-slate-400 dark:text-slate-500 mb-4">Set maximum spending limits per month. Enter 0 or
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Set maximum spending limits per month. Enter 0 or
                 leave blank to remove limit.</p>
 
             <form id="budgets-form" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
@@ -1202,7 +1202,7 @@
                     <button type="button" id="budgets-cancel"
                         class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Close</button>
                     <button type="submit"
-                        class="flex-1 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer">Save
+                        class="flex-1 py-2 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 rounded-xl transition-colors cursor-pointer">Save
                         Budgets</button>
                 </div>
             </form>
@@ -1221,7 +1221,7 @@
                     </h3>
                 </div>
                 <button type="button" id="auto-503020-modal-close"
-                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18" />
@@ -1240,12 +1240,12 @@
                         Income</label>
                     <div class="relative">
                         <span id="auto-currency-prefix"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₦</span>
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400">₦</span>
                         <input type="number" id="auto-income-input" step="any" min="1000" required
                             class="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-indigo-500"
                             placeholder="e.g. 500000">
                     </div>
-                    <p class="text-[10px] text-slate-400 mt-1">Adjust or confirm your expected monthly earnings.</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Adjust or confirm your expected monthly earnings.</p>
                 </div>
 
                 <!-- Preview Allocation Grid -->
@@ -1255,22 +1255,22 @@
                         <span class="block text-[10px] font-bold text-blue-600 dark:text-blue-400">50% Needs</span>
                         <span id="preview-needs-val"
                             class="block font-bold text-slate-800 dark:text-slate-200 mt-0.5">₦0</span>
-                        <span class="block text-[9px] text-slate-400 mt-0.5">Food, Rent, Transit</span>
+                        <span class="block text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Food, Rent, Transit</span>
                     </div>
                     <div
                         class="p-2.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/50 border border-purple-100 dark:border-purple-900/50">
                         <span class="block text-[10px] font-bold text-purple-600 dark:text-purple-400">30% Wants</span>
                         <span id="preview-wants-val"
                             class="block font-bold text-slate-800 dark:text-slate-200 mt-0.5">₦0</span>
-                        <span class="block text-[9px] text-slate-400 mt-0.5">Dining, Shopping, Fun</span>
+                        <span class="block text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Dining, Shopping, Fun</span>
                     </div>
                     <div
                         class="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50">
-                        <span class="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400">20%
+                        <span class="block text-[10px] font-bold text-emerald-700 dark:text-emerald-400">20%
                             Savings</span>
                         <span id="preview-savings-val"
                             class="block font-bold text-slate-800 dark:text-slate-200 mt-0.5">₦0</span>
-                        <span class="block text-[9px] text-slate-400 mt-0.5">Vaults, Debt Payoff</span>
+                        <span class="block text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Vaults, Debt Payoff</span>
                     </div>
                 </div>
 
@@ -1296,7 +1296,7 @@
                     <h3 class="font-heading font-bold text-base text-slate-900 dark:text-white">Export Transactions</h3>
                 </div>
                 <button type="button" id="export-modal-close"
-                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18" />
@@ -1321,7 +1321,7 @@
                             <div>
                                 <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">CSV
                                     (.csv)</span>
-                                <span class="block text-[10px] text-slate-400">Excel, Sheets, Numbers</span>
+                                <span class="block text-[10px] text-slate-500 dark:text-slate-400">Excel, Sheets, Numbers</span>
                             </div>
                         </label>
                         <label
@@ -1330,7 +1330,7 @@
                             <div>
                                 <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">JSON
                                     (.json)</span>
-                                <span class="block text-[10px] text-slate-400">Raw ledger records</span>
+                                <span class="block text-[10px] text-slate-500 dark:text-slate-400">Raw ledger records</span>
                             </div>
                         </label>
                     </div>
@@ -1375,7 +1375,7 @@
                     <button type="button" id="export-cancel"
                         class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
                     <button type="submit" id="export-submit"
-                        class="flex-1 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5">
+                        class="flex-1 py-2 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -1395,7 +1395,7 @@
         <div
             class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 w-full max-w-sm shadow-2xl text-center">
             <div
-                class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
+                class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 6h18" />
@@ -1406,7 +1406,7 @@
                 </svg>
             </div>
             <h4 class="font-heading font-bold text-slate-900 dark:text-white text-sm mb-1">Delete Transaction?</h4>
-            <p class="text-xs text-slate-400 dark:text-slate-500 mb-5">This action cannot be undone.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">This action cannot be undone.</p>
             <div class="flex gap-2.5">
                 <button type="button" id="confirm-cancel-btn"
                     class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
@@ -1425,7 +1425,7 @@
             <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                     <div
-                        class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path
@@ -1437,11 +1437,11 @@
                         <h3
                             class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">
                             Categories & Tags</h3>
-                        <p class="text-[11px] text-slate-400">Customise categories and manage transaction tags</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Customise categories and manage transaction tags</p>
                     </div>
                 </div>
                 <button type="button" id="category-modal-close"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                    class="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18" />
@@ -1457,11 +1457,11 @@
                     Expense Categories
                 </button>
                 <button type="button" id="tab-cat-income"
-                    class="cat-tab-btn pb-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer">
+                    class="cat-tab-btn pb-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer">
                     Income Categories
                 </button>
                 <button type="button" id="tab-cat-tags"
-                    class="cat-tab-btn pb-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer">
+                    class="cat-tab-btn pb-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer">
                     Tags Cloud
                 </button>
             </div>
@@ -1490,7 +1490,7 @@
                                 <div class="flex-1">
                                     <input type="text" id="new-cat-label" required
                                         placeholder="Category name (e.g. Gym & Fitness, Hobbies)"
-                                        class="w-full h-10 px-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium transition-all">
+                                        class="w-full h-10 px-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium transition-all">
                                 </div>
                             </div>
 
@@ -1520,10 +1520,10 @@
                                 </div>
                             </div>
 
-                            <p class="text-xs text-rose-500 font-medium hidden" id="cat-error"></p>
+                            <p class="text-xs text-rose-700 dark:text-rose-400 font-medium hidden" id="cat-error"></p>
 
                             <button type="submit" id="btn-submit-cat"
-                                class="w-full bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white text-xs font-semibold py-2 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                                class="w-full bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 text-white dark:text-slate-950 text-xs font-semibold py-2 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2.5">
                                     <path d="M5 12h14" />
@@ -1539,7 +1539,7 @@
                         <div
                             class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                             <span>Active Categories</span>
-                            <span id="cat-count-badge" class="text-[11px] font-semibold text-slate-400">0
+                            <span id="cat-count-badge" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">0
                                 categories</span>
                         </div>
                         <div id="cat-list-items" class="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
@@ -1555,9 +1555,9 @@
                         <p class="text-xs font-bold text-slate-800 dark:text-slate-200">How Tagging Works</p>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                             Organise transactions across categories using tags like <span
-                                class="font-semibold text-emerald-600 dark:text-emerald-400">#work</span>, <span
-                                class="font-semibold text-emerald-600 dark:text-emerald-400">#travel</span>, or <span
-                                class="font-semibold text-emerald-600 dark:text-emerald-400">#tax-deductible</span>. Add
+                                class="font-semibold text-emerald-700 dark:text-emerald-400">#work</span>, <span
+                                class="font-semibold text-emerald-700 dark:text-emerald-400">#travel</span>, or <span
+                                class="font-semibold text-emerald-700 dark:text-emerald-400">#tax-deductible</span>. Add
                             tags when recording a transaction or click any tag in the list to filter.
                         </p>
                     </div>
@@ -1566,7 +1566,7 @@
                         <div
                             class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                             <span>Popular Tags Cloud</span>
-                            <span id="tags-count-badge" class="text-[11px] font-semibold text-slate-400">0 tags</span>
+                            <span id="tags-count-badge" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">0 tags</span>
                         </div>
                         <div id="tags-cloud-container" class="flex flex-wrap gap-2 pt-1">
                             <!-- Populated dynamically -->
@@ -1579,7 +1579,7 @@
             <div
                 class="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex justify-end">
                 <button type="button" id="category-modal-done"
-                    class="px-4 py-1.5 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer">Done</button>
+                    class="px-4 py-1.5 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 rounded-xl transition-colors cursor-pointer">Done</button>
             </div>
         </div>
     </div>
@@ -1613,12 +1613,12 @@
                         </div>
                     </div>
                 </div>
-                <p class="text-xs text-rose-500 font-medium hidden" id="edit-cat-error"></p>
+                <p class="text-xs text-rose-700 dark:text-rose-400 font-medium hidden" id="edit-cat-error"></p>
                 <div class="flex gap-2 pt-2">
                     <button type="button" id="edit-cat-cancel"
                         class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
                     <button type="submit"
-                        class="flex-1 py-2 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer">Save</button>
+                        class="flex-1 py-2 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 rounded-xl transition-colors cursor-pointer">Save</button>
                 </div>
             </form>
         </div>
@@ -1630,7 +1630,7 @@
         <div
             class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
             <div
-                class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
+                class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 6h18" />
@@ -1642,7 +1642,7 @@
             </div>
             <h4 class="font-heading font-bold text-slate-900 dark:text-white text-sm mb-1" id="cat-delete-title">Delete
                 Category?</h4>
-            <p class="text-xs text-slate-400 dark:text-slate-500 mb-4">Any transactions in this category will be
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Any transactions in this category will be
                 automatically reassigned to <span class="font-bold text-slate-700 dark:text-slate-300">Other</span>.</p>
             <div class="flex gap-2.5">
                 <button type="button" id="cat-delete-cancel"
@@ -1669,11 +1669,11 @@
                         <h3
                             class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">
                             Wallets & Accounts</h3>
-                        <p class="text-[11px] text-slate-400">Manage multiple accounts, banks, mobile money & cards</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Manage multiple accounts, banks, mobile money & cards</p>
                     </div>
                 </div>
                 <button type="button" id="account-modal-close"
-                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18" />
@@ -1691,7 +1691,7 @@
                         <span class="text-xs font-bold text-slate-800 dark:text-slate-200" id="account-form-title">+ Add
                             New Wallet / Account</span>
                         <button type="button" id="btn-cancel-account-edit"
-                            class="text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hidden cursor-pointer">Cancel
+                            class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hidden cursor-pointer">Cancel
                             Edit</button>
                     </div>
                     <form id="account-form" class="space-y-3">
@@ -1703,7 +1703,7 @@
                                     class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Account
                                     Name</label>
                                 <input type="text" id="acc-name" required placeholder="e.g. GTBank, OPay, Main Savings"
-                                    class="w-full h-9 px-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium">
+                                    class="w-full h-9 px-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 font-medium">
                             </div>
                             <div class="sm:col-span-4">
                                 <label for="acc-type"
@@ -1794,10 +1794,10 @@
                             </div>
                         </div>
 
-                        <p class="text-xs text-rose-500 font-medium hidden" id="acc-form-error"></p>
+                        <p class="text-xs text-rose-700 dark:text-rose-400 font-medium hidden" id="acc-form-error"></p>
 
                         <button type="submit" id="btn-submit-account"
-                            class="w-full bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 text-white text-xs font-semibold py-2 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                            class="w-full bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 text-white dark:text-slate-950 text-xs font-semibold py-2 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
                             <span id="btn-submit-account-text">Save Wallet</span>
                         </button>
                     </form>
@@ -1807,7 +1807,7 @@
                 <div class="space-y-2">
                     <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                         <span>Active Wallets</span>
-                        <span id="accounts-count-badge" class="text-[11px] font-semibold text-slate-400">0
+                        <span id="accounts-count-badge" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">0
                             wallets</span>
                     </div>
                     <div id="accounts-manager-list" class="space-y-2 max-h-56 overflow-y-auto pr-0.5">
@@ -1820,7 +1820,7 @@
             <div
                 class="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex justify-end">
                 <button type="button" id="account-modal-done"
-                    class="px-4 py-1.5 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-black dark:hover:bg-emerald-500 rounded-xl transition-colors cursor-pointer">Done</button>
+                    class="px-4 py-1.5 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 hover:bg-black dark:hover:bg-emerald-300 rounded-xl transition-colors cursor-pointer">Done</button>
             </div>
         </div>
     </div>
@@ -1840,11 +1840,11 @@
                         <h3
                             class="font-heading font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">
                             Transfer Funds</h3>
-                        <p class="text-[11px] text-slate-400">Move money between your wallets seamlessly</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Move money between your wallets seamlessly</p>
                     </div>
                 </div>
                 <button type="button" id="transfer-modal-close"
-                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18" />
@@ -1889,10 +1889,10 @@
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Note
                         (optional)</label>
                     <input type="text" id="transfer-note" placeholder="e.g. ATM cash withdrawal, Move to savings"
-                        class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
+                        class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 rounded-xl focus:outline-none focus:border-slate-900 dark:focus:border-slate-500">
                 </div>
 
-                <p class="text-xs text-rose-500 font-medium hidden" id="transfer-error"></p>
+                <p class="text-xs text-rose-700 dark:text-rose-400 font-medium hidden" id="transfer-error"></p>
 
                 <div class="flex gap-2.5 pt-2">
                     <button type="button" id="transfer-cancel"
@@ -1912,7 +1912,7 @@
         <div
             class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
             <div
-                class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
+                class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 6h18" />
@@ -1924,7 +1924,7 @@
             </div>
             <h4 class="font-heading font-bold text-slate-900 dark:text-white text-sm mb-1" id="account-delete-title">
                 Delete Wallet?</h4>
-            <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">Choose where to reassign existing transactions
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Choose where to reassign existing transactions
                 from this wallet:</p>
             <div class="mb-4 text-left">
                 <label for="account-delete-reassign" class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Reassign
@@ -1933,7 +1933,7 @@
                     class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none">
                 </select>
             </div>
-            <p class="text-xs text-rose-500 font-medium hidden mb-3" id="account-delete-error"></p>
+            <p class="text-xs text-rose-700 dark:text-rose-400 font-medium hidden mb-3" id="account-delete-error"></p>
             <div class="flex gap-2.5">
                 <button type="button" id="account-delete-cancel"
                     class="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">Cancel</button>
@@ -1957,7 +1957,7 @@
                     </div>
                 </div>
                 <button type="button" id="btn-close-ai-settings"
-                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+                    class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
@@ -1970,17 +1970,17 @@
                     </label>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-800/40 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/20 dark:has-[:checked]:bg-emerald-950/20">
-                            <input type="radio" name="ai_provider" value="local" checked class="text-emerald-500 focus:ring-emerald-500">
+                            <input type="radio" name="ai_provider" value="local" checked class="text-emerald-700 dark:text-emerald-400 focus:ring-emerald-500">
                             <div>
                                 <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
                                     <span>🧠 Smart NLP</span>
                                 </div>
-                                <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Free • Offline</span>
+                                <span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">Free • Offline</span>
                             </div>
                         </label>
 
                         <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-800/40 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/20 dark:has-[:checked]:bg-emerald-950/20">
-                            <input type="radio" name="ai_provider" value="gemini" class="text-emerald-500 focus:ring-emerald-500">
+                            <input type="radio" name="ai_provider" value="gemini" class="text-emerald-700 dark:text-emerald-400 focus:ring-emerald-500">
                             <div>
                                 <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
                                     <span>✨ Gemini</span>
@@ -1990,12 +1990,12 @@
                         </label>
 
                         <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 cursor-pointer transition-all bg-slate-50/50 dark:bg-slate-800/40 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/20 dark:has-[:checked]:bg-emerald-950/20">
-                            <input type="radio" name="ai_provider" value="openai" class="text-emerald-500 focus:ring-emerald-500">
+                            <input type="radio" name="ai_provider" value="openai" class="text-emerald-700 dark:text-emerald-400 focus:ring-emerald-500">
                             <div>
                                 <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
                                     <span>🟢 OpenAI</span>
                                 </div>
-                                <span class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold">GPT-4o Mini</span>
+                                <span class="text-[10px] text-teal-700 dark:text-teal-400 font-semibold">GPT-4o Mini</span>
                             </div>
                         </label>
                     </div>
@@ -2008,18 +2008,18 @@
                             <label id="ai-key-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                                 API Key
                             </label>
-                            <a id="ai-get-key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1">
+                            <a id="ai-get-key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline inline-flex items-center gap-1">
                                 <span>Get free API key</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                             </a>
                         </div>
                         <div class="relative">
                             <input type="password" id="ai-api-key-input" placeholder="AIzaSy... or sk-proj-..." class="w-full px-3 py-2 pr-16 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-emerald-500 font-mono">
-                            <button type="button" id="btn-toggle-ai-key-visibility" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-1.5 py-0.5 rounded cursor-pointer">
+                            <button type="button" id="btn-toggle-ai-key-visibility" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-1.5 py-0.5 rounded cursor-pointer">
                                 Show
                             </button>
                         </div>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                             Your key is stored securely in your private database and used exclusively for your account.
                         </p>
                     </div>
@@ -2052,7 +2052,7 @@
                     </label>
                 </div>
 
-                <p id="ai-settings-error" class="text-xs text-rose-500 font-semibold hidden"></p>
+                <p id="ai-settings-error" class="text-xs text-rose-700 dark:text-rose-400 font-semibold hidden"></p>
 
                 <!-- Actions -->
                 <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -2220,7 +2220,7 @@
 
             container.classList.remove('hidden');
             list.innerHTML = popularTags.slice(0, 8).map(t => `
-                <button type="button" class="quick-tag-chip px-2 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/40 text-slate-600 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer" data-tag="${esc(t.tag)}">
+                <button type="button" class="quick-tag-chip px-2 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/40 text-slate-600 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer" data-tag="${esc(t.tag)}">
                     #${esc(t.tag)}
                 </button>
             `).join('');
@@ -2236,12 +2236,12 @@
             }
 
             if (!popularTags || popularTags.length === 0) {
-                cloudContainer.innerHTML = `<p class="text-xs text-slate-400 py-3 text-center w-full">No tags created yet. Add tags using #tag in your notes or tag inputs!</p>`;
+                cloudContainer.innerHTML = `<p class="text-xs text-slate-500 dark:text-slate-400 py-3 text-center w-full">No tags created yet. Add tags using #tag in your notes or tag inputs!</p>`;
                 return;
             }
 
             cloudContainer.innerHTML = popularTags.map(t => `
-                <button type="button" class="tag-cloud-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 dark:bg-slate-800/80 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-700 text-slate-700 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400 transition-all cursor-pointer group" data-tag="${esc(t.tag)}">
+                <button type="button" class="tag-cloud-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 dark:bg-slate-800/80 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-700 text-slate-700 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-400 transition-all cursor-pointer group" data-tag="${esc(t.tag)}">
                     <span class="text-xs font-bold">#${esc(t.tag)}</span>
                     <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">${t.count}</span>
                 </button>
@@ -2263,7 +2263,7 @@
             }
 
             if (!list.length) {
-                listContainer.innerHTML = '<p class="text-xs text-slate-400 py-2">No categories found.</p>';
+                listContainer.innerHTML = '<p class="text-xs text-slate-500 dark:text-slate-400 py-2">No categories found.</p>';
                 return;
             }
 
@@ -2279,17 +2279,17 @@
                         </div>
                         <div class="min-w-0">
                             <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">${esc(lbl)}</p>
-                            <p class="text-[10px] text-slate-400 truncate">${esc(k)}</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${esc(k)}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
                         ${c.is_default ? `
-                            <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">Default</span>
+                            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">Default</span>
                         ` : `
-                            <button type="button" class="btn-edit-cat p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer" data-id="${c.id}" data-label="${esc(lbl)}" data-icon="${esc(icn)}" data-color="${esc(c.color)}" title="Edit">
+                            <button type="button" class="btn-edit-cat p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer" data-id="${c.id}" data-label="${esc(lbl)}" data-icon="${esc(icn)}" data-color="${esc(c.color)}" title="Edit">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             </button>
-                            <button type="button" class="btn-del-cat p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer" data-id="${c.id}" data-label="${esc(lbl)}" title="Delete">
+                            <button type="button" class="btn-del-cat p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer" data-id="${c.id}" data-label="${esc(lbl)}" title="Delete">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                             </button>
                         `}
@@ -2619,7 +2619,7 @@
         const typeTransferBtn = document.getElementById('type-transfer-btn');
         const addTxType = document.getElementById('add-tx-type');
 
-        const activeTypeClass = 'px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold text-center flex-1 transition-all cursor-pointer border border-emerald-500/80 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]';
+        const activeTypeClass = 'px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold text-center flex-1 transition-all cursor-pointer border border-emerald-500/80 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]';
         const inactiveTypeClass = 'px-3 sm:px-4 py-1.5 rounded-lg text-xs font-medium text-center flex-1 transition-all cursor-pointer border border-slate-200 dark:border-slate-800 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700';
 
         function updateTypeSelector(selectedType) {
@@ -2786,10 +2786,10 @@
             const incBtn = document.getElementById('modal-type-btn-income');
             if (expBtn && incBtn) {
                 if (type === 'expense') {
-                    expBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/40 shadow-xs';
+                    expBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/40 shadow-xs';
                     incBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent';
                 } else {
-                    incBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shadow-xs';
+                    incBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 shadow-xs';
                     expBtn.className = 'py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent';
                 }
             }
@@ -3040,7 +3040,7 @@
 
             [tabExpense, tabIncome, tabTags].forEach(b => {
                 if (!b) return;
-                b.className = 'cat-tab-btn pb-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer';
+                b.className = 'cat-tab-btn pb-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer';
             });
 
             if (tab === 'expense') {
@@ -3240,12 +3240,12 @@
             activeBudgetTab = tab;
             if (tab === 'envelopes') {
                 tabEnvBtn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-700 shadow-xs cursor-pointer';
-                tab503020Btn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer';
+                tab503020Btn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer';
                 tabEnvContent.classList.remove('hidden');
                 tab503020Content.classList.add('hidden');
             } else {
                 tab503020Btn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-900 dark:text-white bg-white dark:bg-slate-700 shadow-xs cursor-pointer';
-                tabEnvBtn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer';
+                tabEnvBtn.className = 'flex-1 py-1.5 text-center rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer';
                 tab503020Content.classList.remove('hidden');
                 tabEnvContent.classList.add('hidden');
             }
@@ -3296,16 +3296,16 @@
             const pacePill = document.getElementById('budget-pace-pill');
             if (pacePill) {
                 if (rep.overall_pace_status === 'exceeded') {
-                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400';
+                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400';
                     pacePill.textContent = 'Budget Exceeded';
                 } else if (rep.overall_pace_status === 'warning') {
-                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400';
+                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400';
                     pacePill.textContent = 'High Burn Rate';
                 } else if (rep.overall_pace_status === 'caution') {
                     pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-50 dark:bg-yellow-950/60 text-yellow-600 dark:text-yellow-400';
                     pacePill.textContent = 'Near Limit';
                 } else {
-                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400';
+                    pacePill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400';
                     pacePill.textContent = 'On Track';
                 }
             }
@@ -3358,11 +3358,11 @@
             if (!budgetedEnvelopes.length) {
                 list.innerHTML = `
                     <div class="py-6 text-center">
-                        <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 mx-auto flex items-center justify-center mb-2">
+                        <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 mx-auto flex items-center justify-center mb-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                         </div>
                         <p class="text-xs font-bold text-slate-800 dark:text-slate-200">No budgets set yet</p>
-                        <p class="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">Set a monthly spending limit for each category to track your progress.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">Set a monthly spending limit for each category to track your progress.</p>
                         <div class="flex justify-center gap-2 mt-3.5">
                             <button type="button" onclick="openAuto503020Modal()" class="px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors cursor-pointer">Auto 50/30/20</button>
                             <button type="button" onclick="document.getElementById('btn-manage-budgets').click()" class="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">Set Limits</button>
@@ -3400,7 +3400,7 @@
                         bucketClass = 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/50';
                     } else if (env.bucket === 'savings') {
                         bucketLabel = 'Savings (20%)';
-                        bucketClass = 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50';
+                        bucketClass = 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50';
                     }
 
                     const row = document.createElement('div');
@@ -3419,9 +3419,9 @@
                         <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
                             <div class="${barColor} h-2 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
                         </div>
-                        <div class="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
+                        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                             <span>Spent: <strong class="text-slate-700 dark:text-slate-300 font-semibold">${fmtMoney(env.spent)}</strong> of ${fmtMoney(env.monthly_limit)}</span>
-                            <span>Remaining: <strong class="${env.remaining < 0 ? 'text-rose-500 font-bold' : 'text-slate-700 dark:text-slate-300 font-semibold'}">${fmtMoney(env.remaining)}</strong></span>
+                            <span>Remaining: <strong class="${env.remaining < 0 ? 'text-rose-700 dark:text-rose-400 font-bold' : 'text-slate-700 dark:text-slate-300 font-semibold'}">${fmtMoney(env.remaining)}</strong></span>
                         </div>
                     `;
                     list.appendChild(row);
@@ -3470,23 +3470,23 @@
                 if (!b) return '';
                 const isOver = b.status === 'over';
                 const isCaution = b.status === 'caution';
-                let statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">Target Met (${b.actual_percent}%)</span>`;
+                let statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">Target Met (${b.actual_percent}%)</span>`;
                 if (b.key === 'savings') {
                     if (b.actual_spent < b.target_amount) {
-                        statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">${fmtMoney(b.target_amount - b.actual_spent)} to reach 20%</span>`;
+                        statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">${fmtMoney(b.target_amount - b.actual_spent)} to reach 20%</span>`;
                     }
                 } else if (isOver) {
-                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">Over Target by ${fmtMoney(Math.abs(b.variance_amount))}</span>`;
+                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400">Over Target by ${fmtMoney(Math.abs(b.variance_amount))}</span>`;
                 } else if (isCaution) {
                     statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-50 dark:bg-yellow-950/60 text-yellow-600 dark:text-yellow-400">${b.actual_percent}% of Income</span>`;
                 } else {
-                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">${fmtMoney(b.variance_amount)} Under Budget</span>`;
+                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">${fmtMoney(b.variance_amount)} Under Budget</span>`;
                 }
 
                 const catChips = (b.categories || []).map(c => {
                     const meta = getCategoryMeta(c, 'expense');
                     return `<span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300">${meta.icon} ${esc(meta.label)}</span>`;
-                }).join(' ') || '<span class="text-[10px] text-slate-400 italic">No activity yet</span>';
+                }).join(' ') || '<span class="text-[10px] text-slate-500 dark:text-slate-400 italic">No activity yet</span>';
 
                 const progressPct = b.target_amount > 0 ? Math.min(Math.round((b.actual_spent / b.target_amount) * 100), 100) : 0;
 
@@ -3495,7 +3495,7 @@
                         <div class="flex items-center justify-between text-xs">
                             <div>
                                 <span class="font-bold text-slate-900 dark:text-white">${b.name}</span>
-                                <span class="text-[11px] text-slate-400 ml-1.5">${desc}</span>
+                                <span class="text-[11px] text-slate-500 dark:text-slate-400 ml-1.5">${desc}</span>
                             </div>
                             <div>${statusBadge}</div>
                         </div>
@@ -3542,8 +3542,8 @@
             if (!keys.length) {
                 list.innerHTML = `
                     <div class="py-6 text-center">
-                        <p class="text-xs text-slate-400">No monthly budgets set yet.</p>
-                        <p class="text-[11px] text-slate-400 mt-1">Click "Set Limits" or "Auto 50/30/20" to define spending caps.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">No monthly budgets set yet.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Click "Set Limits" or "Auto 50/30/20" to define spending caps.</p>
                     </div>
                 `;
                 return;
@@ -3557,16 +3557,16 @@
                 const isNear = pct >= 80 && !isOver;
 
                 let barColor = 'bg-emerald-500';
-                let badgeClass = 'bg-emerald-50 text-emerald-700';
+                let badgeClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
                 let statusText = `${pct}% spent`;
 
                 if (isOver) {
                     barColor = 'bg-rose-500';
-                    badgeClass = 'bg-rose-50 text-rose-700';
+                    badgeClass = 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400';
                     statusText = 'Over Budget!';
                 } else if (isNear) {
                     barColor = 'bg-amber-500';
-                    badgeClass = 'bg-amber-50 text-amber-700';
+                    badgeClass = 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400';
                     statusText = 'Near Limit';
                 }
 
@@ -3581,7 +3581,7 @@
                             <span>${esc(catMeta.label)}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-slate-400 dark:text-slate-500 text-[11px]">${fmtMoney(spent)} / ${fmtMoney(limit)}</span>
+                            <span class="text-slate-500 dark:text-slate-400 text-[11px]">${fmtMoney(spent)} / ${fmtMoney(limit)}</span>
                             <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${badgeClass}">${statusText}</span>
                         </div>
                     </div>
@@ -3686,7 +3686,7 @@
                 let bClass = 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400';
                 if (kLower.includes('sav') || kLower.includes('invest') || kLower.includes('debt')) {
                     bucketTag = 'Savings';
-                    bClass = 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400';
+                    bClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
                 } else if (kLower.includes('entertain') || kLower.includes('shop') || kLower.includes('person') || kLower.includes('other')) {
                     bucketTag = 'Wants';
                     bClass = 'bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400';
@@ -3703,7 +3703,7 @@
                         </div>
                     </div>
                     <div class="w-36">
-                        <input type="number" step="any" min="0" data-cat="${esc(key)}" value="${currentVal}" placeholder="Limit (${currentCurrency})" class="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 font-semibold text-right transition-colors">
+                        <input type="number" step="any" min="0" data-cat="${esc(key)}" value="${currentVal}" placeholder="Limit (${currentCurrency})" class="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 font-semibold text-right transition-colors">
                     </div>
                 `;
                 container.appendChild(row);
@@ -3784,15 +3784,15 @@
             if (elExp) elExp.textContent = fmtMoney(exp);
             if (elNet) {
                 elNet.textContent = (net >= 0 ? '+' : '') + fmtMoney(net);
-                elNet.className = `font-bold ${net >= 0 ? 'text-emerald-600' : 'text-rose-500'}`;
+                elNet.className = `font-bold ${net >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`;
             }
 
             if (elBadge) {
                 elBadge.textContent = `Net: ${net >= 0 ? '+' : ''}${fmtMoney(net)}`;
                 if (net >= 0) {
-                    elBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 transition-all';
+                    elBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 transition-all';
                 } else {
-                    elBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-500 transition-all';
+                    elBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 transition-all';
                 }
             }
         }
@@ -3997,7 +3997,7 @@
             const mobSavBadge = document.getElementById('mob-savings-badge');
             if (mobSavBadge) {
                 const dir = s.savings_mom_dir === 'up' ? '↑' : '↓';
-                const color = s.savings_mom_dir === 'up' ? 'text-emerald-500' : 'text-rose-500';
+                const color = s.savings_mom_dir === 'up' ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400';
                 mobSavBadge.className = `mt-1 flex items-center gap-1 text-[11px] font-semibold truncate ${color}`;
                 mobSavBadge.innerHTML = `<span>${dir} ${(s.savings_mom_pct || 0).toFixed(1)}% vs ${s.prev_month_name || 'last mo'}</span>`;
             }
@@ -4008,7 +4008,7 @@
             const mobDailyBadge = document.getElementById('mob-daily-badge');
             if (mobDailyBadge) {
                 const dir = s.daily_avg_mom_dir === 'up' ? '↑' : '↓';
-                const color = s.daily_avg_mom_dir === 'down' ? 'text-rose-500' : 'text-emerald-500';
+                const color = s.daily_avg_mom_dir === 'down' ? 'text-rose-700 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400';
                 mobDailyBadge.className = `mt-1 flex items-center gap-1 text-[11px] font-semibold truncate ${color}`;
                 mobDailyBadge.innerHTML = `<span>${dir} ${(s.daily_avg_mom_pct || 0).toFixed(1)}% vs ${s.prev_month_name || 'last mo'}</span>`;
             }
@@ -4371,7 +4371,7 @@
 
                 if (subs.length === 0) {
                     listEl.innerHTML = `
-                        <div class="text-center py-4 text-xs text-slate-400 dark:text-slate-500">
+                        <div class="text-center py-4 text-xs text-slate-500 dark:text-slate-400">
                             <p>No active recurring bills.</p>
                             <a href="/subscriptions" class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline mt-1 inline-block">+ Add subscriptions</a>
                         </div>
@@ -4381,7 +4381,7 @@
 
                 const activeSubs = subs.filter(s => s.status === 'active').slice(0, 3);
                 if (activeSubs.length === 0) {
-                    listEl.innerHTML = `<div class="text-center py-4 text-xs text-slate-400">All subscriptions are paused.</div>`;
+                    listEl.innerHTML = `<div class="text-center py-4 text-xs text-slate-500 dark:text-slate-400">All subscriptions are paused.</div>`;
                     return;
                 }
 
@@ -4389,24 +4389,24 @@
                     let dueBadge = '';
                     let actionBtn = '';
                     if (s.days_until < 0) {
-                        dueBadge = `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">Overdue</span>`;
+                        dueBadge = `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400">Overdue</span>`;
                     } else if (s.days_until === 0) {
-                        dueBadge = `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">Due Today</span>`;
+                        dueBadge = `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">Due Today</span>`;
                     } else if (s.days_until <= 7) {
                         dueBadge = `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">In ${s.days_until}d</span>`;
                     } else {
-                        dueBadge = `<span class="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">✓ Paid</span>`;
+                        dueBadge = `<span class="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">✓ Paid</span>`;
                     }
 
                     if (s.days_until <= 7) {
                         actionBtn = `
-                            <button type="button" onclick="payDashSubscription(${s.id}, ${jsArg(s.name)})" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-xs cursor-pointer" title="Log payment and advance next due date">
+                            <button type="button" onclick="payDashSubscription(${s.id}, ${jsArg(s.name)})" class="px-2 py-1 bg-emerald-700 dark:bg-emerald-400 dark:hover:bg-emerald-300 hover:bg-emerald-800 text-white dark:text-slate-950 rounded-lg text-[10px] font-bold shadow-xs cursor-pointer" title="Log payment and advance next due date">
                                 Pay
                             </button>
                         `;
                     } else {
                         actionBtn = `
-                            <span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-md text-[10px] font-bold">
+                            <span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 rounded-md text-[10px] font-bold">
                                 ✓ Paid
                             </span>
                         `;
@@ -4415,7 +4415,7 @@
                     return `
                         <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-lg bg-slate-900 dark:bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                <div class="w-7 h-7 rounded-lg bg-slate-900 dark:bg-emerald-400 text-white dark:text-slate-950 flex items-center justify-center font-bold text-xs shrink-0">
                                     ${esc(s.name.substring(0, 1).toUpperCase())}
                                 </div>
                                 <div class="min-w-0">
@@ -4423,7 +4423,7 @@
                                         <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${esc(s.name)}</h4>
                                         ${dueBadge}
                                     </div>
-                                    <p class="text-[10px] text-slate-400">Next: ${s.due_date_fmt}</p>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400">Next: ${s.due_date_fmt}</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
@@ -4471,9 +4471,9 @@
 
                 if (goals.length === 0) {
                     listEl.innerHTML = `
-                        <div class="text-center py-4 text-xs text-slate-400 dark:text-slate-500">
+                        <div class="text-center py-4 text-xs text-slate-500 dark:text-slate-400">
                             <p>No savings pots yet.</p>
-                            <a href="/goals" class="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline mt-1 inline-block">+ Create a savings pot</a>
+                            <a href="/goals" class="text-emerald-700 dark:text-emerald-400 font-semibold hover:underline mt-1 inline-block">+ Create a savings pot</a>
                         </div>
                     `;
                     return;
@@ -4496,7 +4496,7 @@
                             <div class="w-full bg-slate-200/60 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                                 <div class="h-full rounded-full transition-all duration-300" style="width: ${g.percentage}%; background-color: ${goalColor};"></div>
                             </div>
-                            <div class="flex items-center justify-between text-[10px] text-slate-400">
+                            <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
                                 <span>${g.saved_fmt || (currentCurrency + g.saved_amount)}</span>
                                 <span>Target: ${g.target_fmt || (currentCurrency + g.target_amount)}</span>
                             </div>
@@ -4542,16 +4542,16 @@
                         <div class="text-sm font-semibold break-words">${esc(acc.name)}</div>
                         <div class="text-xs text-slate-500 dark:text-slate-400">${types[acc.type] || 'Wallet'}${acc.is_default ? ' · Default' : ''}</div>
                     </div>
-                    <span class="text-sm font-semibold tabular-nums text-right ${acc.current_balance < 0 ? 'text-rose-500' : ''}">${isBalanceHidden ? '••••••' : esc(acc.formatted_balance || fmtMoney(acc.current_balance))}</span>
+                    <span class="text-sm font-semibold tabular-nums text-right ${acc.current_balance < 0 ? 'text-rose-700 dark:text-rose-400' : ''}">${isBalanceHidden ? '••••••' : esc(acc.formatted_balance || fmtMoney(acc.current_balance))}</span>
                     <details class="relative shrink-0 account-actions">
                         <summary aria-label="Actions for ${esc(acc.name)}" class="list-none cursor-pointer rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">⋯</summary>
                         <div class="absolute right-0 top-full z-20 w-44 p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg rounded-xl text-sm">
                             <button type="button" data-id="${acc.id}" class="btn-edit-account block w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">Edit account</button>
                             ${!acc.is_default ? `<button type="button" data-id="${acc.id}" class="btn-default-account block w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">Set as default</button>` : ''}
-                            <button type="button" data-id="${acc.id}" data-name="${esc(acc.name)}" class="btn-delete-account block w-full text-left px-3 py-2 rounded-lg text-rose-600 disabled:opacity-50" ${acc.is_default || userAccounts.length < 2 ? 'disabled title="Choose another default account before deleting this account"' : ''}>Delete account</button>
+                            <button type="button" data-id="${acc.id}" data-name="${esc(acc.name)}" class="btn-delete-account block w-full text-left px-3 py-2 rounded-lg text-rose-700 dark:text-rose-400 disabled:opacity-50" ${acc.is_default || userAccounts.length < 2 ? 'disabled title="Choose another default account before deleting this account"' : ''}>Delete account</button>
                         </div>
                     </details>
-                </div>`).join('') : '<p class="py-4 text-sm text-slate-500">No accounts yet. Add an account to get started.</p>';
+                </div>`).join('') : '<p class="py-4 text-sm text-slate-500 dark:text-slate-400">No accounts yet. Add an account to get started.</p>';
             document.getElementById('btn-open-transfer').disabled = userAccounts.length < 2;
         }
 
@@ -4631,7 +4631,7 @@
             }
 
             if (!userAccounts.length) {
-                listEl.innerHTML = '<p class="text-xs text-slate-400 py-3 text-center">No wallets configured.</p>';
+                listEl.innerHTML = '<p class="text-xs text-slate-500 dark:text-slate-400 py-3 text-center">No wallets configured.</p>';
                 return;
             }
 
@@ -4650,11 +4650,11 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-1 shrink-0 ml-2">
-                        <button type="button" class="btn-edit-account p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer" data-id="${a.id}" title="Edit Wallet">
+                        <button type="button" class="btn-edit-account p-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer" data-id="${a.id}" title="Edit Wallet">
                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         ${!a.is_default && userAccounts.length > 1 ? `
-                            <button type="button" class="btn-delete-account p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" data-id="${a.id}" data-name="${esc(a.name)}" title="Delete Wallet">
+                            <button type="button" class="btn-delete-account p-1 text-slate-500 dark:text-slate-400 hover:text-rose-700 dark:hover:text-rose-400 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" data-id="${a.id}" data-name="${esc(a.name)}" title="Delete Wallet">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                             </button>
                         ` : ''}
@@ -5202,14 +5202,14 @@
         function setQuickAddMode(mode) {
             if (mode === 'ai') {
                 if (tabQuickAI) tabQuickAI.className = 'px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all';
-                if (tabQuickManual) tabQuickManual.className = 'px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer transition-all';
+                if (tabQuickManual) tabQuickManual.className = 'px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer transition-all';
                 if (panelQuickAI) panelQuickAI.classList.remove('hidden');
                 if (panelQuickManual) panelQuickManual.classList.add('hidden');
                 const chatInp = document.getElementById('ai-chat-input');
                 if (chatInp) chatInp.focus();
             } else {
                 if (tabQuickManual) tabQuickManual.className = 'px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all';
-                if (tabQuickAI) tabQuickAI.className = 'px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer transition-all';
+                if (tabQuickAI) tabQuickAI.className = 'px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer transition-all';
                 if (panelQuickManual) panelQuickManual.classList.remove('hidden');
                 if (panelQuickAI) panelQuickAI.classList.add('hidden');
                 const noteInp = document.getElementById('tx-note-input');
@@ -5455,22 +5455,22 @@
             if (amountEl) {
                 amountEl.textContent = fmtMoney(parsed.amount);
                 if (parsed.type === 'income') {
-                    amountEl.className = 'text-sm font-extrabold text-emerald-600 dark:text-emerald-400';
+                    amountEl.className = 'text-sm font-extrabold text-emerald-700 dark:text-emerald-400';
                 } else if (parsed.type === 'transfer') {
                     amountEl.className = 'text-sm font-extrabold text-blue-600 dark:text-blue-400';
                 } else {
-                    amountEl.className = 'text-sm font-extrabold text-rose-600 dark:text-rose-400';
+                    amountEl.className = 'text-sm font-extrabold text-rose-700 dark:text-rose-400';
                 }
             }
 
             if (typeEl) {
                 typeEl.textContent = parsed.type;
                 if (parsed.type === 'income') {
-                    typeEl.className = 'px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 uppercase tracking-wider font-bold';
+                    typeEl.className = 'px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 uppercase tracking-wider font-bold';
                 } else if (parsed.type === 'transfer') {
                     typeEl.className = 'px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 uppercase tracking-wider font-bold';
                 } else {
-                    typeEl.className = 'px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 uppercase tracking-wider font-bold';
+                    typeEl.className = 'px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 uppercase tracking-wider font-bold';
                 }
             }
 
@@ -5840,7 +5840,7 @@
                 const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'local';
                 if (selectedProvider === 'local') {
                     if (testKeyStatus) {
-                        testKeyStatus.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400';
+                        testKeyStatus.className = 'text-xs font-semibold text-emerald-700 dark:text-emerald-400';
                         testKeyStatus.textContent = '✓ Smart NLP is always ready (offline)';
                     }
                     return;
@@ -5867,18 +5867,18 @@
                     const data = await res.json();
                     if (res.ok && data.status === 'ok') {
                         if (testKeyStatus) {
-                            testKeyStatus.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400';
+                            testKeyStatus.className = 'text-xs font-semibold text-emerald-700 dark:text-emerald-400';
                             testKeyStatus.textContent = '✓ ' + (data.message || 'Connected successfully!');
                         }
                     } else {
                         if (testKeyStatus) {
-                            testKeyStatus.className = 'text-xs font-semibold text-rose-500';
+                            testKeyStatus.className = 'text-xs font-semibold text-rose-700 dark:text-rose-400';
                             testKeyStatus.textContent = '✗ ' + (data.error || 'Connection failed');
                         }
                     }
                 } catch (err) {
                     if (testKeyStatus) {
-                        testKeyStatus.className = 'text-xs font-semibold text-rose-500';
+                        testKeyStatus.className = 'text-xs font-semibold text-rose-700 dark:text-rose-400';
                         testKeyStatus.textContent = '✗ Network error testing key';
                     }
                 } finally {

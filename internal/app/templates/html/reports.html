@@ -90,7 +90,7 @@
             </div>
             <div class="text-right">
                 <p class="text-xs font-bold text-slate-900" id="print-period-label">Period: This Month</p>
-                <p class="text-[10px] text-slate-500" id="print-generated-date">Generated on: </p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400" id="print-generated-date">Generated on: </p>
             </div>
         </div>
     </div>
@@ -105,7 +105,7 @@
                 
                 <!-- Timeframe Quick Pills (Horizontal Touch Carousel) -->
                 <div class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0" id="timeframe-pills">
-                    <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:bg-emerald-600 shadow-xs" data-tf="this_month">This Month</button>
+                    <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:text-slate-950 dark:bg-emerald-400 shadow-xs" data-tf="this_month">This Month</button>
                     <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="3m">3 Months</button>
                     <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="6m">6 Months</button>
                     <button type="button" class="timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" data-tf="ytd">YTD</button>
@@ -140,14 +140,14 @@
             <!-- Custom Date Range Bar (Toggled when Custom is clicked) -->
             <div id="custom-date-container" class="hidden pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-3">
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-slate-500">From:</span>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">From:</span>
                     <input type="date" id="custom-start-date" class="px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-slate-500">To:</span>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">To:</span>
                     <input type="date" id="custom-end-date" class="px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
                 </div>
-                <button type="button" id="btn-apply-custom-dates" class="px-3 py-1 text-xs font-semibold text-white bg-slate-900 dark:bg-emerald-600 rounded-lg hover:opacity-90 cursor-pointer">
+                <button type="button" id="btn-apply-custom-dates" class="px-3 py-1 text-xs font-semibold text-white dark:text-slate-950 bg-slate-900 dark:bg-emerald-400 rounded-lg hover:opacity-90 cursor-pointer">
                     Apply Filter
                 </button>
             </div>
@@ -168,7 +168,7 @@
                 </div>
                 <div class="mt-2 flex items-center gap-1.5">
                     <span id="kpi-net-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">Surplus</span>
-                    <span class="text-[10px] text-slate-400" id="kpi-savings-rate">0% Savings Rate</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400" id="kpi-savings-rate">0% Savings Rate</span>
                 </div>
             </div>
 
@@ -176,14 +176,14 @@
             <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
                     <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Total Income</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
                         ↓
                     </span>
                 </div>
                 <div class="flex items-baseline gap-2 mt-1">
-                    <span class="font-heading text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight" id="kpi-income">₦0</span>
+                    <span class="font-heading text-lg sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight" id="kpi-income">₦0</span>
                 </div>
-                <div class="mt-2 text-[10px] text-slate-400 truncate">
+                <div class="mt-2 text-[10px] text-slate-500 dark:text-slate-400 truncate">
                     <span id="kpi-income-count">0</span> inflows recorded
                 </div>
             </div>
@@ -192,14 +192,14 @@
             <div class="card-box bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xs relative overflow-hidden transition-colors">
                 <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
                     <span class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider">Total Expenses</span>
-                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
+                    <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
                         ↑
                     </span>
                 </div>
                 <div class="flex items-baseline gap-2 mt-1">
-                    <span class="font-heading text-lg sm:text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight" id="kpi-expense">₦0</span>
+                    <span class="font-heading text-lg sm:text-2xl font-black text-rose-700 dark:text-rose-400 tracking-tight" id="kpi-expense">₦0</span>
                 </div>
-                <div class="mt-2 text-[10px] text-slate-400 truncate">
+                <div class="mt-2 text-[10px] text-slate-500 dark:text-slate-400 truncate">
                     Avg <span id="kpi-daily-spend" class="font-semibold text-slate-600 dark:text-slate-300">₦0</span> / day
                 </div>
             </div>
@@ -215,7 +215,7 @@
                 <div class="flex items-baseline gap-2 mt-1">
                     <span class="font-heading text-lg sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight" id="kpi-runway">0.0 mo</span>
                 </div>
-                <div class="mt-2 text-[10px] text-slate-400 truncate">
+                <div class="mt-2 text-[10px] text-slate-500 dark:text-slate-400 truncate">
                     Based on liquid balances & burn
                 </div>
             </div>
@@ -229,7 +229,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                         <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Cash Flow Trajectory</h2>
-                        <p class="text-xs text-slate-400" id="timeline-subtitle">Inflows vs. Outflows across the selected period</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400" id="timeline-subtitle">Inflows vs. Outflows across the selected period</p>
                     </div>
                     <!-- Legend -->
                     <div class="flex items-center gap-3 text-[11px] font-semibold">
@@ -242,7 +242,7 @@
                 <!-- Canvas Chart -->
                 <div class="relative w-full h-64 sm:h-72">
                     <canvas id="cashflow-canvas" class="w-full h-full"></canvas>
-                    <div id="chart-empty" class="hidden absolute inset-0 flex items-center justify-center text-xs text-slate-400">
+                    <div id="chart-empty" class="hidden absolute inset-0 flex items-center justify-center text-xs text-slate-500 dark:text-slate-400">
                         No transactions recorded for this period.
                     </div>
                 </div>
@@ -253,14 +253,14 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h2 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Spending by Category</h2>
-                        <p class="text-xs text-slate-400">Outflow breakdown and percentages</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Outflow breakdown and percentages</p>
                     </div>
                     <span id="cat-count-badge" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">0 categories</span>
                 </div>
 
                 <!-- Ranked Category List -->
                 <div id="category-report-list" tabindex="0" role="region" aria-label="Spending by category" class="space-y-3 max-h-72 overflow-y-auto pr-1">
-                    <div class="p-4 text-center text-xs text-slate-400">Loading categories...</div>
+                    <div class="p-4 text-center text-xs text-slate-500 dark:text-slate-400">Loading categories...</div>
                 </div>
             </div>
         </section>
@@ -273,12 +273,12 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Spending by Wallet</h3>
-                        <p class="text-xs text-slate-400">Which account funds were drawn from</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Which account funds were drawn from</p>
                     </div>
                     <span class="text-base">💳</span>
                 </div>
                 <div id="account-report-list" class="space-y-2.5 pt-1">
-                    <p class="text-xs text-slate-400">Loading wallet distribution...</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Loading wallet distribution...</p>
                 </div>
             </div>
 
@@ -287,12 +287,12 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Spending by Tag</h3>
-                        <p class="text-xs text-slate-400">Expense distribution across #tags</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Expense distribution across #tags</p>
                     </div>
                     <span class="text-base">🏷️</span>
                 </div>
                 <div id="tags-report-cloud" class="flex flex-wrap gap-2 pt-1">
-                    <p class="text-xs text-slate-400">Loading tag analytics...</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Loading tag analytics...</p>
                 </div>
             </div>
         </section>
@@ -302,7 +302,7 @@
             <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                     <h3 class="font-heading text-sm font-bold text-slate-900 dark:text-white">Period Transaction Register</h3>
-                    <p class="text-xs text-slate-400" id="ledger-subtitle">Showing all transactions in this statement</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400" id="ledger-subtitle">Showing all transactions in this statement</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <span id="ledger-count-badge" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">0 items</span>
@@ -323,20 +323,20 @@
                         </tr>
                     </thead>
                     <tbody id="ledger-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <tr><td colspan="6" class="py-6 text-center text-slate-400">Loading transactions...</td></tr>
+                        <tr><td colspan="6" class="py-6 text-center text-slate-500 dark:text-slate-400">Loading transactions...</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <!-- Card View for Mobile -->
             <div id="ledger-mobile-cards" class="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
-                <div class="p-4 text-center text-xs text-slate-400">Loading transactions...</div>
+                <div class="p-4 text-center text-xs text-slate-500 dark:text-slate-400">Loading transactions...</div>
             </div>
         </section>
     </main>
 
     <!-- Footer -->
-    <footer class="mt-auto py-6 border-t border-slate-200/80 dark:border-slate-800 text-center text-xs text-slate-400 transition-colors">
+    <footer class="mt-auto py-6 border-t border-slate-200/80 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
         <p>Spendly &copy; 2026. Premium Personal Wealth & Finance Engine.</p>
     </footer>
 
@@ -483,7 +483,7 @@
             document.querySelectorAll('.timeframe-btn').forEach(b => {
                 b.className = 'timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300';
             });
-            btn.className = 'timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:bg-emerald-600 shadow-xs';
+            btn.className = 'timeframe-btn shrink-0 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer bg-slate-900 text-white dark:text-slate-950 dark:bg-emerald-400 shadow-xs';
 
             const customContainer = document.getElementById('custom-date-container');
             if (tf === 'custom') {
@@ -538,11 +538,11 @@
             
             netSavingsEl.textContent = fmtMoney(k.net_savings);
             if (k.net_savings >= 0) {
-                netSavingsEl.className = 'font-heading text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight';
+                netSavingsEl.className = 'font-heading text-lg sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight';
                 netBadgeEl.textContent = 'Surplus';
                 netBadgeEl.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
             } else {
-                netSavingsEl.className = 'font-heading text-lg sm:text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight';
+                netSavingsEl.className = 'font-heading text-lg sm:text-2xl font-black text-rose-700 dark:text-rose-400 tracking-tight';
                 netBadgeEl.textContent = 'Deficit';
                 netBadgeEl.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400';
             }
@@ -725,7 +725,7 @@
             badgeEl.textContent = `${categories.length} categories`;
 
             if (!categories || categories.length === 0) {
-                listEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-8">No category expenses in this period.</p>';
+                listEl.innerHTML = '<p class="text-xs text-slate-500 dark:text-slate-400 text-center py-8">No category expenses in this period.</p>';
                 return;
             }
 
@@ -737,11 +737,11 @@
                                 ${c.icon || '📦'}
                             </span>
                             <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${esc(c.name)}</span>
-                            <span class="text-[10px] text-slate-400">(${c.count} txs)</span>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400">(${c.count} txs)</span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <span class="font-bold text-slate-900 dark:text-white">${fmtMoney(c.amount)}</span>
-                            <span class="text-[10px] font-bold text-slate-400 w-8 text-right">${c.percentage}%</span>
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 w-8 text-right">${c.percentage}%</span>
                         </div>
                     </div>
                     <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -757,7 +757,7 @@
             if (!listEl) return;
 
             if (!accounts || accounts.length === 0) {
-                listEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">No wallet activity in this period.</p>';
+                listEl.innerHTML = '<p class="text-xs text-slate-500 dark:text-slate-400 text-center py-4">No wallet activity in this period.</p>';
                 return;
             }
 
@@ -769,8 +769,8 @@
                             <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${esc(a.account_name)}</span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
-                            <span class="font-bold text-rose-500">-${fmtMoney(a.expense)}</span>
-                            <span class="text-[10px] font-bold text-slate-400">(${a.percentage}%)</span>
+                            <span class="font-bold text-rose-700 dark:text-rose-400">-${fmtMoney(a.expense)}</span>
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">(${a.percentage}%)</span>
                         </div>
                     </div>
                     <div class="w-full bg-slate-200/60 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
@@ -786,14 +786,14 @@
             if (!container) return;
 
             if (!tags || tags.length === 0) {
-                container.innerHTML = '<p class="text-xs text-slate-400 text-center w-full py-4">No tagged expenses found in this period.</p>';
+                container.innerHTML = '<p class="text-xs text-slate-500 dark:text-slate-400 text-center w-full py-4">No tagged expenses found in this period.</p>';
                 return;
             }
 
             container.innerHTML = tags.map(t => `
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition-transform hover:scale-105">
                     <span class="text-xs font-bold text-slate-700 dark:text-slate-300">#${esc(t.tag)}</span>
-                    <span class="text-xs font-black text-rose-500">${fmtMoney(t.amount)}</span>
+                    <span class="text-xs font-black text-rose-700 dark:text-rose-400">${fmtMoney(t.amount)}</span>
                     <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${t.count}</span>
                 </div>
             `).join('');
@@ -808,8 +808,8 @@
             countBadge.textContent = `${txs.length} item${txs.length === 1 ? '' : 's'}`;
 
             if (!txs || txs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-400">No transactions match the selected period and filters.</td></tr>';
-                mobileContainer.innerHTML = '<div class="p-8 text-center text-xs text-slate-400">No transactions match the selected period and filters.</div>';
+                tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-500 dark:text-slate-400">No transactions match the selected period and filters.</td></tr>';
+                mobileContainer.innerHTML = '<div class="p-8 text-center text-xs text-slate-500 dark:text-slate-400">No transactions match the selected period and filters.</div>';
                 return;
             }
 
@@ -817,14 +817,14 @@
             tbody.innerHTML = txs.map(t => {
                 const isExp = t.type === 'expense';
                 const sign = isExp ? '-' : '+';
-                const color = isExp ? 'text-rose-500 font-bold' : 'text-emerald-600 font-bold';
+                const color = isExp ? 'text-rose-700 dark:text-rose-400 font-bold' : 'text-emerald-700 dark:text-emerald-400 font-bold';
                 const tagsHtml = (t.tag_list && t.tag_list.length > 0)
                     ? t.tag_list.map(tg => `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold mr-1">#${esc(tg)}</span>`).join('')
-                    : '<span class="text-slate-300 dark:text-slate-600">—</span>';
+                    : '<span class="text-slate-300 dark:text-slate-400">—</span>';
 
                 return `
                     <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                        <td class="py-3 px-4 whitespace-nowrap text-slate-500">${esc(fmtDate(t.date))}</td>
+                        <td class="py-3 px-4 whitespace-nowrap text-slate-500 dark:text-slate-400">${esc(fmtDate(t.date))}</td>
                         <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">${esc(t.note || t.category)}</td>
                         <td class="py-3 px-4 whitespace-nowrap text-slate-600 dark:text-slate-400">${esc(t.category)}</td>
                         <td class="py-3 px-4 whitespace-nowrap">
@@ -842,19 +842,19 @@
             mobileContainer.innerHTML = txs.map(t => {
                 const isExp = t.type === 'expense';
                 const sign = isExp ? '-' : '+';
-                const color = isExp ? 'text-rose-500 font-bold' : 'text-emerald-600 font-bold';
+                const color = isExp ? 'text-rose-700 dark:text-rose-400 font-bold' : 'text-emerald-700 dark:text-emerald-400 font-bold';
 
                 return `
                     <div class="p-3.5 flex items-center justify-between gap-3">
                         <div class="min-w-0">
                             <p class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${esc(t.note || t.category)}</p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                                 ${esc(fmtDate(t.date))} · <span class="font-medium">${esc(t.category)}</span> · 
                                 <span class="font-semibold text-slate-600 dark:text-slate-300">${t.account_icon || '🏦'} ${esc(t.account_name || 'Wallet')}</span>
                             </p>
                             ${t.tag_list && t.tag_list.length > 0 ? `
                                 <div class="flex flex-wrap gap-1 mt-1">
-                                    ${t.tag_list.map(tg => `<span class="text-[10px] font-semibold text-slate-500">#${esc(tg)}</span>`).join(' ')}
+                                    ${t.tag_list.map(tg => `<span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">#${esc(tg)}</span>`).join(' ')}
                                 </div>
                             ` : ''}
                         </div>

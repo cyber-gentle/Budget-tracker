@@ -76,3 +76,10 @@ h1, h2, h3, h4, .font-heading {
 .toast-animate {
     animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+/* Text in a user-chosen goal colour: darkened in light mode to keep AA contrast on white. */
+.goal-tint {
+    color: color-mix(in srgb, var(--goal) 55%, #000);
+}
+.dark .goal-tint {
+    color: var(--goal);
+}
